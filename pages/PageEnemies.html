@@ -195,9 +195,9 @@
         </select>
       </div>
       <div class="col-6">
-        <!-- DB hunting_grounds 테이블에서 동적으로 채워지는 드롭다운 -->
+        <!-- 레벨/층수 순서대로 정렬된 사냥터 드롭다운 -->
         <select id="selectEnemyLocation" class="form-select enemy-input" onchange="handleLocationChange()">
-          <option value="">주요 사냥터 선택...</option>
+          <option value="">주요 사냥터 선택 (레벨순)...</option>
           <option value="__custom__">✏️ 직접 입력</option>
         </select>
       </div>
@@ -276,7 +276,7 @@
   (async function initEnemiesPage() {
     await loadConfiguredGuildName();
     await loadGuildMembersDropdown();
-    await loadHuntingGroundsDropdown(); // 사냥터 목록 동적 로드
+    await loadHuntingGroundsDropdown();
     await loadEnemyData();
   })();
 
@@ -297,31 +297,48 @@
     }
   }
 
-  // 🎯 설정창에서 관리되는 DB 사냥터(hunting_grounds) 동적 로드 및 지역별 분류
+  // 🎯 문자열 내 숫자/레벨/층수를 인식하여 자연 오름차순(Natural Sort) 정렬하는 헬퍼
+  function naturalSortComparator(a, b) {
+    return a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' });
+  }
+
+  // 🎯 설정창에서 등록된 사냥터를 레벨/층수 순서대로 정렬하여 로드
   async function loadHuntingGroundsDropdown() {
     const select = document.getElementById('selectEnemyLocation');
     if (!select) return;
 
     try {
-      const grounds = await apiRequest("hunting_grounds?select=*&order=region.asc,name.asc");
+      const grounds = await apiRequest("hunting_grounds?select=*");
       
-      let html = '<option value="">주요 사냥터 선택...</option>';
+      let html = '<option value="">주요 사냥터 선택 (레벨순)...</option>';
 
       if (grounds && grounds.length > 0) {
-        // 지역(region)별 그룹화
+        // 1. 지역별로 묶기
         const regionMap = {};
         grounds.forEach(g => {
-          const region = g.region || '기타 지역';
+          const region = (g.region || '기타 지역').trim();
+          const name = (g.name || '').trim();
           if (!regionMap[region]) regionMap[region] = [];
-          regionMap[region].push(g.name);
+          if (name && !regionMap[region].includes(name)) {
+            regionMap[region].push(name);
+          }
         });
 
-        Object.keys(regionMap).sort().forEach(reg => {
+        // 2. 지역명 가나다순 정렬
+        const sortedRegions = Object.keys(regionMap).sort(naturalSortComparator);
+
+        // 3. 각 지역 내 사냥터들을 레벨/층수 오름차순으로 정렬
+        sortedRegions.forEach(reg => {
           html += `<optgroup label="📍 ${reg}">`;
-          regionMap[reg].forEach(name => {
+          
+          // 핵심: 이름 안에 포함된 숫자(45, 55, 60, 1층, 2층 등)를 고려한 정렬
+          const sortedGroundNames = regionMap[reg].sort(naturalSortComparator);
+
+          sortedGroundNames.forEach(name => {
             const fullLoc = `[${reg}] ${name}`;
             html += `<option value="${fullLoc}">${name}</option>`;
           });
+
           html += `</optgroup>`;
         });
       }
@@ -446,7 +463,9 @@
 
     const locContainer = document.getElementById('mDetailLocations');
     if (item.locations.length > 0) {
-      locContainer.innerHTML = item.locations.map(loc => `<span class="tag-location-full"><i class="fa-solid fa-location-dot me-1"></i>${loc}</span>`).join('');
+      // 상세 모달에서도 사냥터를 레벨순으로 정렬하여 표시
+      const sortedLocs = item.locations.slice().sort(naturalSortComparator);
+      locContainer.innerHTML = sortedLocs.map(loc => `<span class="tag-location-full"><i class="fa-solid fa-location-dot me-1"></i>${loc}</span>`).join('');
     } else {
       locContainer.innerHTML = '<span class="text-secondary small">등록된 사냥터 정보가 없습니다.</span>';
     }
