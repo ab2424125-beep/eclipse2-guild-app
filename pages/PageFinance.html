@@ -26,7 +26,7 @@
     background: #080d1a;
     border: 1px solid #1e2c47;
     border-radius: 14px;
-    padding: 12px;
+    padding: 14px;
     margin-bottom: 12px;
   }
 
@@ -54,35 +54,66 @@
     border: 1px solid #233554 !important;
     color: #ffffff !important;
     border-radius: 10px !important;
-    padding: 8px 12px !important;
+    padding: 9px 12px !important;
     font-size: 0.85rem !important;
     color-scheme: dark;
   }
 
-  .btn-fin-mode {
+  /* 상단 모드 탭 (수익금 입금 vs 길드 지출) */
+  .btn-fin-main-mode {
     flex: 1;
     background: #0d1527;
     border: 1px solid #1e2c47;
     color: #94a3b8;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    padding: 9px;
+    padding: 10px;
     border-radius: 10px;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s;
   }
-  .btn-fin-mode.active-in {
-    background: rgba(16, 185, 129, 0.15);
+  .btn-fin-main-mode.active-in {
+    background: rgba(16, 185, 129, 0.18);
     border-color: #10b981;
     color: #34d399;
     font-weight: 800;
   }
-  .btn-fin-mode.active-out {
-    background: rgba(239, 68, 68, 0.15);
+  .btn-fin-main-mode.active-out {
+    background: rgba(239, 68, 68, 0.18);
     border-color: #ef4444;
     color: #f87171;
     font-weight: 800;
+  }
+
+  /* 입금 방식 서브 탭 (총액입력 vs 직접입력) */
+  .btn-fin-sub-tab {
+    flex: 1;
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 7px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .btn-fin-sub-tab.active {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: #0ea5e9;
+    color: #38bdf8;
+    font-weight: 800;
+  }
+
+  /* 차액 계산 프리뷰 박스 */
+  .diff-calc-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px dashed #38bdf8;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
   }
 
   .finance-history-item {
@@ -147,7 +178,7 @@
   <!-- 주간/기간 수익금 필터 -->
   <div class="finance-section-box">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small fw-bold text-white"><i class="fa-solid fa-filter me-1 text-info"></i> 주간/기간 수익금 필터</span>
+      <span class="small fw-bold text-white"><i class="fa-solid fa-filter me-1 text-info"></i> 주간 수익금 필터</span>
       <span class="small text-secondary" style="font-size: 0.72rem;">기간 수익: <strong class="text-warning" id="periodNetProfitText">0 다이아</strong></span>
     </div>
 
@@ -169,43 +200,70 @@
     </div>
 
     <button type="button" class="btn btn-outline-info btn-sm w-100 fw-bold" style="font-size: 0.78rem;" onclick="window.loadFinanceLogs()">
-      <i class="fa-solid fa-magnifying-glass me-1"></i> 지정 기간 내역 조회
+      <i class="fa-solid fa-magnifying-glass me-1"></i> 지정 기간 수익금 조회
     </button>
   </div>
 
-  <!-- 입금 / 지출 수동 등록 섹션 (관리자 기능) -->
+  <!-- 금고 입금/지출 등록 섹션 (인게임 총액 입력 차액 계산기 탑재) -->
   <div class="finance-section-box">
+    <!-- 메인 모드 (입금 vs 지출) -->
     <div class="d-flex gap-2 mb-2">
-      <button type="button" class="btn-fin-mode active-in" id="modeBtnDeposit" onclick="window.switchFinMode('deposit')">
+      <button type="button" class="btn-fin-main-mode active-in" id="modeBtnDeposit" onclick="window.switchFinMainMode('deposit')">
         <i class="fa-solid fa-circle-plus me-1"></i> 수익금 입금 등록
       </button>
-      <button type="button" class="btn-fin-mode" id="modeBtnWithdraw" onclick="window.switchFinMode('withdraw')">
+      <button type="button" class="btn-fin-main-mode" id="modeBtnWithdraw" onclick="window.switchFinMainMode('withdraw')">
         <i class="fa-solid fa-circle-minus me-1"></i> 길드 지출 등록
       </button>
     </div>
 
+    <!-- 입금 방식 서브 탭 (총액 입력 vs 직접 입력) -->
+    <div class="d-flex gap-2 mb-3" id="depositSubTabs">
+      <button type="button" class="btn-fin-sub-tab active" id="subTabTotal" onclick="window.switchDepositMethod('total')">
+        <i class="fa-solid fa-calculator me-1"></i> 게임 금고 총액 입력
+      </button>
+      <button type="button" class="btn-fin-sub-tab" id="subTabDirect" onclick="window.switchDepositMethod('direct')">
+        <i class="fa-solid fa-pen-to-square me-1"></i> 추가 입금액 직접 입력
+      </button>
+    </div>
+
+    <!-- 일자 및 금액 입력 행 -->
     <div class="row g-2 mb-2">
       <div class="col-6">
-        <label class="form-label small text-secondary mb-1">분류</label>
-        <select id="finCategorySelect" class="form-select input-custom-fin">
-          <option value="경매낙찰">경매낙찰 길드비</option>
-          <option value="길드후원">길드원 자발후원</option>
-          <option value="기타입금">기타 입금</option>
-        </select>
+        <label class="form-label small text-secondary mb-1" id="finDateLabel">입금 일자</label>
+        <input type="date" id="finTxDate" class="form-control input-custom-fin">
       </div>
       <div class="col-6">
-        <label class="form-label small text-secondary mb-1">금액 (다이아)</label>
-        <input type="number" id="finAmountInput" class="form-control input-custom-fin" placeholder="예: 5000">
+        <label class="form-label small text-secondary mb-1" id="finAmountLabel">금고 총 보유액 (다이아)</label>
+        <input type="number" id="finAmountInput" class="form-control input-custom-fin" placeholder="금고 총액 입력" onkeyup="window.calcNetDiffAmount()">
       </div>
     </div>
 
-    <div class="mb-2">
-      <label class="form-label small text-secondary mb-1">사유 / 적요 (reason)</label>
-      <input type="text" id="finReasonInput" class="form-control input-custom-fin" placeholder="예: 길드 자금 보충, 이벤트 지원 등">
+    <!-- 🎯 [인게임 금고 차액 자동 계산 박스] -->
+    <div id="diffCalcBox" class="diff-calc-box">
+      <div class="d-flex justify-content-between small text-secondary">
+        <span>직전 DB 잔액: <strong class="text-white" id="calcPrevBalanceText">0 D</strong></span>
+        <span>입력 총액: <strong class="text-info" id="calcInputTotalText">0 D</strong></span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-secondary border-opacity-25">
+        <span class="small fw-bold text-white">👉 실제 이번 입금액 (차액):</span>
+        <strong class="text-warning fs-6" id="calcDiffResultText">+0 다이아</strong>
+      </div>
     </div>
 
-    <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" id="btnSubmitFinAction" onclick="window.submitManualFinance()">
-      <i class="fa-solid fa-check me-1"></i> 금고에 반영 처리
+    <!-- 사유 / 원천 -->
+    <div class="mb-2">
+      <label class="form-label small text-secondary mb-1">수익 내역 / 원천</label>
+      <input type="text" id="finReasonInput" class="form-control input-custom-fin" placeholder="예: 보스 토벌 누적 수익금, 길드 후원 등">
+    </div>
+
+    <!-- 비고 / 전달자 -->
+    <div class="mb-3">
+      <label class="form-label small text-secondary mb-1">비고 / 전달자 닉네임 (선택)</label>
+      <input type="text" id="finMemoInput" class="form-control input-custom-fin" placeholder="비고 / 전달자 닉네임 (선택)">
+    </div>
+
+    <button type="button" class="btn btn-outline-success btn-sm w-100 fw-bold py-2" id="btnSubmitFinAction" onclick="window.submitFinanceRecord()">
+      <i class="fa-solid fa-plus me-1"></i> 금고에 수익 입금 처리
     </button>
   </div>
 
@@ -230,7 +288,9 @@
 </div>
 
 <script>
-  window.currentFinMode = 'deposit';
+  window.currentFinMainMode = 'deposit'; // 'deposit' or 'withdraw'
+  window.currentDepositMethod = 'total';  // 'total' (총액입력-차액계산) or 'direct' (직접입력)
+  window.currentDbVaultBalance = 0;       // 현재 DB 상의 순잔액
   window.finHistoryData = [];
   window.finToastTimer = null;
 
@@ -248,36 +308,94 @@
     window.finToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   };
 
-  window.switchFinMode = function(mode) {
-    window.currentFinMode = mode;
+  // 오늘 날짜 YYYY-MM-DD 세팅
+  function setTodayDateInput() {
+    const d = new Date();
+    const pad = n => (n < 10 ? '0' + n : n);
+    const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const dateInput = document.getElementById("finTxDate");
+    if (dateInput && !dateInput.value) {
+      dateInput.value = ymd;
+    }
+  }
+
+  // 상단 메인 모드 전환 (입금 vs 지출)
+  window.switchFinMainMode = function(mode) {
+    window.currentFinMainMode = mode;
     const btnIn = document.getElementById('modeBtnDeposit');
     const btnOut = document.getElementById('modeBtnWithdraw');
-    const catSelect = document.getElementById('finCategorySelect');
+    const subTabs = document.getElementById('depositSubTabs');
+    const diffBox = document.getElementById('diffCalcBox');
+    const amountLabel = document.getElementById('finAmountLabel');
+    const amountInput = document.getElementById('finAmountInput');
+    const dateLabel = document.getElementById('finDateLabel');
     const submitBtn = document.getElementById('btnSubmitFinAction');
 
     if (mode === 'deposit') {
-      btnIn.className = 'btn-fin-mode active-in';
-      btnOut.className = 'btn-fin-mode';
-      catSelect.innerHTML = `
-        <option value="경매낙찰">경매낙찰 길드비</option>
-        <option value="길드후원">길드원 자발후원</option>
-        <option value="기타입금">기타 입금</option>
-      `;
-      submitBtn.className = 'btn btn-success btn-sm w-100 fw-bold py-2';
+      btnIn.className = 'btn-fin-main-mode active-in';
+      btnOut.className = 'btn-fin-main-mode';
+      subTabs.style.display = 'flex';
+      dateLabel.innerText = '입금 일자';
+      window.switchDepositMethod(window.currentDepositMethod);
+      submitBtn.className = 'btn btn-outline-success btn-sm w-100 fw-bold py-2';
       submitBtn.innerHTML = '<i class="fa-solid fa-plus me-1"></i> 금고에 수익 입금 처리';
     } else {
-      btnIn.className = 'btn-fin-mode';
-      btnOut.className = 'btn-fin-mode active-out';
-      catSelect.innerHTML = `
-        <option value="N/1분배">N/1 정산 배당금 지급</option>
-        <option value="이벤트지원">길드 이벤트/소모품 지원</option>
-        <option value="기타지출">기타 운영비 지출</option>
-      `;
-      submitBtn.className = 'btn btn-danger btn-sm w-100 fw-bold py-2';
+      btnIn.className = 'btn-fin-main-mode';
+      btnOut.className = 'btn-fin-main-mode active-out';
+      subTabs.style.display = 'none';
+      diffBox.style.display = 'none';
+      dateLabel.innerText = '지출 일자';
+      amountLabel.innerText = '지출 금액 (다이아)';
+      amountInput.placeholder = '지출할 금액 입력';
+      submitBtn.className = 'btn btn-outline-danger btn-sm w-100 fw-bold py-2';
       submitBtn.innerHTML = '<i class="fa-solid fa-minus me-1"></i> 금고에서 지출 처리';
+    }
+    window.calcNetDiffAmount();
+  };
+
+  // 입금 방식 서브 탭 전환 (총액입력 vs 직접입력)
+  window.switchDepositMethod = function(method) {
+    window.currentDepositMethod = method;
+    const tabTotal = document.getElementById('subTabTotal');
+    const tabDirect = document.getElementById('subTabDirect');
+    const diffBox = document.getElementById('diffCalcBox');
+    const amountLabel = document.getElementById('finAmountLabel');
+    const amountInput = document.getElementById('finAmountInput');
+
+    if (method === 'total') {
+      tabTotal.className = 'btn-fin-sub-tab active';
+      tabDirect.className = 'btn-fin-sub-tab';
+      amountLabel.innerText = '금고 총 보유액 (다이아)';
+      amountInput.placeholder = '금고 총액 입력';
+      diffBox.style.display = 'block';
+    } else {
+      tabTotal.className = 'btn-fin-sub-tab';
+      tabDirect.className = 'btn-fin-sub-tab active';
+      amountLabel.innerText = '추가 입금액 (다이아)';
+      amountInput.placeholder = '추가할 입금액 입력';
+      diffBox.style.display = 'none';
+    }
+    window.calcNetDiffAmount();
+  };
+
+  // 🎯 차액 실시간 계산기
+  window.calcNetDiffAmount = function() {
+    const prevBal = window.currentDbVaultBalance || 0;
+    const inputVal = parseInt(document.getElementById('finAmountInput').value) || 0;
+
+    document.getElementById('calcPrevBalanceText').innerText = `${prevBal.toLocaleString()} D`;
+    document.getElementById('calcInputTotalText').innerText = `${inputVal.toLocaleString()} D`;
+
+    if (window.currentFinMainMode === 'deposit' && window.currentDepositMethod === 'total') {
+      const diff = inputVal - prevBal;
+      const sign = diff >= 0 ? '+' : '';
+      const color = diff >= 0 ? 'text-warning' : 'text-danger';
+      document.getElementById('calcDiffResultText').className = `${color} fs-6`;
+      document.getElementById('calcDiffResultText').innerText = `${sign}${diff.toLocaleString()} 다이아`;
     }
   };
 
+  // 기간 필터 버튼
   window.setFinFilterPeriod = function(type, elem) {
     document.querySelectorAll(".btn-period-pill").forEach(p => p.classList.remove("active"));
     if (elem) elem.classList.add("active");
@@ -328,14 +446,12 @@
     const endVal = document.getElementById("finEndDate").value;
 
     try {
-      // tx_type, category, amount, reason 실제 컬럼 전체 조회
       const logs = await apiRequest("guild_finances?select=*&order=id.desc");
       window.finHistoryData = logs || [];
 
       let totalDeposit = 0;
       let totalWithdraw = 0;
 
-      // 전체 누적 금고 잔액 계산
       window.finHistoryData.forEach(item => {
         const amt = Number(item.amount) || 0;
         const type = (item.tx_type || item.type || '');
@@ -346,12 +462,14 @@
         }
       });
 
-      const currentBalance = totalDeposit - totalWithdraw;
-      document.getElementById("vaultTotalBalanceText").innerText = `${currentBalance.toLocaleString()} 다이아`;
+      window.currentDbVaultBalance = totalDeposit - totalWithdraw;
+      document.getElementById("vaultTotalBalanceText").innerText = `${window.currentDbVaultBalance.toLocaleString()} 다이아`;
       document.getElementById("vaultTotalDepositText").innerText = `+${totalDeposit.toLocaleString()}`;
       document.getElementById("vaultTotalWithdrawText").innerText = `-${totalWithdraw.toLocaleString()}`;
 
-      // 기간 필터링 적용
+      window.calcNetDiffAmount();
+
+      // 기간 필터링
       let filtered = window.finHistoryData;
       if (startVal || endVal) {
         filtered = filtered.filter(item => {
@@ -372,7 +490,7 @@
       });
       document.getElementById("periodNetProfitText").innerText = `${(pIn - pOut).toLocaleString()} 다이아`;
 
-      // 목록 렌더링
+      // 목록 출력
       if (filtered.length === 0) {
         container.innerHTML = '<div class="text-secondary small text-center py-3">해당 기간의 금고 내역이 없습니다.</div>';
         return;
@@ -412,47 +530,81 @@
     }
   };
 
-  // 🎯 수동 입출금 등록
-  window.submitManualFinance = async function() {
+  // 🎯 금고 반영 처리 (총액 입력 시 자동 차액 계산 입금)
+  window.submitFinanceRecord = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       return window.showFinToast("금고 입출금 등록은 관리자 권한이 필요합니다.", "⚠️");
     }
 
-    const amount = parseInt(document.getElementById("finAmountInput").value) || 0;
-    const category = document.getElementById("finCategorySelect").value;
-    const reason = (document.getElementById("finReasonInput").value || "").trim();
+    const inputVal = parseInt(document.getElementById("finAmountInput").value) || 0;
+    const reasonText = (document.getElementById("finReasonInput").value || "").trim();
+    const memoText = (document.getElementById("finMemoInput").value || "").trim();
+    const txDate = document.getElementById("finTxDate").value;
 
-    if (!amount || amount <= 0) return window.showFinToast("금액을 정확히 입력해주세요.", "⚠️");
-    if (!reason) return window.showFinToast("사유(적요)를 입력해주세요.", "⚠️");
+    let finalAmount = 0;
+    let typeStr = '';
+    let category = '';
+
+    if (window.currentFinMainMode === 'deposit') {
+      typeStr = '입금';
+      category = '수익금입금';
+
+      if (window.currentDepositMethod === 'total') {
+        // [총액 입력 방식]: 입력 총액 - 직전 잔액 = 차액
+        finalAmount = inputVal - window.currentDbVaultBalance;
+        if (finalAmount <= 0) {
+          return window.showFinToast("입력 총액이 직전 잔액보다 커야 입금할 차액이 발생합니다.", "⚠️");
+        }
+      } else {
+        // [직접 입력 방식]
+        finalAmount = inputVal;
+        if (finalAmount <= 0) {
+          return window.showFinToast("입금할 금액을 입력해주세요.", "⚠️");
+        }
+      }
+    } else {
+      // [지출 모드]
+      typeStr = '출금';
+      category = '길드지출';
+      finalAmount = inputVal;
+      if (finalAmount <= 0) {
+        return window.showFinToast("지출할 금액을 입력해주세요.", "⚠️");
+      }
+    }
+
+    // 사유(reason) 구성 (비고/전달자 결합)
+    let fullReason = reasonText || (typeStr === '입금' ? '길드 수익금 입금' : '길드 운영비 지출');
+    if (memoText) {
+      fullReason += ` (${memoText})`;
+    }
 
     const submitBtn = document.getElementById("btnSubmitFinAction");
     submitBtn.disabled = true;
 
     try {
-      const typeStr = (window.currentFinMode === 'deposit') ? '입금' : '출금';
-
-      // tx_type, category, amount, reason 전달
+      // DB 실제 컬럼인 tx_type, category, amount, reason 전송
       await apiRequest("guild_finances", "POST", [{
         tx_type: typeStr,
         category: category,
-        amount: amount,
-        reason: reason
+        amount: finalAmount,
+        reason: fullReason
       }]);
 
-      window.showFinToast(`금고에 ${typeStr} 처리가 완료되었습니다!`, "🎉");
+      window.showFinToast(`${typeStr} ${finalAmount.toLocaleString()} 다이아가 금고에 반영되었습니다!`, "🎉");
       document.getElementById("finAmountInput").value = '';
       document.getElementById("finReasonInput").value = '';
+      document.getElementById("finMemoInput").value = '';
 
       submitBtn.disabled = false;
       await window.loadFinanceLogs();
     } catch (err) {
       submitBtn.disabled = false;
-      window.showFinToast("등록 실패: " + err.message, "❌");
+      window.showFinToast("반영 실패: " + err.message, "❌");
     }
   };
 
-  // 🎯 금고 현황 카카오톡 복사
+  // 🎯 카톡 복사
   window.copyFinancesToKakao = function() {
     const balance = document.getElementById("vaultTotalBalanceText").innerText;
     const dep = document.getElementById("vaultTotalDepositText").innerText;
@@ -473,8 +625,9 @@
     }
   };
 
-  // 🎯 모듈 초기 실행
+  // 초기 실행
   (function initFinanceModule() {
+    setTodayDateInput();
     window.loadFinanceLogs();
   })();
 </script>
