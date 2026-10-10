@@ -429,7 +429,7 @@
     } catch (e) {}
   }
 
-  // 🎯 낙찰 등록 & 분배 실행 (DB 실존 필수 컬럼만 정밀 전송: distribution_pool 완전 배제)
+  // 🎯 낙찰 등록 & 분배 실행 (winner_name, reason, tx_type 모든 DB 컬럼 완벽 호환)
   async function executeWishDistributionProcess() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
@@ -463,33 +463,45 @@
     const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / currentSelectedItem.memberCount) : 0;
 
     try {
-      // 🎯 [핵심]: DB에 실제 존재하는 정밀 컬럼만 전달 (distribution_pool, apply_tax, net_price 등 제외)
+      // 1. item_distributions: winner_name과 member_name 둘 다 전송
       await apiRequest("item_distributions", "POST", [{
         item_key: currentSelectedItem.itemKey,
         boss_name: currentSelectedItem.bossName,
         item_name: currentSelectedItem.itemName,
+        winner_name: memberName,
         member_name: memberName,
         price: price,
         per_share: perShare,
         members: currentSelectedItem.members
       }]);
 
-      // guild_finances 금고 입출금 반영
+      // 2. guild_finances: reason, tx_type, type, category 등 모든 스키마 호환 전송
+      const depositReason = `[${currentSelectedItem.bossName}] ${currentSelectedItem.itemName} 낙찰 (${memberName})`;
+      const withdrawReason = `[${currentSelectedItem.itemName}] ${currentSelectedItem.memberCount}명 N/1 분배금 지급`;
+
       const financeLogs = [];
       financeLogs.push({
+        tx_type: '입금',
         type: '입금',
         category: '경매낙찰',
         amount: netAuctionPrice,
-        memo: `[${currentSelectedItem.bossName}] ${currentSelectedItem.itemName} 낙찰 (${memberName})`
+        reason: depositReason,
+        memo: depositReason,
+        description: depositReason
       });
+
       if (distributionPool > 0) {
         financeLogs.push({
+          tx_type: '출금',
           type: '출금',
           category: 'N/1분배',
           amount: distributionPool,
-          memo: `[${currentSelectedItem.itemName}] ${currentSelectedItem.memberCount}명 분배금 지급`
+          reason: withdrawReason,
+          memo: withdrawReason,
+          description: withdrawReason
         });
       }
+
       await apiRequest("guild_finances", "POST", financeLogs);
 
       btn.disabled = false;
@@ -533,28 +545,31 @@
         return;
       }
 
-      container.innerHTML = history.map(item => `
-        <div class="dist-history-row">
-          <div class="dist-history-left">
-            <div class="fw-bold text-white small text-truncate">📦 ${item.item_name}</div>
-            <div class="text-secondary text-truncate" style="font-size: 0.72rem;">
-              ${item.boss_name} • 1인당 ${Number(item.per_share).toLocaleString()} 다이아
+      container.innerHTML = history.map(item => {
+        const winner = item.winner_name || item.member_name || '-';
+        return `
+          <div class="dist-history-row">
+            <div class="dist-history-left">
+              <div class="fw-bold text-white small text-truncate">📦 ${item.item_name}</div>
+              <div class="text-secondary text-truncate" style="font-size: 0.72rem;">
+                ${item.boss_name} • 1인당 ${Number(item.per_share).toLocaleString()} 다이아
+              </div>
+            </div>
+            <div class="dist-history-right">
+              <span class="fw-bold text-info" style="font-size: 0.84rem;">${winner}</span>
+              <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-size: 0.72rem;">
+                ${Number(item.price).toLocaleString()} 다이아
+              </span>
             </div>
           </div>
-          <div class="dist-history-right">
-            <span class="fw-bold text-info" style="font-size: 0.84rem;">${item.member_name}</span>
-            <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-size: 0.72rem;">
-              ${Number(item.price).toLocaleString()} 다이아
-            </span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     } catch (e) {
       container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
     }
   }
 
-  // 버튼 이벤트 연결
+  // 버튼 이벤트 리스너 바인딩
   const submitActionBtn = document.getElementById('btnDistSubmitAction');
   if (submitActionBtn) {
     submitActionBtn.onclick = executeWishDistributionProcess;
