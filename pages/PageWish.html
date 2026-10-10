@@ -1,0 +1,569 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 아이템 분배 및 N/1 정산 모듈
+     경로: pages/PageWish.html
+     ========================================== -->
+<style>
+  .wish-card {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .wish-section-box {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .input-custom-wish {
+    background-color: #080d1a !important;
+    border: 1px solid #233554 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    color-scheme: dark;
+  }
+
+  .tax-toggle-btn {
+    background: #111a2e;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .tax-toggle-btn.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+  }
+
+  .stock-item-card {
+    background: #10192d;
+    border: 1px solid #1f2e4d;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .stock-item-card:hover { border-color: #38bdf8; background: #14223d; }
+  .stock-item-card.selected {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  }
+
+  .btn-wish-submit {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-wish-submit:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+  }
+
+  .dist-history-row {
+    background: #090e1c;
+    border: 1px solid #1b263b;
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .dist-history-left { min-width: 0; flex: 1; }
+  .dist-history-right { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+  /* 커스텀 토스트 알림 */
+  .custom-wish-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0d1830;
+    border: 1.5px solid #38bdf8;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(56, 189, 248, 0.35);
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 99999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+  }
+  .custom-wish-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* 커스텀 완료 안내 모달 */
+  .wish-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(6, 10, 20, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .wish-modal-box {
+    background: #0d1527;
+    border: 1.5px solid #38bdf8;
+    border-radius: 20px;
+    width: 100%; max-width: 340px;
+    padding: 22px 18px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(56, 189, 248, 0.25);
+    text-align: center;
+  }
+</style>
+
+<div class="wish-card mb-4">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <span style="font-size: 1.3rem;">🎁</span>
+    <h6 class="fw-bold mb-0 text-white">아이템 분배 및 N/1 정산</h6>
+  </div>
+
+  <!-- 1. 보유 대기 아이템 -->
+  <div class="wish-section-box">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="small fw-bold text-secondary">📦 분배 대기 아이템 (터치하여 선택)</span>
+      <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.72rem;" onclick="loadStockItems()">
+        <i class="fa-solid fa-arrows-rotate me-1"></i>새로고침
+      </button>
+    </div>
+    <div id="stockItemContainer" style="max-height: 200px; overflow-y: auto;">
+      <div class="text-secondary small text-center py-3">보유 아이템을 불러오는 중...</div>
+    </div>
+  </div>
+
+  <!-- 2. 낙찰 및 지원금 설정 -->
+  <div class="wish-section-box">
+    <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-gavel me-1 text-info"></i> 낙찰 등록 & N/1 분배</div>
+
+    <div class="p-2 mb-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;" id="selectedSummaryBox">
+      <div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>
+    </div>
+
+    <!-- 게임 시스템 경매 세율 (5%) 포함/제외 토글 버튼 -->
+    <div class="mb-2 p-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <label class="form-label small text-secondary mb-0">⚖️ 게임 시스템 경매 수수료 (5%)</label>
+        <span class="text-info small" style="font-size: 0.72rem;" id="taxStatusText">세율 5% 자동 차감 적용</span>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="tax-toggle-btn active flex-fill" id="btnTaxDeduct" onclick="setAuctionTaxMode(true)">
+          <i class="fa-solid fa-percent me-1"></i>세율 5% 차감 (기본)
+        </button>
+        <button type="button" class="tax-toggle-btn flex-fill" id="btnTaxNone" onclick="setAuctionTaxMode(false)">
+          <i class="fa-solid fa-ban me-1"></i>세율 미적용 (0%)
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">가져간 길드원</label>
+        <select id="wishMemberSelect" class="form-select input-custom-wish">
+          <option value="">길드원 선택...</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">낙찰 금액 (다이아)</label>
+        <input type="number" id="wishPrice" class="form-control input-custom-wish" placeholder="예: 10000" onkeyup="calculateNShare()">
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">🏛️ 길드비용 적립 비율</label>
+        <select id="guildFeeSelect" class="form-select input-custom-wish" onchange="calculateNShare()">
+          <option value="10" selected>10% 적립</option>
+          <option value="5">5% 적립</option>
+          <option value="15">15% 적립</option>
+          <option value="20">20% 적립</option>
+          <option value="0">0% (전액 분배)</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">➕ 길드자금 추가지원 (선택)</label>
+        <input type="number" id="wishExtraFund" class="form-control input-custom-wish" placeholder="예: 2000" onkeyup="calculateNShare()">
+      </div>
+    </div>
+
+    <div id="shareCalcNotice" class="p-2 rounded mb-3" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); display: none;">
+      <div class="small text-secondary d-flex justify-content-between">
+        <span>게임 경매 수수료 (5%):</span>
+        <strong id="gameTaxText" class="text-danger">-0 다이아</strong>
+      </div>
+      <div class="small text-secondary d-flex justify-content-between mt-1">
+        <span>길드 금고 실입금액 (세후):</span>
+        <strong id="vaultNetIncomeText" class="text-white">0 다이아</strong>
+      </div>
+      <div class="small text-secondary d-flex justify-content-between mt-1">
+        <span>길드 금고 순적립액:</span>
+        <strong id="guildFeeText" class="text-warning">0 다이아</strong>
+      </div>
+      <div class="small text-secondary d-flex justify-content-between mt-1">
+        <span>길드 자금 추가 지원금:</span>
+        <strong id="guildExtraText" class="text-success">+0 다이아</strong>
+      </div>
+      <div class="small text-secondary d-flex justify-content-between mt-1 pt-1 border-top border-secondary border-opacity-25">
+        <span>참여자 1인당 N/1 최종 배당금:</span>
+        <strong id="perShareText" class="text-info fs-6">0 다이아</strong>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-wish-submit w-100" id="btnDistSubmitAction">
+      <i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영
+    </button>
+  </div>
+
+  <!-- 3. 최근 분배 이력 -->
+  <div class="wish-section-box mb-0">
+    <div class="small fw-bold text-secondary mb-2">📜 최근 분배 이력</div>
+    <div id="distHistoryList" style="max-height: 200px; overflow-y: auto;">
+      <div class="text-secondary small text-center py-2">기록을 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- 플로팅 토스트 -->
+<div id="wishToastBox" class="custom-wish-toast">
+  <span id="wishToastIcon" style="font-size: 1.1rem;">✅</span>
+  <span id="wishToastMsg">알림</span>
+</div>
+
+<!-- 낙찰 완료 커스텀 결과 모달 -->
+<div id="wishSuccessModal" class="wish-modal-backdrop" style="display: none;">
+  <div class="wish-modal-box">
+    <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 2px solid #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 14px;">
+      🎉
+    </div>
+    <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;">낙찰 및 N/1 분배 완료</h6>
+    <div class="text-secondary small mb-4 text-start p-2 rounded" id="wishSuccessDetails" style="background:#080d1a; border:1px solid #1e2c47; font-size:0.78rem; line-height:1.6;">
+    </div>
+    <button type="button" class="btn w-100 fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.9rem; border-radius: 10px;" onclick="closeWishSuccessModal()">
+      확인
+    </button>
+  </div>
+</div>
+
+<script>
+  var availableItemsData = [];
+  var currentSelectedItem = null;
+  var isAuctionTaxApplied = true;
+  var wishToastTimer = null;
+
+  function showWishToast(message, icon = "✅") {
+    const toast = document.getElementById("wishToastBox");
+    const msg = document.getElementById("wishToastMsg");
+    const ic = document.getElementById("wishToastIcon");
+    if (!toast) return;
+
+    msg.innerText = message;
+    ic.innerText = icon;
+    toast.classList.add("show");
+
+    if (wishToastTimer) clearTimeout(wishToastTimer);
+    wishToastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 2400);
+  }
+
+  function closeWishSuccessModal() {
+    document.getElementById("wishSuccessModal").style.display = "none";
+  }
+
+  function setAuctionTaxMode(isApplied) {
+    isAuctionTaxApplied = isApplied;
+    const btnDeduct = document.getElementById('btnTaxDeduct');
+    const btnNone = document.getElementById('btnTaxNone');
+    const statusText = document.getElementById('taxStatusText');
+
+    if (isApplied) {
+      btnDeduct.classList.add('active');
+      btnNone.classList.remove('active');
+      statusText.innerText = "세율 5% 자동 차감 적용";
+      statusText.className = "text-info small";
+    } else {
+      btnDeduct.classList.remove('active');
+      btnNone.classList.add('active');
+      statusText.innerText = "세율 미적용 (100% 기준)";
+      statusText.className = "text-secondary small";
+    }
+    calculateNShare();
+  }
+
+  async function loadStockItems() {
+    const container = document.getElementById('stockItemContainer');
+    container.innerHTML = '<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-1"></i>보유 아이템 불러오는 중...</div>';
+
+    try {
+      const settled = await apiRequest("item_distributions?select=item_key");
+      const settledKeys = new Set((settled || []).map(s => s.item_key));
+
+      const raids = await apiRequest("boss_participations?select=*&order=id.desc");
+      availableItemsData = [];
+
+      (raids || []).forEach(r => {
+        if (!r.drop_items || r.drop_items === '없음') return;
+        
+        const items = r.drop_items.split(',').map(s => s.trim()).filter(Boolean);
+        items.forEach((itemName, idx) => {
+          const itemKey = `${r.id}_${idx}_${itemName}`;
+          if (!settledKeys.has(itemKey)) {
+            availableItemsData.push({
+              itemKey: itemKey,
+              raidId: r.id,
+              bossName: r.boss_name,
+              itemName: itemName,
+              members: Array.isArray(r.members) ? r.members : [],
+              memberCount: (Array.isArray(r.members) ? r.members.length : 0),
+              dateTime: r.raid_time ? r.raid_time.slice(0, 10) : ''
+            });
+          }
+        });
+      });
+
+      renderStockItems(availableItemsData);
+    } catch (err) {
+      container.innerHTML = `<div class="text-danger small text-center py-2">조회 실패: ${err.message}</div>`;
+    }
+  }
+
+  function renderStockItems(items) {
+    const container = document.getElementById('stockItemContainer');
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-2">현재 분배할 미정산 아이템이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = items.map((item, idx) => `
+      <div class="stock-item-card" onclick="selectItem(${idx}, this)">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-white fs-6">📦 ${item.itemName}</span>
+          <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
+            ⚔️ ${item.bossName} • ${item.memberCount}명 참여
+          </span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function selectItem(idx, elem) {
+    document.querySelectorAll('.stock-item-card').forEach(c => c.classList.remove('selected'));
+    elem.classList.add('selected');
+    currentSelectedItem = availableItemsData[idx];
+
+    document.getElementById('selectedSummaryBox').innerHTML = `
+      <div class="d-flex justify-content-between align-items-center">
+        <strong class="text-white">${currentSelectedItem.itemName}</strong>
+        <span class="text-info small">[${currentSelectedItem.bossName}]</span>
+      </div>
+      <div class="text-secondary small mt-1" style="font-size: 0.75rem;">
+        <strong>N/1 대상자(${currentSelectedItem.memberCount}명):</strong> ${currentSelectedItem.members.join(', ')}
+      </div>
+    `;
+    calculateNShare();
+  }
+
+  function calculateNShare() {
+    if (!currentSelectedItem) return;
+    const priceVal = parseInt(document.getElementById('wishPrice').value) || 0;
+    const feeRate = parseInt(document.getElementById('guildFeeSelect').value) || 0;
+    const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
+    const notice = document.getElementById('shareCalcNotice');
+    
+    if (priceVal > 0 || extraFund > 0) {
+      const gameTax = isAuctionTaxApplied ? Math.floor(priceVal * 0.05) : 0;
+      const netAuctionPrice = priceVal - gameTax;
+      const guildFee = Math.floor(netAuctionPrice * (feeRate / 100));
+      const pool = (netAuctionPrice - guildFee) + extraFund;
+      const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(pool / currentSelectedItem.memberCount) : 0;
+
+      document.getElementById('gameTaxText').innerText = isAuctionTaxApplied ? `-${gameTax.toLocaleString()} 다이아 (5%)` : '0 다이아 (미적용)';
+      document.getElementById('vaultNetIncomeText').innerText = `${netAuctionPrice.toLocaleString()} 다이아`;
+      document.getElementById('guildFeeText').innerText = `${guildFee.toLocaleString()} 다이아 (${feeRate}%)`;
+      document.getElementById('guildExtraText').innerText = `+${extraFund.toLocaleString()} 다이아`;
+      document.getElementById('perShareText').innerText = `${perShare.toLocaleString()} 다이아 (총 ${currentSelectedItem.memberCount}명)`;
+      notice.style.display = 'block';
+    } else {
+      notice.style.display = 'none';
+    }
+  }
+
+  async function loadMemberListForWish() {
+    try {
+      const list = await apiRequest("guild_members?select=name&order=name.asc");
+      const select = document.getElementById('wishMemberSelect');
+      select.innerHTML = '<option value="">길드원 선택...</option>';
+      if (list && list.length > 0) {
+        list.forEach(m => select.innerHTML += `<option value="${m.name}">${m.name}</option>`);
+      }
+    } catch (e) {}
+  }
+
+  // 🎯 낙찰 등록 & 분배 실행 (DB 실존 필수 컬럼만 정밀 전송: distribution_pool 완전 배제)
+  async function executeWishDistributionProcess() {
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    if (!isSuper) {
+      try {
+        const permRow = await apiRequest("guild_settings?key=eq.perm_wish_distribute");
+        const permVal = (permRow && permRow.length > 0) ? permRow[0].value : 'true';
+        if (permVal === 'false') {
+          return showWishToast("분배희망신청 권한이 비활성화되어 있습니다.", "⚠️");
+        }
+      } catch (e) {}
+    }
+
+    if (!currentSelectedItem) return showWishToast("분배할 아이템을 먼저 선택해주세요!", "⚠️");
+
+    const memberName = document.getElementById('wishMemberSelect').value;
+    const price = parseInt(document.getElementById('wishPrice').value) || 0;
+    const feeRate = parseInt(document.getElementById('guildFeeSelect').value) || 0;
+    const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
+
+    if (!memberName) return showWishToast("낙찰받은 길드원을 선택해주세요!", "⚠️");
+    if (!price) return showWishToast("낙찰 금액을 입력해주세요!", "⚠️");
+
+    const btn = document.getElementById('btnDistSubmitAction');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>반영 중...';
+
+    const gameTax = isAuctionTaxApplied ? Math.floor(price * 0.05) : 0;
+    const netAuctionPrice = price - gameTax;
+    const guildFeeAmount = Math.floor(netAuctionPrice * (feeRate / 100));
+    const distributionPool = (netAuctionPrice - guildFeeAmount) + extraFund;
+    const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / currentSelectedItem.memberCount) : 0;
+
+    try {
+      // 🎯 [핵심]: DB에 실제 존재하는 정밀 컬럼만 전달 (distribution_pool, apply_tax, net_price 등 제외)
+      await apiRequest("item_distributions", "POST", [{
+        item_key: currentSelectedItem.itemKey,
+        boss_name: currentSelectedItem.bossName,
+        item_name: currentSelectedItem.itemName,
+        member_name: memberName,
+        price: price,
+        per_share: perShare,
+        members: currentSelectedItem.members
+      }]);
+
+      // guild_finances 금고 입출금 반영
+      const financeLogs = [];
+      financeLogs.push({
+        type: '입금',
+        category: '경매낙찰',
+        amount: netAuctionPrice,
+        memo: `[${currentSelectedItem.bossName}] ${currentSelectedItem.itemName} 낙찰 (${memberName})`
+      });
+      if (distributionPool > 0) {
+        financeLogs.push({
+          type: '출금',
+          category: 'N/1분배',
+          amount: distributionPool,
+          memo: `[${currentSelectedItem.itemName}] ${currentSelectedItem.memberCount}명 분배금 지급`
+        });
+      }
+      await apiRequest("guild_finances", "POST", financeLogs);
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
+
+      // 커스텀 다크 모달 안내창
+      const detailHtml = `
+        <div>• <strong>아이템:</strong> [${currentSelectedItem.bossName}] ${currentSelectedItem.itemName}</div>
+        <div>• <strong>낙찰자:</strong> ${memberName}</div>
+        <div>• <strong>금고 실입금(세후):</strong> +${netAuctionPrice.toLocaleString()} 다이아</div>
+        <div>• <strong>참여자 총분배:</strong> -${distributionPool.toLocaleString()} 다이아</div>
+        ${guildFeeAmount > 0 ? `<div>• <strong>길드금고 순적립:</strong> +${guildFeeAmount.toLocaleString()} 다이아</div>` : ''}
+        <div class="mt-1 pt-1 border-top border-secondary border-opacity-25 text-info fw-bold">
+          👉 참여자(${currentSelectedItem.memberCount}명) 1인당: ${perShare.toLocaleString()} 다이아
+        </div>
+      `;
+      document.getElementById('wishSuccessDetails').innerHTML = detailHtml;
+      document.getElementById('wishSuccessModal').style.display = 'flex';
+
+      currentSelectedItem = null;
+      document.getElementById('selectedSummaryBox').innerHTML = '<div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>';
+      document.getElementById('wishPrice').value = '';
+      document.getElementById('wishExtraFund').value = '';
+      document.getElementById('shareCalcNotice').style.display = 'none';
+
+      await loadStockItems();
+      await loadDistHistory();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
+      showWishToast("분배 실패: " + err.message, "❌");
+    }
+  }
+
+  async function loadDistHistory() {
+    const container = document.getElementById('distHistoryList');
+    try {
+      const history = await apiRequest("item_distributions?select=*&order=id.desc&limit=20");
+      if (!history || history.length === 0) {
+        container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = history.map(item => `
+        <div class="dist-history-row">
+          <div class="dist-history-left">
+            <div class="fw-bold text-white small text-truncate">📦 ${item.item_name}</div>
+            <div class="text-secondary text-truncate" style="font-size: 0.72rem;">
+              ${item.boss_name} • 1인당 ${Number(item.per_share).toLocaleString()} 다이아
+            </div>
+          </div>
+          <div class="dist-history-right">
+            <span class="fw-bold text-info" style="font-size: 0.84rem;">${item.member_name}</span>
+            <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-size: 0.72rem;">
+              ${Number(item.price).toLocaleString()} 다이아
+            </span>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
+    }
+  }
+
+  // 버튼 이벤트 연결
+  const submitActionBtn = document.getElementById('btnDistSubmitAction');
+  if (submitActionBtn) {
+    submitActionBtn.onclick = executeWishDistributionProcess;
+  }
+  window.handleDistributionSubmitClick = executeWishDistributionProcess;
+
+  (async function initWishPageModule() {
+    await loadStockItems();
+    await loadMemberListForWish();
+    await loadDistHistory();
+  })();
+</script>

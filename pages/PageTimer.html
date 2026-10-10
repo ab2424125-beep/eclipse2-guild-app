@@ -1,0 +1,359 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 보스타임 & 리젠 현황 모듈
+     경로: pages/PageTimer.html
+     ========================================== -->
+<style>
+  .timer-card {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .boss-timer-item {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+  }
+  .boss-timer-item:hover {
+    border-color: #38bdf8;
+    background: #111d35;
+  }
+
+  /* 카운트다운 뱃지 */
+  .badge-countdown {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .badge-spawned {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    color: #f87171;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    animation: pulseAnim 1.4s infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes pulseAnim {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* 보스 유형 뱃지 */
+  .badge-type-fixed {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid #a855f7;
+    color: #c084fc;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .badge-type-cool {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  .btn-cut-action {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(225, 29, 72, 0.35);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .btn-cut-action:hover {
+    color: #fff;
+    transform: translateY(-1px);
+  }
+</style>
+
+<div class="timer-card mb-4">
+  <!-- 상단 헤더 & 카톡 복사/새로고침 -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size: 1.3rem;">⏰</span>
+      <h6 class="fw-bold mb-0 text-white">보스타임 & 리젠 현황</h6>
+    </div>
+    <div class="d-flex gap-1">
+      <button class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size: 0.74rem;" onclick="copyTimersForKakao()">
+        <i class="fa-solid fa-comment me-1"></i>카톡 복사
+      </button>
+      <button class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.74rem;" onclick="loadBossTimers()">
+        <i class="fa-solid fa-arrows-rotate"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="p-2 mb-3 rounded" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+    <div class="text-secondary small" style="font-size: 0.74rem;">
+      💡 <strong>쿨타임 보스</strong>는 [지금 컷] 시 다음 젠이 자동 계산되며, 카카오톡 메신저 봇 및 단톡방과 실시간 동기화됩니다.
+    </div>
+  </div>
+
+  <!-- 보스 타이머 리스트 -->
+  <div id="bossTimerListContainer" style="max-height: 520px; overflow-y: auto;">
+    <div class="text-secondary small text-center py-4">보스타임을 불러오는 중...</div>
+  </div>
+</div>
+
+<script>
+  var bossTimerList = [];
+  var timerInterval = null;
+
+  (async function initBossTimerPage() {
+    await loadBossTimers();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateCountdowns, 1000);
+  })();
+
+  // 1. 보스 목록 및 스케줄 불러오기 (Supabase)
+  async function loadBossTimers() {
+    const container = document.getElementById('bossTimerListContainer');
+    if (!container) return;
+
+    try {
+      const data = await apiRequest("boss_timers?select=*&order=id.asc");
+      bossTimerList = data || [];
+
+      // 요일/시간 고정 젠 보스 다음 젠 일시 계산
+      const now = new Date();
+      bossTimerList.forEach(b => {
+        if (b.is_fixed && b.fixed_schedule) {
+          b.next_spawn_time = calculateNextDayFixedSpawn(b.fixed_schedule, now);
+        }
+      });
+
+      renderBossTimers();
+    } catch (err) {
+      container.innerHTML = `<div class="text-danger small text-center py-3">조회 실패: ${err.message}</div>`;
+    }
+  }
+
+  // 요일별/매일 고정 젠 스케줄 계산기 (예: "금 18:30", "매일 18:30", "일 22:00")
+  function calculateNextDayFixedSpawn(schedStr, now) {
+    if (!schedStr) return null;
+    const parts = schedStr.trim().split(' ');
+    if (parts.length < 2) return null;
+
+    const dayName = parts[0]; // 매일, 월, 화, 수, 목, 금, 토, 일
+    const [h, m] = parts[1].split(':').map(Number);
+
+    const dayMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
+
+    if (dayName === '매일') {
+      const cand = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+      if (cand > now) return cand.toISOString();
+      const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, m, 0);
+      return nextDay.toISOString();
+    } else if (dayMap[dayName] !== undefined) {
+      const targetDay = dayMap[dayName];
+      const currentDay = now.getDay();
+      let dayDiff = (targetDay - currentDay + 7) % 7;
+
+      let cand = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayDiff, h, m, 0);
+      if (dayDiff === 0 && cand <= now) {
+        cand = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, h, m, 0);
+      }
+      return cand.toISOString();
+    }
+
+    return null;
+  }
+
+  // 2. 화면 렌더링
+  function renderBossTimers() {
+    const container = document.getElementById('bossTimerListContainer');
+    if (!container) return;
+
+    if (bossTimerList.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-4">등록된 보스 목록이 없습니다. Supabase boss_timers 테이블을 확인해주세요.</div>';
+      return;
+    }
+
+    // 다음 젠 시간 순으로 정렬
+    bossTimerList.sort((a, b) => {
+      const tA = a.next_spawn_time ? new Date(a.next_spawn_time).getTime() : 9999999999999;
+      const tB = b.next_spawn_time ? new Date(b.next_spawn_time).getTime() : 9999999999999;
+      return tA - tB;
+    });
+
+    container.innerHTML = bossTimerList.map(b => {
+      let typeBadge = '';
+      let actionArea = '';
+      let infoLine = '';
+
+      if (b.is_fixed) {
+        typeBadge = `<span class="badge-type-fixed">🏛️ 고정 젠</span>`;
+        actionArea = `<span class="badge bg-dark text-secondary border border-secondary border-opacity-25" style="font-size: 0.72rem; padding: 5px 8px;">자동 예약</span>`;
+        infoLine = `<span>스케줄: <strong class="text-white">${b.fixed_schedule}</strong></span>`;
+      } else {
+        const cycleHours = Math.floor(b.cycle_min / 60);
+        const cycleMins = b.cycle_min % 60;
+        const cycleStr = (cycleHours > 0 ? cycleHours + '시간 ' : '') + (cycleMins > 0 ? cycleMins + '분' : '');
+
+        typeBadge = `<span class="badge-type-cool">⚔️ 쿨타임 ${cycleStr}</span>`;
+        actionArea = `
+          <button type="button" class="btn btn-cut-action" onclick="recordCut(${b.id}, '${b.boss_name}', ${b.cycle_min})">
+            <i class="fa-solid fa-skull me-1"></i>지금 컷
+          </button>
+        `;
+
+        const lastCutStr = b.last_cut_time ? formatDisplayTime(b.last_cut_time) : '기록 없음';
+        infoLine = `<span>최근 컷: <strong>${lastCutStr}</strong></span>`;
+      }
+
+      const nextGenStr = b.next_spawn_time ? formatDisplayTime(b.next_spawn_time) : '-';
+
+      return `
+        <div class="boss-timer-item">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <span class="fw-bold text-white fs-6">${b.boss_name}</span>
+              <span class="ms-2">${typeBadge}</span>
+            </div>
+            <div>${actionArea}</div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+            <div class="text-secondary small" style="font-size: 0.74rem;">
+              ${infoLine}<br>
+              <span>다음 젠: <strong class="text-info">${nextGenStr}</strong></span>
+            </div>
+            <div id="countdown-${b.id}">
+              <span class="text-secondary small">계산 중...</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    updateCountdowns();
+  }
+
+  function formatDisplayTime(isoStr) {
+    if (!isoStr) return '-';
+    const d = new Date(isoStr);
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const pad = n => (n < 10 ? '0' + n : n);
+    return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}(${dayNames[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  // 3. 실시간 초단위 카운트다운
+  function updateCountdowns() {
+    const now = Date.now();
+
+    bossTimerList.forEach(b => {
+      const cdElem = document.getElementById(`countdown-${b.id}`);
+      if (!cdElem) return;
+
+      if (!b.next_spawn_time) {
+        cdElem.innerHTML = `<span class="text-secondary small" style="font-size: 0.74rem;">컷 대기</span>`;
+        return;
+      }
+
+      const spawnTime = new Date(b.next_spawn_time).getTime();
+      const diffSec = Math.floor((spawnTime - now) / 1000);
+
+      if (diffSec <= 0) {
+        const passedMin = Math.floor(Math.abs(diffSec) / 60);
+        cdElem.innerHTML = `<span class="badge-spawned">🚨 젠 됨 (+${passedMin}분)</span>`;
+      } else {
+        const hours = Math.floor(diffSec / 3600);
+        const mins = Math.floor((diffSec % 3600) / 60);
+        const secs = diffSec % 60;
+        const timeStr = `${hours > 0 ? hours + '시간 ' : ''}${mins}분 ${secs}초`;
+        cdElem.innerHTML = `<span class="badge-countdown">⏳ ${timeStr} 남음</span>`;
+      }
+    });
+  }
+
+  // 4. [지금 컷] 실행 -> Supabase 동기화 (메신저 봇이 즉시 읽을 수 있음)
+  async function recordCut(id, bossName, cycleMin) {
+    if (!confirm(`[${bossName}] 컷 시간을 현재 시각으로 갱신하시겠습니까?`)) return;
+
+    const cutTime = new Date();
+    const nextSpawn = new Date(cutTime.getTime() + (cycleMin * 60 * 1000));
+
+    try {
+      await apiRequest(`boss_timers?id=eq.${id}`, "PATCH", {
+        last_cut_time: cutTime.toISOString(),
+        next_spawn_time: nextSpawn.toISOString()
+      });
+
+      await loadBossTimers();
+    } catch (err) {
+      alert("컷 등록 실패: " + err.message);
+    }
+  }
+
+  // 5. 카카오톡 단톡방 공유 양식 복사
+  function copyTimersForKakao() {
+    if (bossTimerList.length === 0) return alert("공유할 보스타임 데이터가 없습니다.");
+
+    const now = Date.now();
+    const lines = bossTimerList.map(b => {
+      if (!b.next_spawn_time) {
+        return `• ${b.boss_name}: 컷 대기`;
+      }
+
+      const d = new Date(b.next_spawn_time);
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const pad = n => (n < 10 ? '0' + n : n);
+      const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}(${dayNames[d.getDay()]})`;
+      const diffSec = Math.floor((d.getTime() - now) / 1000);
+
+      let status = '';
+      if (diffSec <= 0) {
+        const passedMin = Math.floor(Math.abs(diffSec) / 60);
+        status = `[🚨 젠 됨 (+${passedMin}분)]`;
+      } else {
+        const h = Math.floor(diffSec / 3600);
+        const m = Math.floor((diffSec % 3600) / 60);
+        status = `[⏳ ${h > 0 ? h + '시간 ' : ''}${m}분 남음]`;
+      }
+
+      return `• ${b.boss_name} (${timeStr}) ${status}`;
+    });
+
+    const shareText = `[⏰ 이클립스 보스타임 & 리젠 현황]\n────────────────────\n${lines.join('\n')}\n────────────────────\n※ 카톡 봇 및 웹앱 실시간 연동 중`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert("✅ 보스타임 현황이 클립보드에 복사되었습니다!\n단톡방에 바로 붙여넣기(Ctrl+V)하세요.");
+      });
+    } else {
+      const t = document.createElement("textarea");
+      t.value = shareText;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+      alert("✅ 보스타임 현황이 클립보드에 복사되었습니다!\n단톡방에 바로 붙여넣기(Ctrl+V)하세요.");
+    }
+  }
+</script>

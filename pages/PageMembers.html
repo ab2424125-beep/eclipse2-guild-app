@@ -1,0 +1,628 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 길드원 관리 모듈
+     경로: pages/PageMembers.html
+     ========================================== -->
+<style>
+  .members-card {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .member-box-custom {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .input-custom-mem {
+    background-color: #080d1a !important;
+    border: 1px solid #233554 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    color-scheme: dark;
+  }
+  .input-custom-mem:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+  }
+  .input-custom-mem:disabled {
+    background-color: #050811 !important;
+    color: #64748b !important;
+    border-color: #172235 !important;
+  }
+
+  .member-item-row {
+    background: #090e1c;
+    border: 1px solid #1b263b;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.15s;
+  }
+  .member-item-row:hover {
+    border-color: #38bdf8;
+    background: #0e172a;
+  }
+
+  /* 직급 뱃지 공통 규격: 닉네임 수직 일자 정렬 */
+  .role-badge-base {
+    display: inline-block;
+    min-width: 58px;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 0;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .role-badge-master {
+    background: rgba(234, 179, 8, 0.18) !important;
+    border: 1px solid #eab308 !important;
+    color: #facc15 !important;
+  }
+  .role-badge-sub {
+    background: rgba(168, 85, 247, 0.18) !important;
+    border: 1px solid #a855f7 !important;
+    color: #c084fc !important;
+  }
+  .role-badge-elite {
+    background: rgba(56, 189, 248, 0.15) !important;
+    border: 1px solid #38bdf8 !important;
+    color: #38bdf8 !important;
+  }
+  .role-badge-normal {
+    background: rgba(148, 163, 184, 0.12) !important;
+    border: 1px solid #475569 !important;
+    color: #94a3b8 !important;
+  }
+
+  /* 클릭 가능한 닉네임 스타일 */
+  .member-clickable-name {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: -0.3px;
+    cursor: pointer;
+    transition: color 0.15s;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .member-clickable-name:hover {
+    color: #38bdf8;
+    text-decoration: underline;
+  }
+
+  /* 커스텀 모달 레이아웃 */
+  .modal-custom-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(6, 10, 20, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-custom-box {
+    background: #0d1527;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 360px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+  }
+
+  /* 모달 직급 선택 4개 탭 버튼 */
+  .role-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .btn-role-tab {
+    background: #080d1a;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 8px 2px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .btn-role-tab:hover {
+    border-color: #38bdf8;
+    color: #ffffff;
+  }
+  .btn-role-tab.active[data-role="일반"] {
+    background: rgba(148, 163, 184, 0.2);
+    border-color: #94a3b8;
+    color: #ffffff;
+  }
+  .btn-role-tab.active[data-role="정예"] {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+  }
+  .btn-role-tab.active[data-role="부길드장"] {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: #c084fc;
+    color: #c084fc;
+  }
+  .btn-role-tab.active[data-role="길드장"] {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: #facc15;
+    color: #facc15;
+  }
+</style>
+
+<div class="members-card mb-4">
+  <!-- 상단 헤더 -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size: 1.3rem;">👥</span>
+      <h6 class="fw-bold mb-0 text-white">길드원 관리</h6>
+    </div>
+    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem;" id="memCountBadge">
+      총 0명
+    </span>
+  </div>
+
+  <!-- 1. 신규 길드원 등록 폼 -->
+  <div class="member-box-custom" id="memberFormBox">
+    <div class="fw-bold text-info small mb-2">
+      <i class="fa-solid fa-user-plus me-1"></i>신규 길드원 등록
+    </div>
+    <div class="row g-2 mb-2">
+      <div class="col-7">
+        <input type="text" id="newMemberName" class="form-control input-custom-mem" placeholder="길드원 닉네임 입력">
+      </div>
+      <div class="col-5">
+        <select id="newMemberRole" class="form-select input-custom-mem">
+          <option value="일반" selected>일반</option>
+          <option value="정예">정예</option>
+          <option value="부길드장">부길드장</option>
+          <option value="길드장">길드장</option>
+        </select>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" id="btnAddMemberBtn" onclick="handleAddMemberClick()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none;">
+      <i class="fa-solid fa-plus me-1"></i> 길드원 등록하기
+    </button>
+  </div>
+
+  <!-- 2. 길드원 검색 -->
+  <div class="mb-2">
+    <input type="text" id="searchMemberInput" class="form-control input-custom-mem" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberList()">
+  </div>
+
+  <!-- 3. 길드원 목록 -->
+  <div id="memberListContainer" style="max-height: 480px; overflow-y: auto;">
+    <div class="text-secondary small text-center py-4">길드원 목록을 불러오는 중...</div>
+  </div>
+</div>
+
+<!-- 4. 길드원 정보 [수정] 모달 창 (관리자 전용) -->
+<div id="modalMemberEdit" class="modal-custom-backdrop" style="display: none;">
+  <div class="modal-custom-box">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+      <div class="d-flex align-items-center gap-2">
+        <span style="font-size: 1.1rem;">✏️</span>
+        <h6 class="fw-bold text-white m-0">길드원 정보 수정</h6>
+      </div>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="closeMemberEditModal()"></button>
+    </div>
+
+    <input type="hidden" id="editMemberId">
+    <input type="hidden" id="editMemberSelectedRole" value="일반">
+    
+    <div class="mb-3">
+      <label class="small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
+      <input type="text" id="editMemberName" class="form-control input-custom-mem" placeholder="닉네임 입력">
+    </div>
+
+    <div class="mb-3">
+      <label class="small text-secondary mb-1" style="font-size: 0.74rem;">직급 선택</label>
+      <div class="role-selector-grid">
+        <div class="btn-role-tab" data-role="일반" onclick="selectRoleTab('일반')">일반</div>
+        <div class="btn-role-tab" data-role="정예" onclick="selectRoleTab('정예')">정예</div>
+        <div class="btn-role-tab" data-role="부길드장" onclick="selectRoleTab('부길드장')">부길드장</div>
+        <div class="btn-role-tab" data-role="길드장" onclick="selectRoleTab('길드장')">길드장</div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 pt-2">
+      <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.8rem;" onclick="closeMemberEditModal()">취소</button>
+      <button type="button" class="btn btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.8rem;" onclick="submitMemberEdit()">저장 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 개인 비밀번호 변경 확인 및 입력 모달 창 -->
+<div id="modalMemberPinChange" class="modal-custom-backdrop" style="display: none;">
+  <div class="modal-custom-box text-center">
+    <!-- 단계 1: 변경 확인 화면 (예 / 아니오) -->
+    <div id="pinStepConfirm">
+      <div style="font-size: 2.2rem; margin-bottom: 10px;">🔐</div>
+      <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;" id="pinTargetMemberName">길드원</h6>
+      <p class="text-secondary small mb-4" style="font-size: 0.82rem; line-height: 1.5;">
+        비밀번호를 변경하시겠습니까?
+      </p>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.85rem;" onclick="closePinChangeModal()">아니오</button>
+        <button type="button" class="btn btn-primary btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none; font-size: 0.85rem;" onclick="proceedToPinInputStep()">예</button>
+      </div>
+    </div>
+
+    <!-- 단계 2: 기존 및 새 비밀번호 입력 화면 -->
+    <div id="pinStepInput" style="display: none;" class="text-start">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 1.1rem;">🔑</span>
+          <h6 class="fw-bold text-white m-0" style="font-size: 0.95rem;" id="pinInputHeaderTitle">비밀번호 변경</h6>
+        </div>
+        <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="closePinChangeModal()"></button>
+      </div>
+
+      <div class="mb-2">
+        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">기존 비밀번호</label>
+        <input type="password" id="inputOldMemberPin" class="form-control text-center input-custom-mem" placeholder="기존 비밀번호 입력" maxlength="16" inputmode="numeric">
+        <div class="text-secondary mt-1" style="font-size: 0.68rem;" id="oldPinHintText">* 초기화 상태인 경우 <code>0000</code>을 입력하세요.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">새 비밀번호 (숫자 6자리 이상)</label>
+        <input type="password" id="inputNewMemberPin" class="form-control text-center input-custom-mem" placeholder="새 비밀번호 입력" maxlength="16" inputmode="numeric">
+        <div class="text-secondary mt-1" style="font-size: 0.68rem; line-height: 1.4;">
+          * 동일한 숫자 3회 이상 연속 금지 (예: 000000, 111222)<br>
+          * 연속된 숫자 금지 (예: 123456)
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 pt-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.82rem;" onclick="closePinChangeModal()">취소</button>
+        <button type="button" class="btn btn-primary btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none; font-size: 0.82rem;" onclick="submitMemberPinChange()">변경 완료</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var allMembersData = [];
+  var targetMemberForPin = null;
+
+  (async function initMembersPage() {
+    checkAdminUIStatus();
+    await loadGuildMembers();
+  })();
+
+  function checkAdminUIStatus() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    const addBtn = document.getElementById("btnAddMemberBtn");
+    const nameInput = document.getElementById("newMemberName");
+    const roleSelect = document.getElementById("newMemberRole");
+
+    if (isAdmin) {
+      if (addBtn) addBtn.disabled = false;
+      if (nameInput) {
+        nameInput.disabled = false;
+        nameInput.placeholder = "길드원 닉네임 입력";
+      }
+      if (roleSelect) roleSelect.disabled = false;
+    } else {
+      if (addBtn) addBtn.disabled = true;
+      if (nameInput) {
+        nameInput.disabled = true;
+        nameInput.placeholder = "관리자 로그인 후 등록할 수 있습니다.";
+      }
+      if (roleSelect) roleSelect.disabled = true;
+    }
+  }
+
+  function getRolePriority(role) {
+    const r = String(role || '').trim();
+    if (r === '길드장' || r === '길마') return 1;
+    if (r === '부길드장' || r === '부길마') return 2;
+    if (r === '정예') return 3;
+    return 4;
+  }
+
+  async function loadGuildMembers() {
+    const container = document.getElementById("memberListContainer");
+    container.innerHTML = `<div class="text-secondary small text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>목록 불러오는 중...</div>`;
+
+    try {
+      const data = await apiRequest("guild_members?select=*");
+      allMembersData = data || [];
+
+      allMembersData.sort((a, b) => {
+        const pA = getRolePriority(a.role);
+        const pB = getRolePriority(b.role);
+        if (pA !== pB) return pA - pB;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      document.getElementById("memCountBadge").innerText = `총 ${allMembersData.length}명`;
+      renderMemberList(allMembersData);
+    } catch (err) {
+      container.innerHTML = `<div class="text-danger small text-center py-4">조회 실패: ${err.message}</div>`;
+    }
+  }
+
+  function renderMemberList(list) {
+    const container = document.getElementById("memberListContainer");
+    if (!list || list.length === 0) {
+      container.innerHTML = `<div class="text-secondary small text-center py-4">등록된 길드원이 없습니다.</div>`;
+      return;
+    }
+
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+
+    container.innerHTML = list.map(m => {
+      const roleStr = String(m.role || '일반').trim();
+      let badgeClass = "role-badge-normal";
+
+      if (roleStr === "길드장" || roleStr === "길마") {
+        badgeClass = "role-badge-master";
+      } else if (roleStr === "부길드장" || roleStr === "부길마") {
+        badgeClass = "role-badge-sub";
+      } else if (roleStr === "정예") {
+        badgeClass = "role-badge-elite";
+      }
+
+      const actionButtons = isAdmin ? `
+        <div class="d-flex align-items-center gap-1">
+          <button type="button" class="btn btn-outline-info btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="event.stopPropagation(); openMemberEditModal(${m.id}, '${m.name}', '${roleStr}')">수정</button>
+          <button type="button" class="btn btn-outline-danger btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="event.stopPropagation(); deleteMemberItem(${m.id}, '${m.name}')">삭제</button>
+        </div>
+      ` : "";
+
+      return `
+        <div class="member-item-row">
+          <div class="d-flex align-items-center gap-2">
+            <span class="role-badge-base ${badgeClass}">${roleStr}</span>
+            <span class="member-clickable-name" title="클릭하여 비밀번호 변경" onclick="openPinConfirmModal(${m.id})">
+              ${m.name}
+              <i class="fa-solid fa-key text-secondary" style="font-size: 0.68rem; opacity: 0.6;"></i>
+            </span>
+          </div>
+          ${actionButtons}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function filterMemberList() {
+    const q = document.getElementById("searchMemberInput").value.trim().toLowerCase();
+    const filtered = allMembersData.filter(m => m.name.toLowerCase().includes(q) || (m.role || "").toLowerCase().includes(q));
+    renderMemberList(filtered);
+  }
+
+  async function handleAddMemberClick() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) {
+      alert("⚠️ 관리자 권한이 필요합니다. 먼저 우측 상단의 [관리자 로그인]을 진행해주세요.");
+      if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+      return;
+    }
+
+    const nameInput = document.getElementById("newMemberName");
+    const name = nameInput.value.trim();
+    const role = document.getElementById("newMemberRole").value;
+
+    if (!name) return alert("길드원 닉네임을 입력하세요!");
+
+    if (allMembersData.some(m => m.name === name)) {
+      return alert("이미 존재하는 길드원 닉네임입니다!");
+    }
+
+    try {
+      await apiRequest("guild_members", "POST", [{ name, role, pin: "0000" }]);
+      alert(`✅ [${name}] 길드원이 등록되었습니다. (초기 비밀번호: 0000)`);
+      nameInput.value = "";
+      await loadGuildMembers();
+    } catch (err) {
+      alert("등록 실패: " + err.message);
+    }
+  }
+
+  // 모달 직급 탭 선택
+  function selectRoleTab(role) {
+    document.getElementById("editMemberSelectedRole").value = role;
+    document.querySelectorAll(".btn-role-tab").forEach(tab => {
+      tab.classList.toggle("active", tab.getAttribute("data-role") === role);
+    });
+  }
+
+  function openMemberEditModal(id, name, role) {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) return alert("관리자만 수정할 수 있습니다.");
+
+    document.getElementById("editMemberId").value = id;
+    document.getElementById("editMemberName").value = name;
+    
+    let normalizedRole = role;
+    if (role === "길마") normalizedRole = "길드장";
+    if (role === "부길마") normalizedRole = "부길드장";
+
+    selectRoleTab(normalizedRole);
+    document.getElementById("modalMemberEdit").style.display = "flex";
+  }
+
+  function closeMemberEditModal() {
+    document.getElementById("modalMemberEdit").style.display = "none";
+  }
+
+  async function submitMemberEdit() {
+    const id = document.getElementById("editMemberId").value;
+    const name = document.getElementById("editMemberName").value.trim();
+    const role = document.getElementById("editMemberSelectedRole").value;
+
+    if (!name) return alert("닉네임을 입력하세요!");
+
+    try {
+      await apiRequest(`guild_members?id=eq.${id}`, "PATCH", { name, role });
+      alert("✅ 수정이 완료되었습니다.");
+      closeMemberEditModal();
+      await loadGuildMembers();
+    } catch (err) {
+      alert("수정 실패: " + err.message);
+    }
+  }
+
+  async function deleteMemberItem(id, name) {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) return alert("관리자만 삭제할 수 있습니다.");
+
+    if (!confirm(`[${name}] 길드원을 명단에서 영구 삭제하시겠습니까?`)) return;
+
+    try {
+      await apiRequest(`guild_members?id=eq.${id}`, "DELETE");
+      alert("삭제되었습니다.");
+      await loadGuildMembers();
+    } catch (err) {
+      alert("삭제 실패: " + err.message);
+    }
+  }
+
+  // ========================================================
+  // 🔐 길드원 개인 비밀번호 변경 로직 및 유효성 검사
+  // ========================================================
+
+  function openPinConfirmModal(memberId) {
+    const target = allMembersData.find(m => m.id === memberId);
+    if (!target) return;
+
+    targetMemberForPin = target;
+    document.getElementById("pinTargetMemberName").innerText = `[${target.name}] 님`;
+    document.getElementById("pinStepConfirm").style.display = "block";
+    document.getElementById("pinStepInput").style.display = "none";
+    document.getElementById("modalMemberPinChange").style.display = "flex";
+  }
+
+  function closePinChangeModal() {
+    document.getElementById("modalMemberPinChange").style.display = "none";
+    targetMemberForPin = null;
+    document.getElementById("inputOldMemberPin").value = "";
+    document.getElementById("inputNewMemberPin").value = "";
+  }
+
+  function proceedToPinInputStep() {
+    if (!targetMemberForPin) return;
+    document.getElementById("pinStepConfirm").style.display = "none";
+    document.getElementById("pinStepInput").style.display = "block";
+    document.getElementById("pinInputHeaderTitle").innerText = `[${targetMemberForPin.name}] 비밀번호 변경`;
+
+    const oldPinHint = document.getElementById("oldPinHintText");
+    const existingPin = (targetMemberForPin.pin || "").trim();
+
+    if (!existingPin || existingPin === "0000") {
+      oldPinHint.innerHTML = "* 초기화 상태이거나 미설정된 경우 기존 비밀번호에 <code>0000</code>을 입력하세요.";
+    } else {
+      oldPinHint.innerText = "* 기존에 사용 중인 비밀번호를 입력해주세요.";
+    }
+
+    document.getElementById("inputOldMemberPin").value = "";
+    document.getElementById("inputNewMemberPin").value = "";
+    setTimeout(() => {
+      document.getElementById("inputOldMemberPin").focus();
+    }, 100);
+  }
+
+  function validateNewPinRules(pin) {
+    if (!/^\d+$/.test(pin)) {
+      return "비밀번호는 숫자만 입력 가능합니다.";
+    }
+    if (pin.length < 6) {
+      return "비밀번호는 숫자 6자리 이상이어야 합니다.";
+    }
+
+    // 동일 숫자 3회 이상 연속 체크 (예: 000, 111)
+    if (/(\d)\1\1/.test(pin)) {
+      return "동일한 숫자를 3회 이상 연속으로 사용할 수 없습니다 (예: 000, 111).";
+    }
+
+    // 연속된 숫자 3자리 이상 (오름차순 및 내림차순) 체크
+    for (let i = 0; i < pin.length - 2; i++) {
+      const c1 = parseInt(pin[i], 10);
+      const c2 = parseInt(pin[i + 1], 10);
+      const c3 = parseInt(pin[i + 2], 10);
+
+      // 오름차순 연속 (예: 1-2-3, 4-5-6)
+      if (c2 === c1 + 1 && c3 === c2 + 1) {
+        return "연속된 숫자를 3회 이상 사용할 수 없습니다 (예: 123, 456).";
+      }
+      // 내림차순 연속 (예: 3-2-1, 6-5-4)
+      if (c2 === c1 - 1 && c3 === c2 - 1) {
+        return "연속된 숫자를 3회 이상 사용할 수 없습니다 (예: 321, 654).";
+      }
+    }
+
+    return null;
+  }
+
+  async function submitMemberPinChange() {
+    if (!targetMemberForPin) return;
+
+    const oldPinInput = document.getElementById("inputOldMemberPin").value.trim();
+    const newPinInput = document.getElementById("inputNewMemberPin").value.trim();
+    let currentMemberPin = (targetMemberForPin.pin || "").trim();
+    if (!currentMemberPin) currentMemberPin = "0000";
+
+    // 1. 기존 비밀번호 확인
+    if (oldPinInput !== currentMemberPin) {
+      alert("❌ 기존 비밀번호가 일치하지 않습니다. (초기 비밀번호는 0000 입니다)");
+      document.getElementById("inputOldMemberPin").focus();
+      return;
+    }
+
+    // 2. 새 비밀번호 규칙 검증
+    const validationError = validateNewPinRules(newPinInput);
+    if (validationError) {
+      alert("⚠️ " + validationError);
+      document.getElementById("inputNewMemberPin").focus();
+      return;
+    }
+
+    // 3. 기존 비밀번호와 동일 여부 체크
+    if (oldPinInput === newPinInput) {
+      alert("⚠️ 새 비밀번호는 기존 비밀번호와 달라야 합니다.");
+      document.getElementById("inputNewMemberPin").focus();
+      return;
+    }
+
+    // 4. 데이터베이스 저장
+    try {
+      await apiRequest(`guild_members?id=eq.${targetMemberForPin.id}`, "PATCH", {
+        pin: newPinInput
+      });
+
+      alert(`🎉 [${targetMemberForPin.name}] 님의 비밀번호가 안전하게 변경되었습니다!`);
+      closePinChangeModal();
+      await loadGuildMembers();
+    } catch (err) {
+      alert("비밀번호 변경 실패: " + err.message);
+    }
+  }
+</script>

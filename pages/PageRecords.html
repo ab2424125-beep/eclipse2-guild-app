@@ -1,0 +1,1458 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 보스 & 전쟁 참여 통계 모듈
+     경로: pages/PageRecords.html
+     ========================================== -->
+<style>
+  .records-card {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .stat-filter-box {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  .quick-filter-group {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-quick-stat {
+    flex: 1;
+    background: #080d1a;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    padding: 6px 8px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.15s;
+    text-align: center;
+    cursor: pointer;
+  }
+  .btn-quick-stat:hover {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border-color: #38bdf8;
+  }
+  .btn-quick-stat.active {
+    background: #0284c7 !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+  }
+
+  .input-custom-stat {
+    background-color: #080d1a !important;
+    border: 1px solid #233554 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 7px 10px !important;
+    font-size: 0.82rem !important;
+    color-scheme: dark;
+  }
+
+  .btn-kakao-copy {
+    background: #fee500;
+    color: #191919;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-kakao-copy:hover {
+    background: #fdd835;
+    color: #000;
+  }
+
+  .top5-container {
+    background: linear-gradient(180deg, rgba(24, 34, 58, 0.5) 0%, rgba(11, 18, 34, 0.7) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .best-tab-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 8px;
+  }
+  .btn-best-tab {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 6px 4px;
+    border-radius: 8px;
+    transition: all 0.15s;
+    text-align: center;
+    cursor: pointer;
+  }
+  .btn-best-tab.active {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #fbbf24;
+    color: #fbbf24;
+  }
+
+  .top5-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .top5-title { color: #fbbf24; font-size: 0.82rem; font-weight: 700; }
+  .top5-sub { color: #64748b; font-size: 0.68rem; }
+  .top5-list { display: flex; flex-direction: column; gap: 5px; }
+  .top5-item {
+    background: #090e1c;
+    border: 1px solid #1b263b;
+    border-radius: 8px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-rank-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.75rem;
+  }
+  .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+  .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fff; }
+  .rank-normal { background: #162036; color: #94a3b8; border: 1px solid #233554; }
+
+  .top5-name { font-size: 0.84rem; font-weight: 600; color: #f1f5f9; }
+  .top5-score {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    padding: 3px 9px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .search-wrapper-stat { position: relative; margin-bottom: 12px; }
+  .search-wrapper-stat i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #38bdf8;
+    font-size: 0.85rem;
+  }
+  .search-input-stat {
+    width: 100%;
+    background-color: #080d1a;
+    border: 1px solid #233554;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 8px 14px 8px 36px;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .tab-btn-3 {
+    flex: 1;
+    background: #080d1a;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    padding: 9px 4px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    border-radius: 10px;
+    transition: all 0.15s;
+    text-align: center;
+    cursor: pointer;
+  }
+  .tab-btn-3.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+  }
+
+  .member-stat-card {
+    background: #111a2e;
+    border: 1px solid #243452;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+    overflow: hidden;
+  }
+  .member-stat-card.active {
+    border-color: #38bdf8;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+  }
+
+  .member-card-header {
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .member-card-header:hover {
+    background: rgba(56, 189, 248, 0.05);
+  }
+
+  .member-detail-accordion {
+    display: none;
+    background: #080d1a;
+    border-top: 1px solid #1e2c47;
+    padding: 12px 14px;
+  }
+  .member-stat-card.active .member-detail-accordion {
+    display: block;
+  }
+
+  .boss-stat-tag {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #bae6fd;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 2px;
+  }
+
+  .badge-score-custom {
+    font-size: clamp(0.62rem, 1.8vw, 0.72rem);
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.35;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+  }
+  .badge-score-inter {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    color: #f87171;
+  }
+  .badge-score-internal {
+    background: rgba(249, 115, 22, 0.15);
+    border: 1px solid #f97316;
+    color: #fb923c;
+  }
+  .badge-score-extra {
+    background: rgba(234, 179, 8, 0.15);
+    border: 1px solid #eab308;
+    color: #facc15;
+  }
+  .badge-score-normal {
+    background: rgba(148, 163, 184, 0.1);
+    border: 1px solid #334155;
+    color: #94a3b8;
+  }
+  .badge-per-person-score {
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    font-weight: 800;
+    font-size: 0.74rem;
+    padding: 3px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .history-item {
+    background: #0d1527;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+
+  .history-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .history-title-area {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .history-tools-area {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .btn-record-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-record-edit { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+  .btn-record-del { color: #f43f5e; border-color: rgba(244, 63, 94, 0.3); }
+
+  .modal-members-grid-4col {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    background: #080d1a;
+    border: 1px solid #1e2c47;
+    border-radius: 10px;
+    padding: 10px 8px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .modal-member-check-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .modal-member-check-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+  }
+  .modal-member-check-item label {
+    font-size: 0.68rem;
+    color: #e2e8f0;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .custom-records-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0d1830;
+    border: 1.5px solid #38bdf8;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(56, 189, 248, 0.35);
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 99999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+  }
+  .custom-records-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .custom-confirm-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(6, 10, 20, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 99999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .custom-confirm-box {
+    background: #0d1527;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 330px;
+    padding: 24px 18px 20px 18px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+    text-align: center;
+  }
+  .confirm-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+  .btn-confirm-cancel-custom {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-confirm-cancel-custom:hover {
+    background: #334155;
+    color: #fff;
+  }
+  .btn-confirm-ok-custom {
+    background: #e11d48;
+    border: none;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+  }
+  .btn-confirm-ok-custom:hover {
+    background: #f43f5e;
+  }
+</style>
+
+<div class="records-card mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size: 1.25rem;">📜</span>
+      <h6 class="fw-bold mb-0 text-white">보스 & 전쟁 참여 통계</h6>
+    </div>
+    <button type="button" class="btn-kakao-copy" onclick="copyStatsToKakao()">
+      <i class="fa-solid fa-comment"></i> 카톡 복사
+    </button>
+  </div>
+
+  <!-- 기간 필터 박스 -->
+  <div class="stat-filter-box">
+    <div class="quick-filter-group">
+      <button type="button" class="btn-quick-stat active" id="btnFilterWeek" onclick="setStatPeriod('thisWeek')">이번주</button>
+      <button type="button" class="btn-quick-stat" id="btnFilterLastWeek" onclick="setStatPeriod('lastWeek')">지난주</button>
+      <button type="button" class="btn-quick-stat" id="btnFilterMonth" onclick="setStatPeriod('thisMonth')">이번달</button>
+      <button type="button" class="btn-quick-stat" id="btnFilterAll" onclick="setStatPeriod('all')">전체</button>
+    </div>
+
+    <div class="row g-2 align-items-center">
+      <div class="col-5">
+        <input type="date" id="filterStartDate" class="form-control input-custom-stat">
+      </div>
+      <div class="col-2 text-center text-secondary small" style="font-size: 0.75rem;">~</div>
+      <div class="col-5">
+        <input type="date" id="filterEndDate" class="form-control input-custom-stat">
+      </div>
+      <div class="col-12 mt-1">
+        <button class="btn btn-outline-info btn-sm w-100 fw-bold py-1" style="font-size: 0.78rem;" onclick="fetchStatsData()">
+          <i class="fa-solid fa-filter me-1"></i> 기간 필터 적용
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP 5 랭킹 박스 -->
+  <div class="top5-container">
+    <div class="best-tab-nav">
+      <button class="btn-best-tab active" id="bestTabTotal" onclick="switchBestTab('total')">
+        👑 총참여 베스트
+      </button>
+      <button class="btn-best-tab" id="bestTabBoss" onclick="switchBestTab('boss')">
+        🎯 보스참여 베스트
+      </button>
+      <button class="btn-best-tab" id="bestTabWar" onclick="switchBestTab('war')">
+        ⚔️ 전쟁참여 베스트
+      </button>
+    </div>
+    <div class="top5-header">
+      <span class="top5-title" id="top5TitleText">👑 총참여 베스트 TOP 5</span>
+      <span class="top5-sub" id="top5SubText">보스 점수 + 내전 + 인터 + 추가점수 합산</span>
+    </div>
+    <div id="top5RankingList" class="top5-list">
+      <div class="text-secondary text-center py-2" style="font-size: 0.75rem;">순위 집계 중...</div>
+    </div>
+  </div>
+
+  <!-- 하단 3대 탭 -->
+  <div class="d-flex gap-2 mb-3">
+    <button class="tab-btn-3 active" id="tabBtnMembers" onclick="switchRecordsTab('members')">
+      <i class="fa-solid fa-chart-pie me-1"></i> 전체길드원통계
+    </button>
+    <button class="tab-btn-3" id="tabBtnWarLog" onclick="switchRecordsTab('warlog')">
+      <i class="fa-solid fa-shield-halved me-1"></i> 전쟁기록
+    </button>
+    <button class="tab-btn-3" id="tabBtnHistory" onclick="switchRecordsTab('history')">
+      <i class="fa-solid fa-list-check me-1"></i> 토벌기록
+    </button>
+  </div>
+
+  <!-- 1. 전체길드원통계 뷰 -->
+  <div id="viewMembers">
+    <div class="search-wrapper-stat">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="statMemberSearch" class="search-input-stat" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberStats()">
+    </div>
+    <div id="memberStatsList" style="max-height: 480px; overflow-y: auto;">
+      <div class="text-secondary small text-center py-3">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+
+  <!-- 2. 전쟁기록 뷰 -->
+  <div id="viewWarLog" style="display: none;">
+    <div id="warLogList" style="max-height: 480px; overflow-y: auto;">
+      <div class="text-secondary small text-center py-3">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+
+  <!-- 3. 토벌기록 뷰 -->
+  <div id="viewHistory" style="display: none;">
+    <div id="historyList" style="max-height: 480px; overflow-y: auto;">
+      <div class="text-secondary small text-center py-3">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- 상단 플로팅 토스트 알림 컨테이너 -->
+<div id="recordsToastBox" class="custom-records-toast">
+  <span id="recordsToastIcon" style="font-size: 1.1rem;">✅</span>
+  <span id="recordsToastMsg">알림 내용</span>
+</div>
+
+<!-- 커스텀 다크 모달 -->
+<div id="customConfirmModal" class="custom-confirm-backdrop" style="display: none;">
+  <div class="custom-confirm-box">
+    <div class="confirm-icon-box" id="confirmModalIconBox">
+      <i class="fa-solid fa-user-gear" id="confirmModalIcon"></i>
+    </div>
+    <h6 class="fw-bold text-white mb-2" id="confirmModalTitle" style="font-size: 0.98rem;">확인</h6>
+    <p class="text-secondary small mb-4" id="confirmModalMsg" style="font-size: 0.8rem; line-height: 1.5; word-break: keep-all;"></p>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn-confirm-cancel-custom flex-fill" id="btnConfirmCancel">취소</button>
+      <button type="button" class="btn-confirm-ok-custom flex-fill" id="btnConfirmOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토벌 참여 인원 수정 모달 -->
+<div id="modalEditRecord" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 999999; align-items: center; justify-content: center;">
+  <div style="background: #0d1527; border: 1px solid #233554; color: #fff; border-radius: 16px; width: 92%; max-width: 480px; padding: 18px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+      <h6 class="modal-title fw-bold text-info m-0" style="font-size: 0.95rem;">토벌 참여 인원 수정</h6>
+      <button type="button" class="btn-close btn-close-white" onclick="closeEditModal()"></button>
+    </div>
+    <div>
+      <input type="hidden" id="editRecordId">
+      <input type="hidden" id="editRecordBossName">
+      <div class="mb-2 text-secondary small" id="editRecordSummary" style="font-size: 0.74rem;"></div>
+      <div id="editMemberCheckList" class="modal-members-grid-4col"></div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top border-secondary border-opacity-25">
+      <button type="button" class="btn btn-secondary btn-sm px-3" onclick="closeEditModal()" style="font-size: 0.78rem;">취소</button>
+      <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" onclick="promptSaveRecordMembers()" style="font-size: 0.78rem;">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 개인별 보스 목록 선택/수정 모달 -->
+<div id="modalMemberBossManager" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center;">
+  <div style="background: #0d1527; border: 1px solid #38bdf8; color: #fff; border-radius: 16px; width: 92%; max-width: 480px; padding: 18px; margin: auto; max-height: 85vh; display: flex; flex-direction: column;">
+    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary">
+      <div>
+        <h6 class="modal-title fw-bold text-info m-0" id="mgrMemberNameTitle">참여 보스 목록 수정</h6>
+        <div class="text-secondary small mt-1" style="font-size: 0.72rem;">기간 내 잡은 보스 중 참여한 항목을 체크/해제하세요.</div>
+      </div>
+      <button type="button" class="btn-close btn-close-white" onclick="closeMemberBossManagerModal()"></button>
+    </div>
+    
+    <div id="memberBossCheckListArea" class="border rounded p-2" style="background: #080d1a; border-color: #1e2c47 !important; flex: 1; overflow-y: auto; max-height: 380px;"></div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+      <div class="text-secondary small" id="mgrSelectionCount">선택: 0건</div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeMemberBossManagerModal()">취소</button>
+        <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" onclick="saveMemberBossSelection()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var rawStatsData = { records: [], warRecords: [], memberStats: {}, bossList: [] };
+  var currentBestTab = 'total';
+  var managingMemberName = "";
+  var allGuildMembersList = [];
+  var recordsToastTimer = null;
+  var currentEditingOriginalMembers = [];
+
+  var liveSettings = {
+    guildName: "불편한사람들",
+    scoreBase: 1,
+    scoreInternal: 1,
+    scoreInter: 2
+  };
+
+  // 🛡️ 관리자 권한 확인 및 일반 관리자 perm_boss_records_edit 검증
+  async function verifyAdminPermission() {
+    const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAuth) {
+      alert("⚠️ 관리자 권한이 필요합니다.\n우측 상단의 [관리자 로그인]을 먼저 진행해주세요.");
+      if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+      return false;
+    }
+
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    if (!isSuper) {
+      try {
+        const permRow = await apiRequest("guild_settings?key=eq.perm_boss_records_edit");
+        if (permRow && permRow.length > 0 && permRow[0].value === 'false') {
+          alert("⚠️ 일반 관리자에게는 [토벌기록 및 닉네임 수정/제거 권한]이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.");
+          return false;
+        }
+      } catch (e) {}
+    }
+
+    return true;
+  }
+
+  function showRecordsToast(message, icon = "✅") {
+    const toast = document.getElementById("recordsToastBox");
+    const msgElem = document.getElementById("recordsToastMsg");
+    const iconElem = document.getElementById("recordsToastIcon");
+    if (!toast) return;
+
+    msgElem.innerText = message;
+    iconElem.innerText = icon;
+    toast.classList.add("show");
+
+    if (recordsToastTimer) clearTimeout(recordsToastTimer);
+    recordsToastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 2400);
+  }
+
+  function openCustomConfirm(title, message, iconClass = "fa-solid fa-user-gear") {
+    return new Promise((resolve) => {
+      const modal = document.getElementById("customConfirmModal");
+      const titleElem = document.getElementById("confirmModalTitle");
+      const msgElem = document.getElementById("confirmModalMsg");
+      const iconElem = document.getElementById("confirmModalIcon");
+      const btnOk = document.getElementById("btnConfirmOk");
+      const btnCancel = document.getElementById("btnConfirmCancel");
+
+      titleElem.innerText = title;
+      msgElem.innerText = message;
+      iconElem.className = iconClass;
+
+      modal.style.display = "flex";
+
+      const handleOk = () => {
+        cleanup();
+        resolve(true);
+      };
+      const handleCancel = () => {
+        cleanup();
+        resolve(false);
+      };
+      const cleanup = () => {
+        modal.style.display = "none";
+        btnOk.removeEventListener("click", handleOk);
+        btnCancel.removeEventListener("click", handleCancel);
+      };
+
+      btnOk.addEventListener("click", handleOk);
+      btnCancel.addEventListener("click", handleCancel);
+    });
+  }
+
+  (async function initRecordsPage() {
+    setStatPeriod('thisWeek');
+  })();
+
+  function setStatPeriod(periodType) {
+    const now = new Date();
+    const pad = n => (n < 10 ? '0' + n : n);
+    const toYmd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    document.querySelectorAll('.btn-quick-stat').forEach(b => b.classList.remove('active'));
+
+    if (periodType === 'thisWeek') {
+      const day = now.getDay();
+      const diffToMon = (day === 0 ? -6 : 1 - day);
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+      document.getElementById('filterStartDate').value = toYmd(start);
+      document.getElementById('filterEndDate').value = toYmd(end);
+      document.getElementById('btnFilterWeek').classList.add('active');
+    } else if (periodType === 'lastWeek') {
+      const day = now.getDay();
+      const diffToMon = (day === 0 ? -6 : 1 - day) - 7;
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+      document.getElementById('filterStartDate').value = toYmd(start);
+      document.getElementById('filterEndDate').value = toYmd(end);
+      document.getElementById('btnFilterLastWeek').classList.add('active');
+    } else if (periodType === 'thisMonth') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      document.getElementById('filterStartDate').value = toYmd(start);
+      document.getElementById('filterEndDate').value = toYmd(end);
+      document.getElementById('btnFilterMonth').classList.add('active');
+    } else if (periodType === 'all') {
+      document.getElementById('filterStartDate').value = '';
+      document.getElementById('filterEndDate').value = '';
+      document.getElementById('btnFilterAll').classList.add('active');
+    }
+
+    fetchStatsData();
+  }
+
+  async function fetchStatsData() {
+    const start = document.getElementById('filterStartDate').value;
+    const end = document.getElementById('filterEndDate').value;
+
+    const top5Area = document.getElementById('top5RankingList');
+    const listArea = document.getElementById('memberStatsList');
+    const warArea = document.getElementById('warLogList');
+    const histArea = document.getElementById('historyList');
+
+    if (top5Area) top5Area.innerHTML = '<div class="text-secondary text-center py-2" style="font-size: 0.72rem;"><i class="fa-solid fa-spinner fa-spin me-1"></i>집계 중...</div>';
+    if (listArea) listArea.innerHTML = '<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>전체 통계 집계 중...</div>';
+    if (warArea) warArea.innerHTML = '<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>전쟁 기록 불러오는 중...</div>';
+    if (histArea) histArea.innerHTML = '<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>토벌 기록 불러오는 중...</div>';
+
+    try {
+      const [members, raids, settings] = await Promise.all([
+        apiRequest("guild_members?select=name,role&order=id.asc"),
+        apiRequest("boss_participations?select=*&order=raid_time.desc"),
+        apiRequest("guild_settings?select=*")
+      ]);
+
+      allGuildMembersList = members || [];
+      const allRaids = raids || [];
+
+      if (settings && settings.length > 0) {
+        settings.forEach(s => {
+          if (s.key === 'guild_name') liveSettings.guildName = s.value || "불편한사람들";
+          if (s.key === 'score_base') liveSettings.scoreBase = parseInt(s.value, 10) || 1;
+          if (s.key === 'score_war_internal') liveSettings.scoreInternal = parseInt(s.value, 10) || 1;
+          if (s.key === 'score_war_inter') liveSettings.scoreInter = parseInt(s.value, 10) || 2;
+        });
+      }
+
+      const filtered = allRaids.filter(r => {
+        if (!r.raid_time) return false;
+        const d = r.raid_time.slice(0, 10);
+        if (start && d < start) return false;
+        if (end && d > end) return false;
+        return true;
+      });
+
+      const records = [];
+      const warRecords = [];
+      const memberStats = {};
+
+      allGuildMembersList.forEach(m => {
+        memberStats[m.name] = {
+          totalScore: 0,
+          bossScore: 0,
+          internalScore: 0,
+          interScore: 0,
+          extraBonus: 0,
+          warExtraBonus: 0,
+          generalExtraBonus: 0,
+          bossCount: 0,
+          warCount: 0,
+          byBoss: {}
+        };
+      });
+
+      filtered.forEach(r => {
+        const warType = r.war_type || '일반';
+        const isInternal = warType.includes('내전');
+        const isInter = warType.includes('인터');
+        const isWar = isInternal || isInter;
+        const extra = parseInt(r.extra_score, 10) || 0;
+        const membersArr = Array.isArray(r.members) ? r.members : [];
+
+        let totalScorePerPerson = 1 + extra;
+
+        const recordObj = {
+          id: r.id,
+          bossName: r.boss_name,
+          warType: warType,
+          isInternal: isInternal,
+          isInter: isInter,
+          dropItem: r.drop_items || '없음',
+          dateTime: r.raid_time ? r.raid_time.replace('T', ' ').slice(0, 16) : '',
+          count: membersArr.length,
+          totalScore: totalScorePerPerson,
+          extraBonus: extra,
+          members: membersArr
+        };
+
+        records.push(recordObj);
+
+        if (isWar) {
+          warRecords.push({
+            id: r.id,
+            bossName: r.boss_name,
+            warType: warType,
+            isInternal: isInternal,
+            isInter: isInter,
+            dateTime: recordObj.dateTime,
+            count: membersArr.length,
+            warScore: extra,
+            extraBonus: extra,
+            members: membersArr
+          });
+        }
+
+        membersArr.forEach(name => {
+          if (!memberStats[name]) {
+            memberStats[name] = {
+              totalScore: 0, bossScore: 0, internalScore: 0, interScore: 0,
+              extraBonus: 0, warExtraBonus: 0, generalExtraBonus: 0,
+              bossCount: 0, warCount: 0, byBoss: {}
+            };
+          }
+
+          const st = memberStats[name];
+          st.totalScore += totalScorePerPerson;
+          st.bossScore += 1;
+          st.bossCount += 1;
+          st.extraBonus += extra;
+
+          if (isInternal) st.internalScore += (isInter ? 1 : extra);
+          if (isInter) st.interScore += (isInternal ? 2 : extra);
+
+          if (isWar) {
+            st.warCount += 1;
+            st.warExtraBonus += extra;
+          } else {
+            st.generalExtraBonus += extra;
+          }
+
+          st.byBoss[r.boss_name] = (st.byBoss[r.boss_name] || 0) + 1;
+        });
+      });
+
+      rawStatsData = { records, warRecords, memberStats };
+
+      renderTop5Ranking();
+      renderMemberStats(rawStatsData.memberStats);
+      renderWarLogList(rawStatsData.warRecords);
+      renderHistoryList(rawStatsData.records);
+
+    } catch (err) {
+      showRecordsToast("통계 조회 실패: " + err.message, "❌");
+    }
+  }
+
+  function switchBestTab(tabKey) {
+    currentBestTab = tabKey;
+    document.getElementById('bestTabTotal').classList.toggle('active', tabKey === 'total');
+    document.getElementById('bestTabBoss').classList.toggle('active', tabKey === 'boss');
+    document.getElementById('bestTabWar').classList.toggle('active', tabKey === 'war');
+
+    if (tabKey === 'total') {
+      document.getElementById('top5TitleText').innerText = "👑 총참여 베스트 TOP 5";
+      document.getElementById('top5SubText').innerText = "보스 점수 + 전쟁/추가 점수 누적 합산";
+    } else if (tabKey === 'boss') {
+      document.getElementById('top5TitleText').innerText = "🎯 보스참여 베스트 TOP 5";
+      document.getElementById('top5SubText').innerText = "순수 보스 토벌 점수";
+    } else {
+      document.getElementById('top5TitleText').innerText = "⚔️ 전쟁참여 베스트 TOP 5";
+      document.getElementById('top5SubText').innerText = "전쟁 및 추가 가산 점수 합산";
+    }
+    renderTop5Ranking();
+  }
+
+  function renderTop5Ranking() {
+    const container = document.getElementById('top5RankingList');
+    const statsObj = rawStatsData.memberStats || {};
+    const allMembers = Object.keys(statsObj);
+
+    const memberDetailMap = {};
+    allMembers.forEach(name => {
+      const d = statsObj[name];
+      const totalSc = d.totalScore || 0;
+      const totalCount = d.bossCount || 0;
+      const warCount = d.warCount || 0;
+      
+      const internalSc = d.internalScore || 0;
+      const interSc = d.interScore || 0;
+      const warExtra = d.warExtraBonus || 0;
+      const generalExtra = d.generalExtraBonus || 0;
+      const totalExtra = d.extraBonus || 0;
+
+      const pureBossCount = Math.max(0, totalCount - warCount);
+      const pureBossTotal = pureBossCount + generalExtra;
+      const warTotal = warExtra || (internalSc + interSc);
+      const hasWarParticipation = (warCount > 0) || (warTotal > 0);
+
+      memberDetailMap[name] = {
+        totalSc: totalSc,
+        bossCount: totalCount,
+        pureBossCount: pureBossCount,
+        pureBossTotal: pureBossTotal,
+        warCount: warCount,
+        internalSc: internalSc,
+        interSc: interSc,
+        warExtra: warExtra,
+        generalExtra: generalExtra,
+        totalExtra: totalExtra,
+        warTotal: warTotal,
+        hasWarParticipation: hasWarParticipation
+      };
+    });
+
+    let validMembers = [];
+    if (currentBestTab === 'total') {
+      validMembers = allMembers.filter(name => memberDetailMap[name].totalSc > 0);
+      validMembers.sort((a, b) => memberDetailMap[b].totalSc - memberDetailMap[a].totalSc);
+    } else if (currentBestTab === 'boss') {
+      validMembers = allMembers.filter(name => memberDetailMap[name].pureBossTotal > 0);
+      validMembers.sort((a, b) => memberDetailMap[b].pureBossTotal - memberDetailMap[a].pureBossTotal);
+    } else {
+      validMembers = allMembers.filter(name => memberDetailMap[name].hasWarParticipation && memberDetailMap[name].warTotal > 0);
+      validMembers.sort((a, b) => memberDetailMap[b].warTotal - memberDetailMap[a].warTotal);
+    }
+
+    if (validMembers.length === 0) {
+      let tabName = '총참여';
+      if (currentBestTab === 'boss') tabName = '보스참여';
+      if (currentBestTab === 'war') tabName = '전쟁참여';
+      container.innerHTML = `<div class="text-secondary text-center py-2" style="font-size: 0.76rem;">해당 기간 동안 ${tabName} 베스트 길드원이 없습니다.</div>`;
+      return;
+    }
+
+    const top5 = validMembers.slice(0, 5);
+
+    container.innerHTML = top5.map((name, idx) => {
+      const rank = idx + 1;
+      let rankClass = "rank-normal";
+      let rankIcon = rank;
+      if (rank === 1) { rankClass = "rank-1"; rankIcon = "👑"; }
+      else if (rank === 2) { rankClass = "rank-2"; rankIcon = "🥈"; }
+      else if (rank === 3) { rankClass = "rank-3"; rankIcon = "🥉"; }
+
+      const m = memberDetailMap[name];
+      let scoreText = "";
+
+      if (currentBestTab === 'total') {
+        scoreText = `총 ${m.totalSc}점 (보스 ${m.bossCount} + 추가 ${m.totalExtra})`;
+      } else if (currentBestTab === 'boss') {
+        scoreText = `총 ${m.pureBossTotal}점 (${m.pureBossCount}회 + 일반추가 ${m.generalExtra})`;
+      } else {
+        scoreText = `총 ${m.warTotal}점 (전쟁가산 ${m.warExtra})`;
+      }
+
+      return `
+        <div class="top5-item">
+          <div class="d-flex align-items-center gap-2">
+            <span class="top-rank-badge ${rankClass}">${rankIcon}</span>
+            <span class="top5-name">${name}</span>
+          </div>
+          <span class="top5-score">${scoreText}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderMemberStats(statsObj) {
+    const container = document.getElementById('memberStatsList');
+    const allMembers = Object.keys(statsObj || {});
+
+    const members = allMembers.filter(m => (statsObj[m].totalScore || 0) > 0);
+
+    if (members.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-3">해당 기간 동안 참여 기록이 없습니다.</div>';
+      return;
+    }
+
+    members.sort((a, b) => statsObj[b].totalScore - statsObj[a].totalScore);
+
+    container.innerHTML = members.map((name, idx) => {
+      const data = statsObj[name];
+      const totalSc = data.totalScore || 0;
+      const bossSc = data.bossScore || 0;
+      const extraSc = data.extraBonus || 0;
+
+      const bossTags = Object.keys(data.byBoss || {}).map(bName => `
+        <span class="boss-stat-tag">${bName} <strong class="text-info">${data.byBoss[bName]}</strong>회</span>
+      `).join('');
+
+      const fullScoreDisplay = `총 ${totalSc}점 (보스 ${bossSc}회 + 추가 ${extraSc}점)`;
+      const safeName = encodeURIComponent(name);
+
+      const memberRecords = (rawStatsData.records || []).filter(r => r.members && r.members.includes(name));
+      let historyRows = '<div class="text-secondary small text-center py-2">참여 토벌 기록이 없습니다.</div>';
+
+      if (memberRecords.length > 0) {
+        historyRows = memberRecords.map(r => {
+          return `
+            <div class="history-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="fw-bold text-info" style="font-size: 0.8rem;">${r.bossName}</span>
+                <span class="badge-score-custom badge-score-normal ms-1" style="font-size: 0.65rem;">${r.warType}</span>
+                <div class="text-secondary" style="font-size: 0.7rem;">${r.dateTime} (${r.count}명)</div>
+              </div>
+              <div>
+                <button type="button" class="btn btn-record-action btn-record-del" onclick="event.stopPropagation(); removeSingleMember('${safeName}', ${r.id}, '${r.bossName}')">제외</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      return `
+        <div class="member-stat-card" id="card_m_${idx}">
+          <div class="member-card-header" onclick="toggleMemberDetailCard('card_m_${idx}')">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-white" style="font-size: 0.94rem;">
+                ${name} <i class="fa-solid fa-chevron-down ms-1 text-secondary" style="font-size: 0.72rem;"></i>
+              </span>
+              <span class="badge px-3 py-2 rounded-pill" style="background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.78rem; font-weight: 700;">
+                ${fullScoreDisplay}
+              </span>
+            </div>
+            <div class="boss-tag-group mt-2">${bossTags}</div>
+          </div>
+
+          <div class="member-detail-accordion">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary gap-1">
+              <span class="text-info fw-bold small"><i class="fa-solid fa-clock-rotate-left me-1"></i>참여 토벌 (${memberRecords.length}건)</span>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn btn-primary btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem;" onclick="event.stopPropagation(); openMemberBossManagerModal('${safeName}')">
+                  <i class="fa-solid fa-list-check me-1"></i>참여 보스 수정
+                </button>
+                <button type="button" class="btn btn-danger btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem;" onclick="event.stopPropagation(); removeMemberAll('${safeName}')">
+                  <i class="fa-solid fa-user-xmark me-1"></i>일괄제외
+                </button>
+              </div>
+            </div>
+            <div style="max-height: 220px; overflow-y: auto;">
+              ${historyRows}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleMemberDetailCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card) {
+      card.classList.toggle('active');
+    }
+  }
+
+  async function openMemberBossManagerModal(encodedName) {
+    if (!(await verifyAdminPermission())) return;
+
+    const name = decodeURIComponent(encodedName);
+    managingMemberName = name;
+
+    document.getElementById('mgrMemberNameTitle').innerHTML = `<i class="fa-solid fa-user-pen me-2"></i>[${name}] 님 참여 보스 목록`;
+
+    const container = document.getElementById('memberBossCheckListArea');
+    const allPeriodRecords = rawStatsData.records || [];
+
+    if (allPeriodRecords.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-4">조회 기간 내 토벌 기록이 없습니다.</div>';
+      document.getElementById('modalMemberBossManager').style.display = 'flex';
+      return;
+    }
+
+    container.innerHTML = allPeriodRecords.map((r, i) => {
+      const isChecked = (r.members && r.members.includes(name)) ? 'checked' : '';
+      return `
+        <div class="d-flex align-items-center gap-2 p-2 mb-1 rounded" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <input class="form-check-input mgr-boss-chk m-0" type="checkbox" id="mchk_${i}" value="${r.id}" ${isChecked} onchange="updateMgrSelectionCount()" style="width: 1.15rem; height: 1.15rem; flex-shrink: 0; cursor: pointer;">
+          <label class="d-flex justify-content-between align-items-center w-100 m-0 ps-1" for="mchk_${i}" style="cursor: pointer; user-select: none;">
+            <div>
+              <strong class="text-info" style="font-size: 0.84rem;">${r.bossName}</strong>
+              <span class="text-secondary small ms-1" style="font-size: 0.72rem;">(${r.warType})</span>
+            </div>
+            <span class="text-secondary" style="font-size: 0.72rem;">${r.dateTime}</span>
+          </label>
+        </div>
+      `;
+    }).join('');
+
+    updateMgrSelectionCount();
+    document.getElementById('modalMemberBossManager').style.display = 'flex';
+  }
+
+  function updateMgrSelectionCount() {
+    const checked = document.querySelectorAll('.mgr-boss-chk:checked').length;
+    const total = document.querySelectorAll('.mgr-boss-chk').length;
+    document.getElementById('mgrSelectionCount').innerText = `선택: ${checked} / 전체 ${total}건`;
+  }
+
+  function closeMemberBossManagerModal() {
+    document.getElementById('modalMemberBossManager').style.display = 'none';
+  }
+
+  async function saveMemberBossSelection() {
+    if (!(await verifyAdminPermission())) return;
+
+    const checkboxes = Array.from(document.querySelectorAll('.mgr-boss-chk'));
+    closeMemberBossManagerModal();
+
+    try {
+      for (const chk of checkboxes) {
+        const raidId = parseInt(chk.value, 10);
+        const shouldBeIn = chk.checked;
+        const targetRecord = rawStatsData.records.find(r => r.id === raidId);
+        if (!targetRecord) continue;
+
+        let members = targetRecord.members.slice();
+        const exists = members.includes(managingMemberName);
+
+        if (shouldBeIn && !exists) {
+          members.push(managingMemberName);
+          await apiRequest(`boss_participations?id=eq.${raidId}`, "PATCH", { members, member_count: members.length });
+        } else if (!shouldBeIn && exists) {
+          members = members.filter(m => m !== managingMemberName);
+          await apiRequest(`boss_participations?id=eq.${raidId}`, "PATCH", { members, member_count: members.length });
+        }
+      }
+
+      showRecordsToast(`[${managingMemberName}] 님의 참여 보스 목록 저장 완료!`, "✅");
+      await fetchStatsData();
+    } catch (err) {
+      showRecordsToast("보스 참여 수정 실패: " + err.message, "❌");
+    }
+  }
+
+  async function removeSingleMember(encodedName, raidId, bossName) {
+    if (!(await verifyAdminPermission())) return;
+
+    const name = decodeURIComponent(encodedName);
+    const confirmed = await openCustomConfirm(
+      "참여 인원 제외",
+      `[${bossName}] 토벌 기록에서 [${name}] 님을 제외하시겠습니까?`,
+      "fa-solid fa-user"
+    );
+    if (!confirmed) return;
+
+    try {
+      const targetRecord = rawStatsData.records.find(r => r.id === raidId);
+      if (!targetRecord) return;
+
+      const updatedMembers = targetRecord.members.filter(m => m !== name);
+      await apiRequest(`boss_participations?id=eq.${raidId}`, "PATCH", {
+        members: updatedMembers,
+        member_count: updatedMembers.length
+      });
+
+      showRecordsToast(`[${name}] 님이 해당 토벌에서 제외되었습니다.`, "🗑️");
+      await fetchStatsData();
+    } catch (err) {
+      showRecordsToast("제외 실패: " + err.message, "❌");
+    }
+  }
+
+  async function removeMemberAll(encodedName) {
+    if (!(await verifyAdminPermission())) return;
+
+    const name = decodeURIComponent(encodedName);
+    const confirmed = await openCustomConfirm(
+      "참여 기록 일괄 제외",
+      `[${name}] 님이 참여한 모든 토벌 기록에서 일괄 제외하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+      "fa-solid fa-triangle-exclamation"
+    );
+    if (!confirmed) return;
+
+    try {
+      const recordsToUpdate = rawStatsData.records.filter(r => r.members && r.members.includes(name));
+      for (const r of recordsToUpdate) {
+        const updated = r.members.filter(m => m !== name);
+        await apiRequest(`boss_participations?id=eq.${r.id}`, "PATCH", {
+          members: updated,
+          member_count: updated.length
+        });
+      }
+
+      showRecordsToast(`[${name}] 님의 전체 참여 기록 일괄 제외 완료!`, "🗑️");
+      await fetchStatsData();
+    } catch (err) {
+      showRecordsToast("일괄 제외 실패: " + err.message, "❌");
+    }
+  }
+
+  function filterMemberStats() {
+    const q = document.getElementById('statMemberSearch').value.trim().toLowerCase();
+    const cards = document.querySelectorAll('.member-stat-card');
+    cards.forEach(card => {
+      const header = card.querySelector('.member-card-header');
+      const text = header ? header.innerText.toLowerCase() : '';
+      card.style.display = text.includes(q) ? 'block' : 'none';
+    });
+  }
+
+  function renderWarLogList(warRecords) {
+    const container = document.getElementById('warLogList');
+    if (!warRecords || warRecords.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-3">해당 기간 동안 발생한 전쟁(내전/인터) 기록이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = warRecords.map(r => {
+      let badgeParts = [];
+      if (r.isInter) badgeParts.push(`<span class="badge-score-custom badge-score-inter">🌐 인터</span>`);
+      if (r.isInternal) badgeParts.push(`<span class="badge-score-custom badge-score-internal">🛡️ 내전</span>`);
+      if (r.extraBonus > 0) badgeParts.push(`<span class="badge-score-custom badge-score-extra">+${r.extraBonus}점</span>`);
+
+      return `
+        <div class="history-item" style="border-left: 4px solid ${r.isInter ? '#ef4444' : '#f97316'};">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="d-flex align-items-center flex-wrap gap-1">
+              <span class="fw-bold text-white fs-6">${r.bossName}</span>
+              ${badgeParts.join(' ')}
+            </div>
+            <span class="badge-per-person-score">
+              1인당 추가 +${r.extraBonus}점
+            </span>
+          </div>
+          <div class="text-secondary mb-1" style="font-size: 0.74rem;">
+            <i class="fa-regular fa-clock me-1"></i>${r.dateTime}
+          </div>
+          <div class="text-light" style="font-size: 0.78rem;">
+            <strong class="text-secondary">전쟁참여(${r.count}명):</strong> ${r.members.join(', ')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderHistoryList(records) {
+    const container = document.getElementById('historyList');
+    if (!records || records.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-3">기록이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = records.map((r, idx) => {
+      let badgeHtml = "";
+
+      if (r.isInter || r.isInternal || r.extraBonus > 0) {
+        let parts = [];
+        if (r.isInter) parts.push(`<span class="badge-score-custom badge-score-inter">🌐 인터</span>`);
+        if (r.isInternal) parts.push(`<span class="badge-score-custom badge-score-internal">🛡️ 내전</span>`);
+        if (r.extraBonus > 0) parts.push(`<span class="badge-score-custom badge-score-extra">추가(+${r.extraBonus}점)</span>`);
+        badgeHtml = parts.join(' ');
+      } else {
+        badgeHtml = `<span class="badge-score-custom badge-score-normal">일반</span>`;
+      }
+
+      return `
+        <div class="history-item">
+          <div class="history-header-flex">
+            <div class="history-title-area">
+              <span class="fw-bold text-info" style="font-size: 0.88rem; white-space: nowrap;">${r.bossName}</span>
+              ${badgeHtml}
+            </div>
+            <div class="history-tools-area">
+              <span class="text-secondary me-1" style="font-size: 0.7rem;">${r.dateTime}</span>
+              <button type="button" class="btn btn-record-action btn-record-edit" onclick="triggerEditRecordModal(${idx})">수정</button>
+              <button type="button" class="btn btn-record-action btn-record-del" onclick="triggerDeleteRecord(${r.id}, '${r.bossName}')">삭제</button>
+            </div>
+          </div>
+          <div class="text-secondary mb-1" style="font-size: 0.76rem;">획득 아이템: <span class="text-light">${r.dropItem || '없음'}</span></div>
+          <div class="text-light" style="font-size: 0.76rem; line-height: 1.4;">
+            <strong class="text-secondary">참여(${r.count}명 / 총배점 ${r.totalScore}점):</strong> ${r.members.join(', ')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function switchRecordsTab(tab) {
+    document.getElementById('viewMembers').style.display = (tab === 'members') ? 'block' : 'none';
+    document.getElementById('viewWarLog').style.display = (tab === 'warlog') ? 'block' : 'none';
+    document.getElementById('viewHistory').style.display = (tab === 'history') ? 'block' : 'none';
+
+    document.getElementById('tabBtnMembers').classList.toggle('active', tab === 'members');
+    document.getElementById('tabBtnWarLog').classList.toggle('active', tab === 'warlog');
+    document.getElementById('tabBtnHistory').classList.toggle('active', tab === 'history');
+  }
+
+  async function triggerEditRecordModal(idx) {
+    if (!(await verifyAdminPermission())) return;
+
+    const record = rawStatsData.records[idx];
+    if (!record) return;
+
+    document.getElementById('editRecordId').value = record.id;
+    document.getElementById('editRecordBossName').value = record.bossName;
+    document.getElementById('editRecordSummary').innerText = `[${record.bossName}] ${record.dateTime} (${record.warType || '일반'})`;
+
+    currentEditingOriginalMembers = (record.members || []).slice();
+
+    const container = document.getElementById('editMemberCheckList');
+    
+    container.innerHTML = allGuildMembersList.map((m, i) => {
+      const isChecked = record.members.includes(m.name) ? 'checked' : '';
+      return `
+        <div class="modal-member-check-item">
+          <input type="checkbox" class="edit-chk" id="echk_${i}" value="${m.name}" ${isChecked}>
+          <label for="echk_${i}" title="${m.name}">${m.name}</label>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('modalEditRecord').style.display = 'flex';
+  }
+
+  function closeEditModal() {
+    document.getElementById('modalEditRecord').style.display = 'none';
+  }
+
+  async function promptSaveRecordMembers() {
+    if (!(await verifyAdminPermission())) return;
+
+    const raidId = document.getElementById('editRecordId').value;
+    const bossName = document.getElementById('editRecordBossName').value || "보스";
+    const selected = Array.from(document.querySelectorAll('.edit-chk:checked')).map(c => c.value);
+
+    const addedMembers = selected.filter(name => !currentEditingOriginalMembers.includes(name));
+    const removedMembers = currentEditingOriginalMembers.filter(name => !selected.includes(name));
+
+    let confirmMessage = "";
+
+    if (selected.length === 0) {
+      confirmMessage = `선택된 인원이 없습니다.\n[${bossName}] 토벌 참여자를 0명으로 저장하시겠습니까?`;
+    } else if (addedMembers.length > 0 && removedMembers.length === 0) {
+      confirmMessage = `[${bossName}] 토벌에\n[${addedMembers.join(', ')}] 님을 추가하시겠습니까?`;
+    } else if (addedMembers.length === 0 && removedMembers.length > 0) {
+      confirmMessage = `[${bossName}] 토벌에서\n[${removedMembers.join(', ')}] 님을 제외하시겠습니까?`;
+    } else if (addedMembers.length > 0 && removedMembers.length > 0) {
+      confirmMessage = `[${bossName}] 토벌 명단 변경\n• 추가: ${addedMembers.join(', ')}\n• 제외: ${removedMembers.join(', ')}\n\n반영하시겠습니까?`;
+    } else {
+      confirmMessage = `[${bossName}] 토벌 참여 명단에 변동이 없습니다.\n현재 명단(${selected.length}명) 그대로 유지하시겠습니까?`;
+    }
+
+    const confirmed = await openCustomConfirm(
+      "참여 인원 수정 확인",
+      confirmMessage,
+      "fa-solid fa-user-pen"
+    );
+    if (!confirmed) return;
+
+    closeEditModal();
+
+    try {
+      await apiRequest(`boss_participations?id=eq.${raidId}`, "PATCH", {
+        members: selected,
+        member_count: selected.length
+      });
+
+      showRecordsToast('참여 명단이 정상적으로 수정되었습니다.', '✅');
+      await fetchStatsData();
+    } catch (err) {
+      showRecordsToast("수정 실패: " + err.message, "❌");
+    }
+  }
+
+  async function triggerDeleteRecord(raidId, bossName) {
+    if (!(await verifyAdminPermission())) return;
+
+    const confirmed = await openCustomConfirm(
+      "토벌 기록 삭제",
+      `[${bossName}] 토벌 기록을 삭제하시겠습니까?\n삭제된 기록은 복구할 수 없습니다.`,
+      "fa-solid fa-trash-can"
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiRequest(`boss_participations?id=eq.${raidId}`, "DELETE");
+      showRecordsToast('토벌 기록이 삭제되었습니다.', '🗑️');
+      await fetchStatsData();
+    } catch (err) {
+      showRecordsToast("삭제 실패: " + err.message, "❌");
+    }
+  }
+
+  function copyStatsToKakao() {
+    const statsObj = rawStatsData.memberStats || {};
+    const allMembers = Object.keys(statsObj);
+    const members = allMembers.filter(m => (statsObj[m].totalScore || 0) > 0);
+
+    if (members.length === 0) return showRecordsToast('복사할 참여 내역 데이터가 없습니다.', '⚠️');
+
+    const sDate = document.getElementById('filterStartDate').value || '전체';
+    const eDate = document.getElementById('filterEndDate').value || '현재';
+    members.sort((a, b) => statsObj[b].totalScore - statsObj[a].totalScore);
+
+    let text = `📢 [${liveSettings.guildName}] 보스 & 전쟁 참여 점수 통계\n📅 기간: ${sDate} ~ ${eDate}\n──────────────────\n`;
+    members.forEach((name, idx) => {
+      const d = statsObj[name];
+      text += `${idx + 1}위. ${name} : 총 ${d.totalScore}점 (보스 ${d.bossScore}점 / 추가 ${d.extraBonus}점)\n`;
+    });
+    text += `──────────────────\n• 기본 보스: ${liveSettings.scoreBase}점 | 내전: ${liveSettings.scoreInternal}점 | 인터: ${liveSettings.scoreInter}점 | 추가 점수 유동 합산\n모두 수고하셨습니다! 👍`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      showRecordsToast('카톡 공유 양식이 복사되었습니다!', '📋');
+    } else {
+      const t = document.createElement("textarea");
+      t.value = text;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+      showRecordsToast('카톡 공유 양식이 복사되었습니다!', '📋');
+    }
+  }
+</script>

@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ECLIPSE 불편한사람들 길드관리</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #060a14;
+      --card-bg: #0d1527;
+      --card-border: #1a2742;
+      --accent-blue: #38bdf8;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #080d1a; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #1e2c47; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.15); }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+    * { scrollbar-width: thin; scrollbar-color: #1e2c47 #080d1a; }
+
+    .global-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .brand-logo-area { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    .badge-brand-eclipse { background: #7c3aed; color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; }
+    .brand-title-text { color: #ffffff; font-size: 0.95rem; font-weight: 700; letter-spacing: -0.3px; }
+
+    .header-right-tools { display: flex; align-items: center; gap: 8px; }
+    .btn-header-back {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-header-back:hover { background: rgba(56, 189, 248, 0.25); color: #ffffff; }
+
+    .btn-admin-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-admin-pill:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: #38bdf8; }
+    .btn-admin-pill.logged-in-admin { background: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #34d399; font-weight: 700; }
+    .btn-admin-pill.logged-in-super { background: rgba(168, 85, 247, 0.22); border-color: #a855f7; color: #facc15; font-weight: 800; box-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
+
+    .app-container { max-width: 520px; margin: 0 auto; padding: 6px 14px 20px 14px; }
+
+    .visit-counter-banner {
+      background: #0b1324;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .visit-label { color: #38bdf8; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .visit-value { color: #cbd5e1; font-size: 0.8rem; }
+    .visit-value strong { color: #38bdf8; font-size: 0.95rem; font-weight: 800; }
+
+    .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+    .dash-menu-card {
+      background: #0d1527;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+    }
+    .dash-menu-card:hover { background: #111e38; border-color: #38bdf8; transform: translateY(-2px); }
+    .dash-menu-card:active { transform: scale(0.98); }
+
+    .menu-icon-box { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 10px; }
+    .dash-menu-title { color: #ffffff; font-weight: 800; font-size: 0.92rem; margin-bottom: 3px; letter-spacing: -0.3px; }
+    .dash-menu-sub { color: #64748b; font-size: 0.72rem; letter-spacing: -0.2px; }
+
+    .bottom-utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+    .bottom-utility-card {
+      background: #0d1527;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+    }
+    .bottom-utility-card:hover { transform: translateY(-2px); }
+    .bottom-utility-card.enemy:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    .bottom-utility-card.settings:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+    .bottom-utility-card:active { transform: scale(0.98); }
+    .bottom-utility-title { font-weight: 800; font-size: 0.86rem; letter-spacing: -0.2px; }
+
+    #detailPageView { display: none; }
+
+    .admin-auth-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(6, 10, 20, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 999999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .admin-auth-box {
+      background: #0d1527;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 18px;
+      width: 100%; max-width: 330px;
+      padding: 22px 18px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+      text-align: center;
+    }
+    .input-pin-custom {
+      background: #080d1a !important;
+      border: 1px solid #233554 !important;
+      color: #38bdf8 !important;
+      font-size: 1.3rem !important;
+      letter-spacing: 6px;
+      text-align: center;
+      border-radius: 10px !important;
+      padding: 8px !important;
+    }
+
+    .btn-emergency-icon {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-emergency-icon:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .self-checkin-box {
+      background: #0d1527;
+      border: 1.5px solid #38bdf8;
+      border-radius: 20px;
+      width: 100%; max-width: 340px;
+      padding: 22px 18px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(56, 189, 248, 0.25);
+      text-align: center;
+    }
+    .self-timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #f87171;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .custom-global-toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #0d1830;
+      border: 1.5px solid #38bdf8;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+      color: #ffffff;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 99999999;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+    .custom-global-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="global-nav-bar">
+    <div class="brand-logo-area" onclick="goHome()">
+      <span class="badge-brand-eclipse">ECLIPSE</span>
+      <span class="brand-title-text" id="topHeaderTitle">불편한사람들 길드관리</span>
+    </div>
+
+    <div class="header-right-tools">
+      <button type="button" class="btn-header-back" id="btnHeaderBack" style="display: none;" onclick="goHome()">
+        <i class="fa-solid fa-arrow-left"></i><span>뒤로</span>
+      </button>
+      <button type="button" class="btn-admin-pill" id="btnAdminAuthStatus" onclick="handleAdminAuthToggle()">
+        <i class="fa-solid fa-lock"></i><span>관리자 로그인</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <div id="homeDashboardView">
+      <div class="visit-counter-banner">
+        <span class="visit-label">
+          <i class="fa-solid fa-chart-line"></i> 금일 시스템 방문
+        </span>
+        <span class="visit-value">
+          총 <strong id="todayVisitCount">-</strong> 회
+        </span>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-menu-card" onclick="openModule('PageMembers')">
+          <div class="menu-icon-box" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div class="dash-menu-title">길드원목록</div>
+          <div class="dash-menu-sub">명단 & 직급 관리</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageRegister')">
+          <div class="menu-icon-box" style="background: rgba(244, 63, 94, 0.15); color: #fb7185;">
+            <i class="fa-solid fa-crosshairs"></i>
+          </div>
+          <div class="dash-menu-title">보스참여등록</div>
+          <div class="dash-menu-sub">스샷 AI 분석 및 등록</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageRecords')">
+          <div class="menu-icon-box" style="background: rgba(234, 179, 8, 0.15); color: #facc15;">
+            <i class="fa-solid fa-scroll"></i>
+          </div>
+          <div class="dash-menu-title">보스참여자</div>
+          <div class="dash-menu-sub">토벌 히스토리 & 통계</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageWish')">
+          <div class="menu-icon-box" style="background: rgba(236, 72, 153, 0.15); color: #f472b6;">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div class="dash-menu-title">분배희망신청</div>
+          <div class="dash-menu-sub">보유템 낙찰 & 분배</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageSettle')">
+          <div class="menu-icon-box" style="background: rgba(168, 85, 129, 0.15); color: #34d399;">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div class="dash-menu-title">정산내역</div>
+          <div class="dash-menu-sub">N/1 배당금 & 카톡 공유</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageFinance')">
+          <div class="menu-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+            <i class="fa-solid fa-landmark"></i>
+          </div>
+          <div class="dash-menu-title">길드비용현황</div>
+          <div class="dash-menu-sub">금고 자금 & 입출금</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageNotice')">
+          <div class="menu-icon-box" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
+            <i class="fa-solid fa-bullhorn"></i>
+          </div>
+          <div class="dash-menu-title">공지사항</div>
+          <div class="dash-menu-sub">시트 실시간 길드공지</div>
+        </div>
+
+        <div class="dash-menu-card" onclick="openModule('PageTimer')">
+          <div class="menu-icon-box" style="background: rgba(234, 179, 8, 0.15); color: #facc15;">
+            <i class="fa-solid fa-hourglass-half"></i>
+          </div>
+          <div class="dash-menu-title">보스타임</div>
+          <div class="dash-menu-sub">리젠 계산 & 타이머</div>
+        </div>
+      </div>
+
+      <div class="bottom-utility-grid">
+        <div class="bottom-utility-card enemy" onclick="openModule('PageEnemies')">
+          <i class="fa-solid fa-skull text-danger" style="font-size: 1.05rem;"></i>
+          <span class="bottom-utility-title text-danger">원수목록</span>
+        </div>
+        <div class="bottom-utility-card settings" onclick="openModule('PageSettings')">
+          <i class="fa-solid fa-gear text-info" style="font-size: 1.05rem;"></i>
+          <span class="bottom-utility-title text-info">시스템설정</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="detailPageView">
+      <div id="moduleContentArea"></div>
+    </div>
+  </div>
+
+  <div id="globalToastBox" class="custom-global-toast">
+    <span id="globalToastIcon" style="font-size: 1.1rem;">✅</span>
+    <span id="globalToastMsg">알림 내용</span>
+  </div>
+
+  <!-- 🎯 관리자 로그인 모달 -->
+  <div id="globalAuthModal" class="admin-auth-backdrop" style="display: none;">
+    <div class="admin-auth-box">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 1.2rem;">🔑</span>
+          <h6 class="fw-bold text-white m-0" style="font-size: 0.95rem;">관리자 인증</h6>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn-emergency-icon" title="비밀번호 분실 시 비상 복구" onclick="openGlobalRecoveryModal()">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </button>
+          <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="closeGlobalAuthModal()"></button>
+        </div>
+      </div>
+
+      <p class="text-secondary small mb-3" style="font-size: 0.76rem;">관리자 PIN 또는 마스터 키를 입력해주세요.</p>
+
+      <div class="mb-3">
+        <input type="password" id="globalAuthPinInput" class="form-control input-pin-custom" maxlength="12" placeholder="••••" onkeypress="if(event.keyCode==13){ submitGlobalAuth(); }">
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.8rem;" onclick="closeGlobalAuthModal()">취소</button>
+        <button type="button" class="btn btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.8rem;" onclick="submitGlobalAuth()">인증하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🚨 비상 복구 모달 -->
+  <div id="globalRecoveryModal" class="admin-auth-backdrop" style="display: none;">
+    <div class="admin-auth-box">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 1.2rem;">🚨</span>
+          <h6 class="fw-bold text-warning m-0" style="font-size: 0.95rem;">비상 마스터키 복구</h6>
+        </div>
+        <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="closeGlobalRecoveryModal()"></button>
+      </div>
+
+      <p class="text-secondary small mb-3" style="font-size: 0.74rem; line-height: 1.4;">
+        비밀번호를 분실한 경우, 복구 시크릿 코드를 입력하면 마스터키가 <code>000000</code>으로 초기화됩니다.
+      </p>
+
+      <div class="mb-3">
+        <input type="password" id="globalRecoveryKeyInput" class="form-control text-center" placeholder="시크릿 코드 입력" style="background:#080d1a; border:1px solid #f59e0b; color:#facc15; font-size:0.95rem; height:42px;">
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.8rem;" onclick="closeGlobalRecoveryModal()">취소</button>
+        <button type="button" class="btn btn-warning btn-sm flex-fill fw-bold py-2" style="font-size: 0.8rem;" onclick="submitGlobalRecoveryReset()">초기화 실행</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 자가 등록 입력 모달 -->
+  <div id="selfCheckinModal" class="admin-auth-backdrop" style="display: none;">
+    <div class="self-checkin-box" id="selfCheckinInputCard">
+      <div class="self-timer-badge">
+        <i class="fa-solid fa-stopwatch fa-spin"></i>
+        <span>자가 등록 제한 시간: </span><strong id="selfTimerCountdown">03:00</strong>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+        <span style="font-size: 1.3rem;">⚔️</span>
+        <h6 class="fw-bold text-white m-0" style="font-size: 1rem;">토벌 참여 자가 등록</h6>
+      </div>
+
+      <div class="p-2 mb-3 rounded" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.78rem;">
+        <div class="text-info fw-bold mb-1" id="selfRaidInfoText">보스 정보 로드 중...</div>
+        <div class="text-secondary" style="font-size: 0.7rem;">OCR 누락 인원만 본인 인증 후 등록 가능합니다.</div>
+      </div>
+
+      <div class="mb-3 text-start">
+        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (숫자 6자리 이상)</label>
+        <input type="password" id="selfMemberPin" class="form-control text-center" placeholder="개인 비밀번호 입력" maxlength="12" inputmode="numeric" style="background:#080d1a; border:1px solid #38bdf8; color:#38bdf8; font-size:1.1rem; letter-spacing:4px; height:44px;" onkeypress="if(event.keyCode==13){ submitSelfCheckin(); }">
+        <div class="text-secondary mt-1 text-center" style="font-size: 0.68rem;">* 본인 비밀번호와 일치하는 길드원으로 자동 식별됩니다.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.82rem;" onclick="closeSelfCheckinModal()">닫기</button>
+        <button type="button" class="btn btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.82rem;" onclick="submitSelfCheckin()">추가하기</button>
+      </div>
+    </div>
+
+    <!-- 등록 완료 확인 팝업 -->
+    <div class="self-checkin-box" id="selfCheckinSuccessCard" style="display: none;">
+      <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 2px solid #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 14px;">
+        🎉
+      </div>
+      <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;" id="selfSuccessTitle">추가 등록 완료</h6>
+      <p class="text-secondary small mb-4" id="selfSuccessSubText" style="font-size: 0.82rem; line-height: 1.6; word-break: keep-all;"></p>
+      <button type="button" class="btn w-100 fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.9rem; border-radius: 10px;" onclick="terminateSelfCheckinWindow()">
+        확인
+      </button>
+    </div>
+  </div>
+
+  <script src="supabase.js"></script>
+
+  <script>
+    var currentActiveModule = "";
+    var selfTimerInterval = null;
+    var targetSelfRaidData = null;
+    var globalToastTimer = null;
+    var GLOBAL_RECOVERY_SECRET = "ECLIPSE-RECOVERY-9999";
+    var cachedGuildSettingsMap = {};
+
+    function showGlobalToast(message, icon = "✅") {
+      const toast = document.getElementById("globalToastBox");
+      const msgElem = document.getElementById("globalToastMsg");
+      const iconElem = document.getElementById("globalToastIcon");
+      if (!toast) return;
+
+      msgElem.innerText = message;
+      iconElem.innerText = icon;
+      toast.classList.add("show");
+
+      if (globalToastTimer) clearTimeout(globalToastTimer);
+      globalToastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2400);
+    }
+
+    async function sha256(message) {
+      if (!message) return "";
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getAuthStatus() {
+      const expire = sessionStorage.getItem("admin_auth_expire");
+      if (!expire || Date.now() > parseInt(expire, 10)) {
+        sessionStorage.removeItem("admin_auth");
+        sessionStorage.removeItem("admin_role");
+        sessionStorage.removeItem("admin_auth_expire");
+        return { isAuth: false, role: "" };
+      }
+      return {
+        isAuth: sessionStorage.getItem("admin_auth") === "true",
+        role: sessionStorage.getItem("admin_role") || "admin"
+      };
+    }
+
+    function isAdminLoggedIn() {
+      return getAuthStatus().isAuth;
+    }
+
+    function isSuperAdminLoggedIn() {
+      const status = getAuthStatus();
+      return status.isAuth && status.role === "super";
+    }
+
+    function updateAdminAuthUI() {
+      const btn = document.getElementById("btnAdminAuthStatus");
+      if (!btn) return;
+      const status = getAuthStatus();
+
+      if (status.isAuth) {
+        const remainingMin = Math.max(1, Math.round((parseInt(sessionStorage.getItem("admin_auth_expire"), 10) - Date.now()) / 60000));
+        btn.classList.remove("logged-in-admin", "logged-in-super");
+
+        if (status.role === "super") {
+          btn.classList.add("logged-in-super");
+          btn.innerHTML = `<i class="fa-solid fa-crown text-warning"></i><span>슈퍼관리자(${remainingMin}분)</span>`;
+        } else {
+          btn.classList.add("logged-in-admin");
+          btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i><span>관리자(${remainingMin}분)</span>`;
+        }
+      } else {
+        btn.className = "btn-admin-pill";
+        btn.innerHTML = `<i class="fa-solid fa-lock"></i><span>관리자 로그인</span>`;
+      }
+    }
+
+    function handleAdminAuthToggle() {
+      if (isAdminLoggedIn()) {
+        const currentRole = isSuperAdminLoggedIn() ? "슈퍼관리자" : "일반 관리자";
+        if (confirm(`${currentRole} 모드에서 로그아웃하시겠습니까?`)) {
+          sessionStorage.removeItem("admin_auth");
+          sessionStorage.removeItem("admin_role");
+          sessionStorage.removeItem("admin_auth_expire");
+          updateAdminAuthUI();
+          showGlobalToast("로그아웃되었습니다.");
+          if (currentActiveModule === "PageSettings") {
+            goHome();
+          } else if (currentActiveModule) {
+            openModule(currentActiveModule, false);
+          }
+        }
+        return;
+      }
+
+      const modal = document.getElementById("globalAuthModal");
+      const pinInput = document.getElementById("globalAuthPinInput");
+      pinInput.value = "";
+      modal.style.display = "flex";
+      setTimeout(() => pinInput.focus(), 100);
+    }
+
+    function closeGlobalAuthModal() {
+      document.getElementById("globalAuthModal").style.display = "none";
+    }
+
+    function openGlobalRecoveryModal() {
+      closeGlobalAuthModal();
+      document.getElementById("globalRecoveryKeyInput").value = "";
+      document.getElementById("globalRecoveryModal").style.display = "flex";
+      setTimeout(() => document.getElementById("globalRecoveryKeyInput").focus(), 100);
+    }
+
+    function closeGlobalRecoveryModal() {
+      document.getElementById("globalRecoveryModal").style.display = "none";
+    }
+
+    async function submitGlobalRecoveryReset() {
+      const inputCode = document.getElementById("globalRecoveryKeyInput").value.trim();
+      if (inputCode !== GLOBAL_RECOVERY_SECRET) {
+        return alert("❌ 비상 복구 시크릿 코드가 올바르지 않습니다.");
+      }
+
+      try {
+        const defaultHash = await sha256("000000");
+        await apiRequest("guild_settings?key=eq.super_admin_pin", "PATCH", { value: defaultHash });
+        alert("🚨 슈퍼 마스터키가 기본값 [ 000000 ] 으로 안전하게 초기화되었습니다.\n다시 로그인해주세요.");
+        closeGlobalRecoveryModal();
+        handleAdminAuthToggle();
+      } catch (err) {
+        alert("초기화 실패: " + err.message);
+      }
+    }
+
+    async function submitGlobalAuth() {
+      const inputPin = document.getElementById("globalAuthPinInput").value.trim();
+      if (!inputPin) return alert("PIN 번호를 입력해주세요.");
+
+      try {
+        let adminPin = "3003";
+        let superPin = "000000";
+
+        const settings = await apiRequest("guild_settings?select=*");
+        if (settings && settings.length > 0) {
+          settings.forEach(s => {
+            if (s.key === "admin_pin") adminPin = s.value;
+            if (s.key === "super_admin_pin") superPin = s.value;
+            cachedGuildSettingsMap[s.key] = s.value;
+          });
+        }
+
+        const inputHash = await sha256(inputPin);
+
+        if (inputPin === superPin.trim() || inputHash === superPin.trim()) {
+          sessionStorage.setItem("admin_auth", "true");
+          sessionStorage.setItem("admin_role", "super");
+          sessionStorage.setItem("admin_auth_expire", Date.now() + (60 * 60 * 1000));
+          closeGlobalAuthModal();
+          updateAdminAuthUI();
+          showGlobalToast("👑 슈퍼관리자(Master)로 인증되었습니다.");
+          if (currentActiveModule) openModule(currentActiveModule, false);
+        } else if (inputPin === adminPin.trim() || inputHash === adminPin.trim()) {
+          sessionStorage.setItem("admin_auth", "true");
+          sessionStorage.setItem("admin_role", "admin");
+          sessionStorage.setItem("admin_auth_expire", Date.now() + (60 * 60 * 1000));
+          closeGlobalAuthModal();
+          updateAdminAuthUI();
+          showGlobalToast("✅ 일반 관리자로 인증되었습니다.");
+          if (currentActiveModule) openModule(currentActiveModule, false);
+        } else {
+          alert("❌ 비밀번호가 올바르지 않습니다.");
+          document.getElementById("globalAuthPinInput").value = "";
+          document.getElementById("globalAuthPinInput").focus();
+        }
+      } catch (err) {
+        alert("인증 오류: " + err.message);
+      }
+    }
+
+    async function initSystemSettings() {
+      try {
+        const settings = await apiRequest("guild_settings?select=*");
+        if (settings && settings.length > 0) {
+          settings.forEach(s => cachedGuildSettingsMap[s.key] = s.value);
+          if (cachedGuildSettingsMap['guild_name']) {
+            const guildName = cachedGuildSettingsMap['guild_name'];
+            document.getElementById("topHeaderTitle").innerText = `${guildName} 길드관리`;
+            document.title = `ECLIPSE ${guildName} 길드관리`;
+          }
+        }
+      } catch (e) {}
+
+      const todayKey = "visited_date_" + new Date().toISOString().slice(0, 10);
+      let localCount = parseInt(localStorage.getItem("system_visits"), 10) || 1;
+
+      if (!sessionStorage.getItem(todayKey)) {
+        sessionStorage.setItem(todayKey, "1");
+        localCount += 1;
+        localStorage.setItem("system_visits", localCount);
+
+        try {
+          const res = await apiRequest("guild_settings?key=eq.today_visits");
+          if (res && res.length > 0) {
+            const dbCount = (parseInt(res[0].value, 10) || 0) + 1;
+            await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: String(dbCount) });
+            localCount = dbCount;
+          }
+        } catch (e) {}
+      }
+
+      document.getElementById("todayVisitCount").innerText = localCount;
+    }
+
+    // 🎯 일반 관리자 권한 사전 검증 및 메뉴 진입 제어
+    async function checkPermissionBeforeOpen(pageName) {
+      if (isSuperAdminLoggedIn()) return true;
+
+      try {
+        const settings = await apiRequest("guild_settings?select=*");
+        if (settings && settings.length > 0) {
+          settings.forEach(s => cachedGuildSettingsMap[s.key] = s.value);
+        }
+      } catch (e) {}
+
+      const permMap = {
+        "PageRegister": { key: "perm_boss_register", name: "보스참여등록" },
+        "PageWish": { key: "perm_wish_distribute", name: "분배희망신청" },
+        "PageSettle": { key: "perm_settle_fund_dist", name: "정산내역" },
+        "PageFinance": { key: "perm_finance_input", name: "길드비용현황" }
+      };
+
+      if (permMap[pageName]) {
+        const cfg = permMap[pageName];
+        if (cachedGuildSettingsMap[cfg.key] === "false") {
+          alert(`⚠️ [${cfg.name}] 기능은 일반 관리자 권한이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.`);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    async function openModule(pageName, pushHistory = true) {
+      if (pageName === "PageSettings") {
+        if (!isAdminLoggedIn()) {
+          handleAdminAuthToggle();
+          return;
+        }
+      }
+
+      // 일반 관리자 권한 체크
+      const isAllowed = await checkPermissionBeforeOpen(pageName);
+      if (!isAllowed) return;
+
+      currentActiveModule = pageName;
+      document.getElementById("homeDashboardView").style.display = "none";
+      document.getElementById("detailPageView").style.display = "block";
+      document.getElementById("btnHeaderBack").style.display = "inline-flex";
+
+      if (pushHistory) {
+        history.pushState({ page: pageName }, "", `#${pageName}`);
+      }
+
+      const container = document.getElementById("moduleContentArea");
+      container.innerHTML = `<div class="text-secondary small text-center py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>화면을 불러오는 중...</div>`;
+
+      try {
+        // 캐시 무효화 타임스탬프 쿼리
+        const response = await fetch(`pages/${pageName}.html?_t=${Date.now()}`);
+        if (!response.ok) throw new Error(`페이지 로드 실패 (${response.status})`);
+        const html = await response.text();
+        container.innerHTML = html;
+
+        document.querySelectorAll(".dynamic-module-script").forEach(el => el.remove());
+
+        const scripts = container.querySelectorAll("script");
+        scripts.forEach(s => {
+          const newScript = document.createElement("script");
+          newScript.className = "dynamic-module-script";
+          if (s.src) {
+            newScript.src = s.src;
+          } else {
+            newScript.textContent = s.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      } catch (err) {
+        container.innerHTML = `<div class="text-danger small text-center py-5">화면 로드 실패: ${err.message}</div>`;
+      }
+    }
+
+    function goHome(pushHistory = true) {
+      currentActiveModule = "";
+      document.getElementById("btnHeaderBack").style.display = "none";
+      document.getElementById("detailPageView").style.display = "none";
+      document.getElementById("homeDashboardView").style.display = "block";
+      document.getElementById("moduleContentArea").innerHTML = "";
+
+      document.querySelectorAll(".dynamic-module-script").forEach(el => el.remove());
+
+      if (pushHistory && window.location.hash) {
+        history.pushState(null, "", window.location.pathname);
+      }
+    }
+
+    async function checkSelfCheckinUrlHash() {
+      const hash = window.location.hash;
+      if (!hash || !hash.includes("SelfCheckin")) return;
+
+      const paramsPart = hash.split("?")[1];
+      if (!paramsPart) return;
+
+      const params = new URLSearchParams(paramsPart);
+      const raidId = params.get("id");
+      const createdTime = parseInt(params.get("t"), 10) || 0;
+
+      if (!raidId || !createdTime) return;
+
+      const elapsedMs = Date.now() - createdTime;
+      const expireLimitMs = 3 * 60 * 1000;
+
+      if (elapsedMs > expireLimitMs) {
+        alert("⚠️ 자가 추가 가능 시간(3분)이 이미 만료되었습니다.\n명단 추가가 필요한 경우 길드 관리자에게 문의하세요.");
+        history.replaceState(null, "", window.location.pathname);
+        return;
+      }
+
+      try {
+        const [raidData, members] = await Promise.all([
+          apiRequest(`boss_participations?id=eq.${raidId}`),
+          apiRequest(`guild_members?select=name,pin&order=name.asc`)
+        ]);
+
+        if (!raidData || raidData.length === 0) {
+          alert("해당 토벌 기록을 찾을 수 없습니다.");
+          history.replaceState(null, "", window.location.pathname);
+          return;
+        }
+
+        targetSelfRaidData = raidData[0];
+        window.cachedSelfMembers = members || [];
+
+        const raidTimeStr = (targetSelfRaidData.raid_time || "").replace("T", " ").slice(0, 16);
+        document.getElementById("selfRaidInfoText").innerText = `[${raidTimeStr}] ${targetSelfRaidData.boss_name} (${targetSelfRaidData.war_type || '일반'})`;
+
+        document.getElementById("selfCheckinInputCard").style.display = "block";
+        document.getElementById("selfCheckinSuccessCard").style.display = "none";
+
+        const pinInput = document.getElementById("selfMemberPin");
+        pinInput.value = "";
+        document.getElementById("selfCheckinModal").style.display = "flex";
+        setTimeout(() => pinInput.focus(), 100);
+
+        startSelfTimerCountdown(createdTime + expireLimitMs);
+
+      } catch (err) {
+        alert("데이터 로드 실패: " + err.message);
+      }
+    }
+
+    function startSelfTimerCountdown(expireAt) {
+      if (selfTimerInterval) clearInterval(selfTimerInterval);
+
+      const updateTimer = () => {
+        const remainMs = expireAt - Date.now();
+        if (remainMs <= 0) {
+          clearInterval(selfTimerInterval);
+          document.getElementById("selfTimerCountdown").innerText = "만료됨";
+          alert("⚠️ 자가 추가 가능 시간(3분)이 만료되었습니다.");
+          closeSelfCheckinModal();
+          return;
+        }
+
+        const sec = Math.floor(remainMs / 1000);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        document.getElementById("selfTimerCountdown").innerText = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+      };
+
+      updateTimer();
+      selfTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function closeSelfCheckinModal() {
+      if (selfTimerInterval) clearInterval(selfTimerInterval);
+      document.getElementById("selfCheckinModal").style.display = "none";
+      history.replaceState(null, "", window.location.pathname);
+    }
+
+    async function submitSelfCheckin() {
+      const inputPin = document.getElementById("selfMemberPin").value.trim();
+
+      if (!inputPin) return alert("개인 비밀번호를 입력해주세요.");
+      if (inputPin.length < 4) return alert("비밀번호는 숫자 4자리 이상이어야 합니다.");
+
+      const matchedMembers = (window.cachedSelfMembers || []).filter(m => (m.pin || "").trim() === inputPin);
+
+      if (matchedMembers.length === 0) {
+        return alert("❌ 등록된 비밀번호와 일치하는 길드원을 찾을 수 없습니다.\n비밀번호를 다시 확인해주세요.");
+      }
+
+      if (matchedMembers.length > 1) {
+        return alert("⚠️ 동일한 비밀번호를 사용하는 길드원이 둘 이상 존재합니다.\n관리자에게 문의하여 비밀번호를 재설정해주세요.");
+      }
+
+      const identifiedMember = matchedMembers[0];
+      const memberName = identifiedMember.name;
+
+      const currentList = Array.isArray(targetSelfRaidData.members) ? targetSelfRaidData.members : [];
+      if (currentList.includes(memberName)) {
+        showSuccessConfirmCard(memberName, true);
+        return;
+      }
+
+      try {
+        const updatedMembers = currentList.concat([memberName]);
+        await apiRequest(`boss_participations?id=eq.${targetSelfRaidData.id}`, "PATCH", {
+          members: updatedMembers,
+          member_count: updatedMembers.length
+        });
+
+        showSuccessConfirmCard(memberName, false);
+
+      } catch (err) {
+        alert("추가 실패: " + err.message);
+      }
+    }
+
+    function showSuccessConfirmCard(memberName, isAlready) {
+      if (selfTimerInterval) clearInterval(selfTimerInterval);
+
+      document.getElementById("selfCheckinInputCard").style.display = "none";
+      const successCard = document.getElementById("selfCheckinSuccessCard");
+      const titleElem = document.getElementById("selfSuccessTitle");
+      const subElem = document.getElementById("selfSuccessSubText");
+
+      const dateTimeStr = (targetSelfRaidData.raid_time || "").replace("T", " ").slice(0, 16);
+      const bossStr = targetSelfRaidData.boss_name || "보스";
+
+      if (isAlready) {
+        titleElem.innerText = `이미 등록되어 있습니다.`;
+        subElem.innerHTML = `<strong>${dateTimeStr} [${bossStr}]</strong>에<br><strong>[${memberName}]</strong> 님은 이미 포함되어 있습니다.<br><br>확인 버튼을 누르면 창이 닫힙니다.`;
+      } else {
+        titleElem.innerText = `추가 등록 완료`;
+        subElem.innerHTML = `<strong>${dateTimeStr} [${bossStr}]</strong>에<br><strong>[${memberName}]</strong> 님이 추가 등록 완료되었습니다.<br><br>확인 버튼을 누르면 창이 닫힙니다.`;
+      }
+
+      successCard.style.display = "block";
+    }
+
+    function terminateSelfCheckinWindow() {
+      if (selfTimerInterval) clearInterval(selfTimerInterval);
+      document.getElementById("selfCheckinModal").style.display = "none";
+      history.replaceState(null, "", window.location.pathname);
+
+      window.location.href = "kakaotalk://inappbrowser/close";
+      window.open('', '_self', '');
+      window.close();
+
+      setTimeout(() => {
+        document.body.innerHTML = `
+          <div style="min-height: 100vh; background: #060a14; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 1.5px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 16px;">
+              ✅
+            </div>
+            <h5 style="font-weight: 800; margin-bottom: 8px;">토벌 참여 등록 완료</h5>
+            <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px;">
+              성공적으로 명단에 등록되었습니다.<br>이 탭을 닫고 카카오톡으로 돌아가셔도 좋습니다.
+            </p>
+            <button onclick="window.close()" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 0.82rem; font-weight: 700; padding: 8px 20px; border-radius: 10px; cursor: pointer;">
+              창 닫기
+            </button>
+          </div>
+        `;
+      }, 300);
+    }
+
+    window.addEventListener("popstate", (event) => {
+      if (event.state && event.state.page) {
+        openModule(event.state.page, false);
+      } else {
+        goHome(false);
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initSystemSettings();
+      updateAdminAuthUI();
+
+      if (window.location.hash.includes("SelfCheckin")) {
+        checkSelfCheckinUrlHash();
+      } else {
+        const hash = window.location.hash.replace("#", "");
+        if (hash) openModule(hash, false);
+      }
+    });
+  </script>
+</body>
+</html>

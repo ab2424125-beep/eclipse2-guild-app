@@ -1,0 +1,578 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 길드 원수 목록 및 등록 모듈
+     경로: pages/PageEnemies.html
+     ========================================== -->
+<style>
+  .enemy-card-main {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .enemy-form-box {
+    background: #0d1527;
+    border: 1px solid #233554;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+
+  .enemy-input {
+    background-color: #080d1a !important;
+    border: 1px solid #334767 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    font-size: 0.82rem !important;
+    color-scheme: dark;
+  }
+  .enemy-input:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25) !important;
+  }
+  .enemy-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  select.enemy-input option, select.enemy-input optgroup {
+    background-color: #0d1527;
+    color: #ffffff;
+  }
+
+  .btn-kakao-copy-enemy {
+    background: #fee500;
+    color: #191919;
+    border: none;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 4px 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-kakao-copy-enemy:hover {
+    background: #fdd835;
+    color: #000;
+  }
+
+  .filter-chips-wrapper {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    scrollbar-width: thin;
+  }
+  .filter-chip {
+    white-space: nowrap;
+    background: #0b1324;
+    border: 1px solid #243552;
+    color: #94a3b8;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-chip.active {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+  }
+
+  .enemy-grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-height: 440px;
+    overflow-y: auto;
+    padding: 6px 4px 6px 2px;
+  }
+
+  @media (max-width: 480px) {
+    .enemy-grid-container {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .enemy-grid-block {
+    background: #0d1527;
+    border: 1px solid #22324e;
+    border-radius: 10px;
+    padding: 9px 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s ease-in-out;
+    text-align: center;
+    min-height: 52px;
+  }
+  .enemy-grid-block:hover {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+  }
+
+  .grid-enemy-name {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .grid-guild-tag {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tag-location-full {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 2px;
+  }
+</style>
+
+<div class="enemy-card-main mb-4">
+  <!-- 상단 타이틀 & 카톡 복사 버튼 영역 -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size: 1.25rem;">💀</span>
+      <h6 class="fw-bold mb-0 text-danger fs-6">길드 원수 목록 및 등록</h6>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn-kakao-copy-enemy" onclick="copyEnemyListToKakao()">
+        <i class="fa-solid fa-comment"></i> 카톡 복사
+      </button>
+      <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-2 py-1" id="enemyTotalCount" style="font-size: 0.72rem;">
+        총 0명
+      </span>
+    </div>
+  </div>
+
+  <!-- 1. 원수 등록 폼 -->
+  <div class="enemy-form-box">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="text-light small fw-bold" style="font-size: 0.76rem;">
+        <i class="fa-solid fa-circle-plus text-danger me-1"></i> 원수 등록 / 사냥터 추가
+      </span>
+      <span class="text-secondary small" style="font-size: 0.68rem;">동일 원수는 자동 병합 갱신</span>
+    </div>
+    <div class="row g-2">
+      <div class="col-6">
+        <input type="text" id="inputEnemyName" class="form-control enemy-input" placeholder="원수 닉네임 (필수)">
+      </div>
+      <div class="col-6">
+        <input type="text" id="inputEnemyGuild" class="form-control enemy-input" placeholder="원수 소속 길드명">
+      </div>
+      <div class="col-6">
+        <select id="selectEnemyReporter" class="form-select enemy-input">
+          <option value="">등록 길드원 선택</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <select id="selectEnemyLocation" class="form-select enemy-input" onchange="handleLocationChange()">
+          <option value="">주요 사냥터 선택</option>
+          <option value="월드 던전 1층">월드 던전 1층</option>
+          <option value="월드 던전 2층">월드 던전 2층</option>
+          <option value="오만의 탑 1층">오만의 탑 1층</option>
+          <option value="오만의 탑 2층">오만의 탑 2층</option>
+          <option value="오만의 탑 3층">오만의 탑 3층</option>
+          <option value="용의 계곡 던전">용의 계곡 던전</option>
+          <option value="화룡의 둥지">화룡의 둥지</option>
+          <option value="__custom__">✏️ 직접 입력</option>
+        </select>
+      </div>
+      <div class="col-12" id="customLocationRow" style="display: none;">
+        <input type="text" id="inputCustomLocation" class="form-control enemy-input" placeholder="새로운 사냥터 이름을 입력하세요">
+      </div>
+      <div class="col-12 mt-2">
+        <button type="button" class="btn btn-danger btn-sm w-100 fw-bold py-1" style="font-size: 0.8rem;" onclick="submitEnemyForm()">
+          <i class="fa-solid fa-skull me-1"></i> 등록 / 사냥터 추가
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 제보 길드원 필터 칩 -->
+  <div class="filter-chips-wrapper" id="reporterFilterChips">
+    <div class="filter-chip active" onclick="setReporterFilter('')">전체보기</div>
+  </div>
+
+  <!-- 3. 실시간 검색창 -->
+  <div class="mb-2">
+    <div class="position-relative">
+      <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
+      <input type="text" id="searchEnemyInput" class="form-control enemy-input" style="padding-left: 32px; font-size: 0.8rem !important;" placeholder="원수 닉네임, 길드명, 사냥터 실시간 검색..." onkeyup="applyFilter()">
+    </div>
+  </div>
+
+  <!-- 4. 원수 그리드 리스트 영역 -->
+  <div class="enemy-grid-container" id="enemyListContainer">
+    <div class="text-secondary small text-center py-4 w-100" style="grid-column: 1 / -1;">원수 목록을 불러오는 중...</div>
+  </div>
+</div>
+
+<!-- 원수 상세 보기 모달 -->
+<div id="modalEnemyDetail" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center;">
+  <div style="background: #0d1527; border: 1px solid #ef4444; color: #fff; border-radius: 16px; width: 92%; max-width: 420px; padding: 18px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-50">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid fa-crosshairs text-danger"></i>
+        <h6 class="modal-title fw-bold text-danger m-0" id="mDetailName">원수 상세</h6>
+        <span class="grid-guild-tag" id="mDetailGuild" style="display: none;"></span>
+      </div>
+      <button type="button" class="btn-close btn-close-white" onclick="closeEnemyDetailModal()"></button>
+    </div>
+
+    <div class="mb-3">
+      <div class="text-secondary small mb-1" style="font-size: 0.72rem;">주요 출몰 사냥터:</div>
+      <div id="mDetailLocations" class="p-2 rounded border border-secondary border-opacity-25" style="background: #080d1a; min-height: 50px;"></div>
+    </div>
+
+    <div class="mb-3 text-secondary" style="font-size: 0.72rem;">
+      <div>제보/등록 길드원: <strong class="text-light" id="mDetailReporters"></strong></div>
+      <div class="mt-1">최근 등록/갱신: <span id="mDetailDate"></span></div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-50">
+      <button type="button" class="btn btn-outline-danger btn-sm" id="btnModalDelete">
+        <i class="fa-solid fa-trash-can me-1"></i>삭제
+      </button>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-info btn-sm" id="btnModalEdit">
+          <i class="fa-solid fa-pen-to-square me-1"></i>사냥터 편집
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeEnemyDetailModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var rawEnemyList = [];
+  var currentFilteredList = [];
+  var currentReporterFilter = "";
+
+  (async function initEnemiesPage() {
+    await loadGuildMembersDropdown();
+    await loadEnemyData();
+  })();
+
+  async function loadGuildMembersDropdown() {
+    try {
+      const members = await apiRequest("guild_members?select=name&order=name.asc");
+      const select = document.getElementById('selectEnemyReporter');
+      if (!select) return;
+
+      let optionsHtml = '<option value="">등록 길드원 선택</option>';
+      (members || []).forEach(m => {
+        optionsHtml += `<option value="${m.name}">${m.name}</option>`;
+      });
+      select.innerHTML = optionsHtml;
+    } catch (e) {}
+  }
+
+  function handleLocationChange() {
+    const val = document.getElementById('selectEnemyLocation').value;
+    const customRow = document.getElementById('customLocationRow');
+    if (val === '__custom__') {
+      customRow.style.display = 'block';
+      document.getElementById('inputCustomLocation').focus();
+    } else {
+      customRow.style.display = 'none';
+      document.getElementById('inputCustomLocation').value = '';
+    }
+  }
+
+  async function loadEnemyData() {
+    const container = document.getElementById('enemyListContainer');
+    container.innerHTML = '<div class="text-secondary small text-center py-4 w-100" style="grid-column: 1 / -1;"><i class="fa-solid fa-spinner fa-spin text-danger me-2"></i>목록 불러오는 중...</div>';
+
+    try {
+      const data = await apiRequest("guild_enemies?select=*&order=id.desc");
+      rawEnemyList = (data || []).map(item => ({
+        id: item.id,
+        enemyName: item.enemy_name,
+        enemyGuild: item.enemy_guild || '',
+        reporters: Array.isArray(item.reporters) ? item.reporters : [],
+        locations: Array.isArray(item.locations) ? item.locations : [],
+        dateTime: item.updated_at ? item.updated_at.slice(0, 10) : ''
+      }));
+
+      document.getElementById('enemyTotalCount').innerText = `총 ${rawEnemyList.length}명`;
+      buildReporterFilterChips();
+      applyFilter();
+    } catch (err) {
+      container.innerHTML = `<div class="text-danger small text-center py-3 w-100" style="grid-column: 1 / -1;">오류 발생: ${err.message}</div>`;
+    }
+  }
+
+  function buildReporterFilterChips() {
+    const container = document.getElementById('reporterFilterChips');
+    const reporterMap = {};
+
+    rawEnemyList.forEach(item => {
+      (item.reporters || []).forEach(rep => {
+        reporterMap[rep] = (reporterMap[rep] || 0) + 1;
+      });
+    });
+
+    const reporterNames = Object.keys(reporterMap).sort((a, b) => reporterMap[b] - reporterMap[a]);
+
+    let html = `<div class="filter-chip ${currentReporterFilter === '' ? 'active' : ''}" onclick="setReporterFilter('')">전체 (${rawEnemyList.length})</div>`;
+    reporterNames.forEach(name => {
+      const activeClass = (currentReporterFilter === name) ? 'active' : '';
+      html += `<div class="filter-chip ${activeClass}" onclick="setReporterFilter('${name}')">${name} (${reporterMap[name]})</div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function setReporterFilter(repName) {
+    currentReporterFilter = repName;
+    buildReporterFilterChips();
+    applyFilter();
+  }
+
+  function renderEnemyList(list) {
+    const container = document.getElementById('enemyListContainer');
+    if (!list || list.length === 0) {
+      container.innerHTML = '<div class="text-secondary small text-center py-4 w-100" style="grid-column: 1 / -1;">표시할 원수가 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map((item, idx) => {
+      const guildBadge = item.enemyGuild 
+        ? `<span class="grid-guild-tag">${item.enemyGuild}</span>` 
+        : '';
+
+      return `
+        <div class="enemy-grid-block" onclick="openEnemyDetailModal(${idx})">
+          <div class="grid-enemy-name">${item.enemyName}</div>
+          ${guildBadge}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openEnemyDetailModal(idx) {
+    const item = currentFilteredList[idx] || rawEnemyList[idx];
+    if (!item) return;
+
+    document.getElementById('mDetailName').innerText = item.enemyName;
+
+    const guildTag = document.getElementById('mDetailGuild');
+    if (item.enemyGuild) {
+      guildTag.innerText = item.enemyGuild;
+      guildTag.style.display = 'inline-block';
+    } else {
+      guildTag.style.display = 'none';
+    }
+
+    const locContainer = document.getElementById('mDetailLocations');
+    if (item.locations.length > 0) {
+      locContainer.innerHTML = item.locations.map(loc => `<span class="tag-location-full"><i class="fa-solid fa-location-dot me-1"></i>${loc}</span>`).join('');
+    } else {
+      locContainer.innerHTML = '<span class="text-secondary small">등록된 사냥터 정보가 없습니다.</span>';
+    }
+
+    document.getElementById('mDetailReporters').innerText = item.reporters.length > 0 ? item.reporters.join(', ') : '미입력';
+    document.getElementById('mDetailDate').innerText = item.dateTime;
+
+    document.getElementById('btnModalEdit').onclick = function() {
+      closeEnemyDetailModal();
+      editEnemyLocationsPrompt(item.id, item.enemyName, item.locations.join(', '));
+    };
+
+    document.getElementById('btnModalDelete').onclick = function() {
+      closeEnemyDetailModal();
+      deleteEnemyItem(item.id, item.enemyName);
+    };
+
+    document.getElementById('modalEnemyDetail').style.display = 'flex';
+  }
+
+  function closeEnemyDetailModal() {
+    document.getElementById('modalEnemyDetail').style.display = 'none';
+  }
+
+  function applyFilter() {
+    const query = document.getElementById('searchEnemyInput').value.trim().toLowerCase();
+
+    currentFilteredList = rawEnemyList.filter(item => {
+      if (currentReporterFilter && !item.reporters.includes(currentReporterFilter)) {
+        return false;
+      }
+
+      if (query) {
+        const matchName = item.enemyName.toLowerCase().includes(query);
+        const matchGuild = (item.enemyGuild || '').toLowerCase().includes(query);
+        const matchLoc = item.locations.some(loc => loc.toLowerCase().includes(query));
+        const matchRep = item.reporters.some(rep => rep.toLowerCase().includes(query));
+        return matchName || matchGuild || matchLoc || matchRep;
+      }
+
+      return true;
+    });
+
+    renderEnemyList(currentFilteredList);
+  }
+
+  // 원수 등록 및 자동 병합 처리
+  async function submitEnemyForm() {
+    const enemyName = document.getElementById('inputEnemyName').value.trim();
+    const enemyGuild = document.getElementById('inputEnemyGuild').value.trim();
+    const reporter = document.getElementById('selectEnemyReporter').value.trim();
+    
+    let location = document.getElementById('selectEnemyLocation').value.trim();
+    if (location === '__custom__') {
+      location = document.getElementById('inputCustomLocation').value.trim();
+    }
+
+    if (!enemyName) {
+      alert('원수 닉네임을 입력해주세요.');
+      document.getElementById('inputEnemyName').focus();
+      return;
+    }
+
+    try {
+      // 기존 원수 등록 여부 확인
+      const existing = await apiRequest(`guild_enemies?enemy_name=eq.${encodeURIComponent(enemyName)}`);
+      
+      if (existing && existing.length > 0) {
+        // 기존 데이터에 누적 병합
+        const target = existing[0];
+        let newReporters = Array.isArray(target.reporters) ? target.reporters.slice() : [];
+        let newLocations = Array.isArray(target.locations) ? target.locations.slice() : [];
+
+        if (reporter && !newReporters.includes(reporter)) newReporters.push(reporter);
+        if (location && !newLocations.includes(location)) newLocations.push(location);
+
+        await apiRequest(`guild_enemies?id=eq.${target.id}`, "PATCH", {
+          enemy_guild: enemyGuild || target.enemy_guild,
+          reporters: newReporters,
+          locations: newLocations,
+          updated_at: new Date().toISOString()
+        });
+
+        alert(`✅ [${enemyName}] 기존 원수 데이터에 사냥터 및 제보자가 누적 병합되었습니다!`);
+      } else {
+        // 신규 등록
+        await apiRequest("guild_enemies", "POST", [{
+          enemy_name: enemyName,
+          enemy_guild: enemyGuild,
+          reporters: reporter ? [reporter] : [],
+          locations: location ? [location] : [],
+          updated_at: new Date().toISOString()
+        }]);
+
+        alert(`✅ [${enemyName}] 신규 원수로 등록되었습니다.`);
+      }
+
+      document.getElementById('inputEnemyName').value = '';
+      document.getElementById('inputEnemyGuild').value = '';
+      document.getElementById('selectEnemyReporter').value = '';
+      document.getElementById('selectEnemyLocation').value = '';
+      document.getElementById('customLocationRow').style.display = 'none';
+      document.getElementById('inputCustomLocation').value = '';
+
+      await loadEnemyData();
+    } catch (err) {
+      alert("등록 실패: " + err.message);
+    }
+  }
+
+  // 사냥터 편집
+  async function editEnemyLocationsPrompt(id, enemyName, oldLocs) {
+    const newLocs = prompt(`[${enemyName}] 님의 주요 사냥터 목록을 수정합니다.\n(여러 사냥터는 쉼표로 구분)`, oldLocs);
+    if (newLocs === null) return;
+
+    const locArr = newLocs.split(',').map(s => s.trim()).filter(Boolean);
+
+    try {
+      await apiRequest(`guild_enemies?id=eq.${id}`, "PATCH", {
+        locations: locArr,
+        updated_at: new Date().toISOString()
+      });
+
+      alert('사냥터 목록이 수정되었습니다.');
+      await loadEnemyData();
+    } catch (err) {
+      alert("수정 실패: " + err.message);
+    }
+  }
+
+  // 원수 삭제
+  async function deleteEnemyItem(id, enemyName) {
+    if (!confirm(`[${enemyName}] 원수를 목록에서 삭제하시겠습니까?`)) return;
+
+    try {
+      await apiRequest(`guild_enemies?id=eq.${id}`, "DELETE");
+      alert('원수가 삭제되었습니다.');
+      await loadEnemyData();
+    } catch (err) {
+      alert("삭제 실패: " + err.message);
+    }
+  }
+
+  // 카카오톡 공유 텍스트 양식 복사
+  function copyEnemyListToKakao() {
+    const listToCopy = currentFilteredList.length > 0 ? currentFilteredList : rawEnemyList;
+
+    if (!listToCopy || listToCopy.length === 0) {
+      alert('복사할 원수 목록이 없습니다.');
+      return;
+    }
+
+    let filterDesc = currentReporterFilter ? ` [${currentReporterFilter} 님 제보]` : '';
+    let text = `💀 [이클립스] 길드 원수 목록${filterDesc} (${listToCopy.length}명)\n`;
+    text += `──────────────────\n`;
+
+    listToCopy.forEach((item, idx) => {
+      const guildPart = item.enemyGuild ? `[${item.enemyGuild}]` : '';
+      const repPart = item.reporters.length > 0 ? item.reporters.join(', ') : '미입력';
+      text += `${idx + 1}.${guildPart}${item.enemyName} - ${repPart}\n`;
+    });
+
+    text += `──────────────────\n필드 발견 시 적극 제보 및 처치 부탁드립니다. ⚔️`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`📋 원수 목록 총 ${listToCopy.length}건이 복사되었습니다!\n단톡방에 바로 붙여넣기(Ctrl+V)하세요.`);
+      });
+    } else {
+      const t = document.createElement("textarea");
+      t.value = text;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+      alert(`📋 원수 목록 총 ${listToCopy.length}건이 복사되었습니다!`);
+    }
+  }
+</script>

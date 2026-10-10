@@ -1,1 +1,1 @@
-# eclipse2-guild-app
+# eclipse-guild-app

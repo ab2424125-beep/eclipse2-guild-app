@@ -1,0 +1,227 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 길드 공지사항 모듈
+     경로: pages/PageNotice.html
+     ========================================== -->
+<style>
+  .notice-card {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .notice-item-box {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    transition: all 0.15s ease;
+  }
+  .notice-item-box:hover {
+    border-color: #38bdf8;
+    background: #101a30;
+  }
+
+  .badge-notice-important {
+    background: rgba(244, 63, 94, 0.2);
+    border: 1px solid #f43f5e;
+    color: #fb7185;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .badge-notice-normal {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .notice-body {
+    color: #cbd5e1;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  }
+</style>
+
+<div class="notice-card mb-4">
+  <!-- 상단 헤더 & 등록/새로고침 버튼 -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size: 1.3rem;">📢</span>
+      <h6 class="fw-bold mb-0 text-white">길드 공지사항</h6>
+    </div>
+    <div class="d-flex gap-1">
+      <button class="btn btn-outline-info btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="toggleNoticeForm()">
+        <i class="fa-solid fa-pen me-1"></i>공지 등록
+      </button>
+      <button class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="loadGuildNotices()">
+        <i class="fa-solid fa-arrows-rotate"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 공지 등록 폼 (접이식) -->
+  <div class="box-dark mb-3" id="noticeWriteBox" style="display: none; border: 1px solid rgba(56, 189, 248, 0.3);">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="small fw-bold text-info"><i class="fa-solid fa-pen-to-square me-1"></i>신규 공지사항 등록</span>
+      <button class="btn-close btn-close-white" style="font-size: 0.7rem;" onclick="toggleNoticeForm()"></button>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-4">
+        <label class="small text-secondary mb-1">구분</label>
+        <select id="noticeBadge" class="form-select input-custom py-1" style="font-size: 0.8rem;">
+          <option value="📢 일반" selected>📢 일반</option>
+          <option value="🚨 필독">🚨 필독</option>
+          <option value="⚔️ 쟁/공성">⚔️ 쟁/공성</option>
+          <option value="🎉 이벤트">🎉 이벤트</option>
+        </select>
+      </div>
+      <div class="col-4">
+        <label class="small text-secondary mb-1">작성자</label>
+        <input type="text" id="noticeAuthor" class="form-control input-custom py-1" placeholder="길드장" value="길드장" style="font-size: 0.8rem;">
+      </div>
+      <div class="col-4">
+        <label class="small text-secondary mb-1">공지 일자</label>
+        <input type="date" id="noticeDate" class="form-control input-custom py-1" style="font-size: 0.8rem;">
+      </div>
+      <div class="col-12">
+        <label class="small text-secondary mb-1">공지 제목</label>
+        <input type="text" id="noticeTitle" class="form-control input-custom" placeholder="제목을 입력하세요">
+      </div>
+      <div class="col-12">
+        <label class="small text-secondary mb-1">공지 내용</label>
+        <textarea id="noticeContent" class="form-control input-custom" rows="4" placeholder="공지 내용을 자세히 입력하세요"></textarea>
+      </div>
+      <div class="col-12 mt-2">
+        <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="handleSubmitNotice()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none;">
+          <i class="fa-solid fa-check me-1"></i> 공지사항 저장하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-2 mb-3 rounded" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+    <div class="text-secondary small" style="font-size: 0.75rem;">
+      💡 길드 중요 공지 및 전달사항이 실시간으로 안내됩니다.
+    </div>
+  </div>
+
+  <!-- 공지사항 리스트 영역 -->
+  <div id="noticeListArea" style="max-height: 520px; overflow-y: auto;">
+    <div class="text-secondary small text-center py-4">공지사항을 불러오는 중...</div>
+  </div>
+</div>
+
+<script>
+  (async function initNoticePage() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('noticeDate');
+    if (dateInput) dateInput.value = today;
+
+    await loadGuildNotices();
+  })();
+
+  function toggleNoticeForm() {
+    const box = document.getElementById('noticeWriteBox');
+    if (box) {
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  // 1. 공지사항 목록 조회 (Supabase)
+  async function loadGuildNotices() {
+    const container = document.getElementById('noticeListArea');
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-secondary small text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>공지 조회 중...</div>';
+
+    try {
+      const list = await apiRequest("guild_notices?select=*&order=id.desc");
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="text-secondary small text-center py-4">등록된 공지사항이 없습니다.<br>우측 상단의 [+ 공지 등록]을 눌러 첫 공지를 작성해보세요!</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(item => {
+        const badge = item.badge || '📢 일반';
+        const isImportant = badge.includes('필독') || badge.includes('긴급') || badge.includes('중요');
+        const badgeClass = isImportant ? 'badge-notice-important' : 'badge-notice-normal';
+        const dateOnly = item.notice_date || (item.created_at ? item.created_at.slice(0, 10) : '');
+
+        return `
+          <div class="notice-item-box">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="${badgeClass}">${badge}</span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-secondary" style="font-size: 0.72rem;">📅 ${dateOnly} • ✍️ ${item.author || '관리자'}</span>
+                <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" style="font-size: 0.65rem;" onclick="deleteNotice(${item.id})">삭제</button>
+              </div>
+            </div>
+            <div class="fw-bold text-white fs-6 mt-2">${item.title}</div>
+            <div class="notice-body">${item.content}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="text-danger small text-center py-4">공지 로드 실패: ${err.message}</div>`;
+    }
+  }
+
+  // 2. 신규 공지사항 등록
+  async function handleSubmitNotice() {
+    const badge = document.getElementById('noticeBadge').value;
+    const author = document.getElementById('noticeAuthor').value.trim() || '관리자';
+    const notice_date = document.getElementById('noticeDate').value;
+    const title = document.getElementById('noticeTitle').value.trim();
+    const content = document.getElementById('noticeContent').value.trim();
+
+    if (!title || !content) {
+      return alert("제목과 내용을 모두 입력해주세요!");
+    }
+
+    try {
+      await apiRequest("guild_notices", "POST", [{
+        badge,
+        author,
+        notice_date,
+        title,
+        content
+      }]);
+
+      alert("✅ 공지사항이 성공적으로 등록되었습니다.");
+      document.getElementById('noticeTitle').value = '';
+      document.getElementById('noticeContent').value = '';
+      toggleNoticeForm();
+      await loadGuildNotices();
+    } catch (err) {
+      alert("공지 등록 실패: " + err.message);
+    }
+  }
+
+  // 3. 공지사항 삭제
+  async function deleteNotice(id) {
+    if (!confirm("해당 공지사항을 삭제하시겠습니까?")) return;
+
+    try {
+      await apiRequest(`guild_notices?id=eq.${id}`, "DELETE");
+      await loadGuildNotices();
+    } catch (err) {
+      alert("삭제 실패: " + err.message);
+    }
+  }
+</script>
