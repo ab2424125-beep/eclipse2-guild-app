@@ -195,7 +195,7 @@
     background: #0d1527;
     border: 1.5px solid #38bdf8;
     border-radius: 20px;
-    width: 100%; max-width: 330px;
+    width: 100%; max-width: 350px;
     padding: 20px 16px;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
   }
@@ -207,7 +207,7 @@
       <span style="font-size: 1.3rem;">🏛️</span>
       <h6 class="fw-bold mb-0 text-white">길드 비용 및 금고 현황</h6>
     </div>
-    <!-- 헤더 우측 [지급계산기] & [카톡 복사] 버튼 복원 -->
+    <!-- 헤더 우측 [지급계산기] & [카톡 복사] 버튼 -->
     <div class="d-flex gap-1">
       <button type="button" class="btn-util-header" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.35);" onclick="window.openPayCalcModal()">
         <i class="fa-solid fa-calculator"></i>지급계산기
@@ -336,41 +336,80 @@
   <span id="finToastMsg">알림</span>
 </div>
 
-<!-- 🎯 [지급 계산기 모달] 복원 -->
+<!-- 🎯 [기존 분배/지급 계산기 모달 복원] -->
 <div id="payCalcModal" class="calc-modal-backdrop" style="display: none;">
   <div class="calc-modal-box">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="fw-bold text-white small d-flex align-items-center gap-1">
         <span>🧮</span>
-        <span>길드 자금 배분 계산기</span>
+        <span>길드 분배 & 지급 계산기</span>
       </div>
       <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="window.closePayCalcModal()"></button>
     </div>
 
-    <div class="mb-2">
-      <label class="form-label small text-secondary mb-1">배분 총 다이아</label>
-      <input type="number" id="calcModalTotalDia" class="form-control input-custom-fin" placeholder="예: 50000" onkeyup="window.calcPayModalShare()">
+    <div class="row g-2 mb-2">
+      <div class="col-7">
+        <label class="form-label small text-secondary mb-1">분배 총 다이아</label>
+        <input type="number" id="calcModalTotalDia" class="form-control input-custom-fin" placeholder="예: 50000" onkeyup="window.calcPayModalShare()">
+      </div>
+      <div class="col-5">
+        <label class="form-label small text-secondary mb-1">참여 인원</label>
+        <input type="number" id="calcModalMemberCnt" class="form-control input-custom-fin" placeholder="예: 15" onkeyup="window.calcPayModalShare()">
+      </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label small text-secondary mb-1">배분 대상 인원 수</label>
-      <input type="number" id="calcModalMemberCnt" class="form-control input-custom-fin" placeholder="예: 15" onkeyup="window.calcPayModalShare()">
+    <div class="row g-2 mb-2">
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">🏛️ 길드비 적립 비율</label>
+        <select id="calcModalFeeRate" class="form-select input-custom-fin" onchange="window.calcPayModalShare()">
+          <option value="10">10% 적립</option>
+          <option value="5">5% 적립</option>
+          <option value="15">15% 적립</option>
+          <option value="0" selected>0% (전액 분배)</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label small text-secondary mb-1">➕ 길드 추가 지원금</label>
+        <input type="number" id="calcModalExtraFund" class="form-control input-custom-fin" placeholder="선택 (예: 2000)" onkeyup="window.calcPayModalShare()">
+      </div>
     </div>
 
-    <div class="p-2 rounded mb-3" style="background:#080d1a; border:1px solid #1e2c47;">
-      <div class="d-flex justify-content-between small text-secondary">
-        <span>1인당 배분액:</span>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" id="calcModalTaxToggle" checked onchange="window.calcPayModalShare()">
+      <label class="form-check-label small text-secondary" for="calcModalTaxToggle">게임 경매 수수료 5% 차감 적용</label>
+    </div>
+
+    <div class="p-2 rounded mb-3" style="background:#080d1a; border:1px solid #1e2c47; font-size:0.76rem; line-height:1.7;">
+      <div class="d-flex justify-content-between text-secondary">
+        <span>경매 수수료 (5%):</span>
+        <strong class="text-danger" id="calcModalTaxText">-0 D</strong>
+      </div>
+      <div class="d-flex justify-content-between text-secondary">
+        <span>길드비 적립액:</span>
+        <strong class="text-warning" id="calcModalFeeText">0 D</strong>
+      </div>
+      <div class="d-flex justify-content-between text-secondary">
+        <span>실제 총 분배 풀:</span>
+        <strong class="text-white" id="calcModalPoolText">0 D</strong>
+      </div>
+      <div class="d-flex justify-content-between text-secondary pt-1 border-top border-secondary border-opacity-25 mt-1">
+        <span class="text-info fw-bold">👉 1인당 배당금:</span>
         <strong class="text-info fs-6" id="calcModalPerShareText">0 다이아</strong>
       </div>
-      <div class="d-flex justify-content-between small text-secondary mt-1">
+      <div class="d-flex justify-content-between text-secondary">
         <span>배분 후 잔여 다이아:</span>
         <strong class="text-warning" id="calcModalRemainderText">0 다이아</strong>
       </div>
     </div>
 
-    <button type="button" class="btn btn-secondary btn-sm w-100 py-2 fw-bold" style="background:#1e293b; border-color:#334155;" onclick="window.closePayCalcModal()">
-      닫기
-    </button>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-warning btn-sm flex-fill fw-bold py-2" onclick="window.copyCalcModalResult()">
+        <i class="fa-solid fa-share-nodes me-1"></i>계산결과 복사
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm flex-fill fw-bold py-2" style="background:#1e293b; border-color:#334155;" onclick="window.closePayCalcModal()">
+        닫기
+      </button>
+    </div>
   </div>
 </div>
 
@@ -380,6 +419,7 @@
   window.currentDbVaultBalance = 0;
   window.finHistoryData = [];
   window.finToastTimer = null;
+  window.activeGuildName = "ECLIPSE"; // 기본값 (설정값 로드 후 덮어씌움)
 
   window.showFinToast = function(msg, icon = "✅") {
     const toast = document.getElementById("finToastBox");
@@ -395,10 +435,34 @@
     window.finToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   };
 
-  // 지급 계산기 모달 컨트롤
+  // 🎯 설정창에 등록된 실제 길드명 불러오기
+  async function loadConfiguredGuildName() {
+    try {
+      // 1. 세션 캐시 확인
+      const cached = sessionStorage.getItem("guild_name");
+      if (cached) {
+        window.activeGuildName = cached;
+        return;
+      }
+      // 2. DB guild_settings 조회
+      const res = await apiRequest("guild_settings?key=eq.guild_name");
+      if (res && res.length > 0 && res[0].value) {
+        window.activeGuildName = res[0].value;
+        sessionStorage.setItem("guild_name", res[0].value);
+      }
+    } catch (e) {
+      window.activeGuildName = "ECLIPSE";
+    }
+  }
+
+  // 🎯 지급 계산기 모달 컨트롤
   window.openPayCalcModal = function() {
     document.getElementById("calcModalTotalDia").value = '';
     document.getElementById("calcModalMemberCnt").value = '';
+    document.getElementById("calcModalExtraFund").value = '';
+    document.getElementById("calcModalTaxText").innerText = '-0 D';
+    document.getElementById("calcModalFeeText").innerText = '0 D';
+    document.getElementById("calcModalPoolText").innerText = '0 D';
     document.getElementById("calcModalPerShareText").innerText = '0 다이아';
     document.getElementById("calcModalRemainderText").innerText = '0 다이아';
     document.getElementById("payCalcModal").style.display = 'flex';
@@ -411,15 +475,56 @@
   window.calcPayModalShare = function() {
     const totalDia = parseInt(document.getElementById("calcModalTotalDia").value) || 0;
     const count = parseInt(document.getElementById("calcModalMemberCnt").value) || 0;
+    const feeRate = parseInt(document.getElementById("calcModalFeeRate").value) || 0;
+    const extraFund = parseInt(document.getElementById("calcModalExtraFund").value) || 0;
+    const isTax = document.getElementById("calcModalTaxToggle").checked;
 
     if (totalDia > 0 && count > 0) {
-      const perShare = Math.floor(totalDia / count);
-      const remainder = totalDia - (perShare * count);
+      const tax = isTax ? Math.floor(totalDia * 0.05) : 0;
+      const netAfterTax = totalDia - tax;
+      const fee = Math.floor(netAfterTax * (feeRate / 100));
+      const pool = (netAfterTax - fee) + extraFund;
+      const perShare = Math.floor(pool / count);
+      const remainder = pool - (perShare * count);
+
+      document.getElementById("calcModalTaxText").innerText = isTax ? `-${tax.toLocaleString()} D (5%)` : '0 D (미적용)';
+      document.getElementById("calcModalFeeText").innerText = `${fee.toLocaleString()} D (${feeRate}%)`;
+      document.getElementById("calcModalPoolText").innerText = `${pool.toLocaleString()} D`;
       document.getElementById("calcModalPerShareText").innerText = `${perShare.toLocaleString()} 다이아`;
       document.getElementById("calcModalRemainderText").innerText = `${remainder.toLocaleString()} 다이아`;
     } else {
+      document.getElementById("calcModalTaxText").innerText = '-0 D';
+      document.getElementById("calcModalFeeText").innerText = '0 D';
+      document.getElementById("calcModalPoolText").innerText = '0 D';
       document.getElementById("calcModalPerShareText").innerText = '0 다이아';
       document.getElementById("calcModalRemainderText").innerText = '0 다이아';
+    }
+  };
+
+  window.copyCalcModalResult = function() {
+    const totalDia = parseInt(document.getElementById("calcModalTotalDia").value) || 0;
+    const count = parseInt(document.getElementById("calcModalMemberCnt").value) || 0;
+    const perShare = document.getElementById("calcModalPerShareText").innerText;
+    const remainder = document.getElementById("calcModalRemainderText").innerText;
+    const pool = document.getElementById("calcModalPoolText").innerText;
+
+    if (!totalDia || !count) {
+      return window.showFinToast("금액과 인원수를 먼저 입력해주세요.", "⚠️");
+    }
+
+    const gName = window.activeGuildName || "길드";
+    const text = `[🧮 ${gName} 자금 분배 계산 결과]\n` +
+      `• 분배 총 다이아: ${totalDia.toLocaleString()} D\n` +
+      `• 분배 인원: ${count}명\n` +
+      `• 실제 분배 풀: ${pool}\n` +
+      `• 1인당 배당금: ${perShare}\n` +
+      `• 배분 후 잔여: ${remainder}\n` +
+      `────────────────\n` +
+      `※ 자동 분배 계산기 산출 내역입니다.`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+      window.showFinToast("계산 결과가 복사되었습니다!", "📋");
     }
   };
 
@@ -499,7 +604,6 @@
     document.getElementById('calcInputTotalText').innerText = `${inputVal.toLocaleString()} D`;
 
     if (window.currentFinMainMode === 'deposit' && window.currentDepositMethod === 'total') {
-      // 총액이 아직 입력되지 않았거나 직전 잔액 이하일 경우 0 다이아로 단정하게 표시
       if (inputVal <= prevBal) {
         document.getElementById('calcDiffResultText').className = 'text-warning fs-6';
         document.getElementById('calcDiffResultText').innerText = '+0 다이아';
@@ -584,7 +688,6 @@
 
       window.calcNetDiffAmount();
 
-      // 기간 필터링
       let filtered = window.finHistoryData;
       if (startVal || endVal) {
         filtered = filtered.filter(item => {
@@ -595,7 +698,6 @@
         });
       }
 
-      // 기간 순수익 집계
       let pIn = 0, pOut = 0;
       filtered.forEach(it => {
         const amt = Number(it.amount) || 0;
@@ -712,13 +814,15 @@
     }
   };
 
+  // 🎯 카톡 복사 (설정된 길드명 연동)
   window.copyFinancesToKakao = function() {
     const balance = document.getElementById("vaultTotalBalanceText").innerText;
     const dep = document.getElementById("vaultTotalDepositText").innerText;
     const wth = document.getElementById("vaultTotalWithdrawText").innerText;
     const netProfit = document.getElementById("periodNetProfitText").innerText;
+    const gName = window.activeGuildName || "길드";
 
-    let text = `[🏛️ ECLIPSE 길드 금고 및 비용 현황]\n` +
+    let text = `[🏛️ ${gName} 길드 금고 및 비용 현황]\n` +
       `• 현재 금고 잔액: ${balance}\n` +
       `• 누적 적립액: ${dep} 다이아\n` +
       `• 누적 지출액: ${wth} 다이아\n` +
@@ -732,8 +836,9 @@
     }
   };
 
-  // 🎯 초기 실행: 오늘 날짜 및 '이번 주' 기본 필터 설정 후 로드
-  (function initFinanceModule() {
+  // 🎯 초기 실행: 길드명 로드, 날짜 설정 및 '이번 주' 기본 로드
+  (async function initFinanceModule() {
+    await loadConfiguredGuildName();
     setTodayDateInput();
     const pill = document.getElementById("pillThisWeek");
     window.setFinFilterPeriod('thisWeek', pill);
