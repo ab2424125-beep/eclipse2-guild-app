@@ -195,15 +195,9 @@
         </select>
       </div>
       <div class="col-6">
+        <!-- DB hunting_grounds 테이블에서 동적으로 채워지는 드롭다운 -->
         <select id="selectEnemyLocation" class="form-select enemy-input" onchange="handleLocationChange()">
-          <option value="">주요 사냥터 선택</option>
-          <option value="월드 던전 1층">월드 던전 1층</option>
-          <option value="월드 던전 2층">월드 던전 2층</option>
-          <option value="오만의 탑 1층">오만의 탑 1층</option>
-          <option value="오만의 탑 2층">오만의 탑 2층</option>
-          <option value="오만의 탑 3층">오만의 탑 3층</option>
-          <option value="용의 계곡 던전">용의 계곡 던전</option>
-          <option value="화룡의 둥지">화룡의 둥지</option>
+          <option value="">주요 사냥터 선택...</option>
           <option value="__custom__">✏️ 직접 입력</option>
         </select>
       </div>
@@ -277,11 +271,67 @@
   var rawEnemyList = [];
   var currentFilteredList = [];
   var currentReporterFilter = "";
+  var activeGuildName = "ECLIPSE";
 
   (async function initEnemiesPage() {
+    await loadConfiguredGuildName();
     await loadGuildMembersDropdown();
+    await loadHuntingGroundsDropdown(); // 사냥터 목록 동적 로드
     await loadEnemyData();
   })();
+
+  async function loadConfiguredGuildName() {
+    try {
+      const cached = sessionStorage.getItem("guild_name");
+      if (cached) {
+        activeGuildName = cached;
+        return;
+      }
+      const res = await apiRequest("guild_settings?key=eq.guild_name");
+      if (res && res.length > 0 && res[0].value) {
+        activeGuildName = res[0].value;
+        sessionStorage.setItem("guild_name", res[0].value);
+      }
+    } catch (e) {
+      activeGuildName = "ECLIPSE";
+    }
+  }
+
+  // 🎯 설정창에서 관리되는 DB 사냥터(hunting_grounds) 동적 로드 및 지역별 분류
+  async function loadHuntingGroundsDropdown() {
+    const select = document.getElementById('selectEnemyLocation');
+    if (!select) return;
+
+    try {
+      const grounds = await apiRequest("hunting_grounds?select=*&order=region.asc,name.asc");
+      
+      let html = '<option value="">주요 사냥터 선택...</option>';
+
+      if (grounds && grounds.length > 0) {
+        // 지역(region)별 그룹화
+        const regionMap = {};
+        grounds.forEach(g => {
+          const region = g.region || '기타 지역';
+          if (!regionMap[region]) regionMap[region] = [];
+          regionMap[region].push(g.name);
+        });
+
+        Object.keys(regionMap).sort().forEach(reg => {
+          html += `<optgroup label="📍 ${reg}">`;
+          regionMap[reg].forEach(name => {
+            const fullLoc = `[${reg}] ${name}`;
+            html += `<option value="${fullLoc}">${name}</option>`;
+          });
+          html += `</optgroup>`;
+        });
+      }
+
+      html += '<option value="__custom__">✏️ 직접 입력</option>';
+      select.innerHTML = html;
+    } catch (err) {
+      console.warn("사냥터 목록 로드 실패:", err);
+    }
+  }
 
   async function loadGuildMembersDropdown() {
     try {
@@ -443,7 +493,6 @@
     renderEnemyList(currentFilteredList);
   }
 
-  // 원수 등록 및 자동 병합 처리
   async function submitEnemyForm() {
     const enemyName = document.getElementById('inputEnemyName').value.trim();
     const enemyGuild = document.getElementById('inputEnemyGuild').value.trim();
@@ -461,11 +510,9 @@
     }
 
     try {
-      // 기존 원수 등록 여부 확인
       const existing = await apiRequest(`guild_enemies?enemy_name=eq.${encodeURIComponent(enemyName)}`);
       
       if (existing && existing.length > 0) {
-        // 기존 데이터에 누적 병합
         const target = existing[0];
         let newReporters = Array.isArray(target.reporters) ? target.reporters.slice() : [];
         let newLocations = Array.isArray(target.locations) ? target.locations.slice() : [];
@@ -482,7 +529,6 @@
 
         alert(`✅ [${enemyName}] 기존 원수 데이터에 사냥터 및 제보자가 누적 병합되었습니다!`);
       } else {
-        // 신규 등록
         await apiRequest("guild_enemies", "POST", [{
           enemy_name: enemyName,
           enemy_guild: enemyGuild,
@@ -507,7 +553,6 @@
     }
   }
 
-  // 사냥터 편집
   async function editEnemyLocationsPrompt(id, enemyName, oldLocs) {
     const newLocs = prompt(`[${enemyName}] 님의 주요 사냥터 목록을 수정합니다.\n(여러 사냥터는 쉼표로 구분)`, oldLocs);
     if (newLocs === null) return;
@@ -527,7 +572,6 @@
     }
   }
 
-  // 원수 삭제
   async function deleteEnemyItem(id, enemyName) {
     if (!confirm(`[${enemyName}] 원수를 목록에서 삭제하시겠습니까?`)) return;
 
@@ -540,7 +584,6 @@
     }
   }
 
-  // 카카오톡 공유 텍스트 양식 복사
   function copyEnemyListToKakao() {
     const listToCopy = currentFilteredList.length > 0 ? currentFilteredList : rawEnemyList;
 
@@ -549,14 +592,16 @@
       return;
     }
 
+    const gName = activeGuildName || "길드";
     let filterDesc = currentReporterFilter ? ` [${currentReporterFilter} 님 제보]` : '';
-    let text = `💀 [이클립스] 길드 원수 목록${filterDesc} (${listToCopy.length}명)\n`;
+    let text = `💀 [${gName}] 길드 원수 목록${filterDesc} (${listToCopy.length}명)\n`;
     text += `──────────────────\n`;
 
     listToCopy.forEach((item, idx) => {
       const guildPart = item.enemyGuild ? `[${item.enemyGuild}]` : '';
       const repPart = item.reporters.length > 0 ? item.reporters.join(', ') : '미입력';
-      text += `${idx + 1}.${guildPart}${item.enemyName} - ${repPart}\n`;
+      const locPart = item.locations.length > 0 ? ` (${item.locations.join(', ')})` : '';
+      text += `${idx + 1}.${guildPart}${item.enemyName} - ${repPart}${locPart}\n`;
     });
 
     text += `──────────────────\n필드 발견 시 적극 제보 및 처치 부탁드립니다. ⚔️`;
