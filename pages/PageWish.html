@@ -239,14 +239,19 @@
       </div>
     </div>
 
-    <button type="button" class="btn btn-wish-submit w-100" id="btnDistSubmitAction">
+    <button type="button" class="btn btn-wish-submit w-100" id="btnDistSubmitAction" onclick="executeWishDistributionProcess()">
       <i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영
     </button>
   </div>
 
   <!-- 3. 최근 분배 이력 -->
   <div class="wish-section-box mb-0">
-    <div class="small fw-bold text-secondary mb-2">📜 최근 분배 이력</div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="small fw-bold text-secondary">📜 최근 분배 이력</span>
+      <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.72rem;" onclick="loadDistHistory()">
+        <i class="fa-solid fa-arrows-rotate me-1"></i>새로고침
+      </button>
+    </div>
     <div id="distHistoryList" style="max-height: 200px; overflow-y: auto;">
       <div class="text-secondary small text-center py-2">기록을 불러오는 중...</div>
     </div>
@@ -275,12 +280,12 @@
 </div>
 
 <script>
-  var availableItemsData = [];
-  var currentSelectedItem = null;
-  var isAuctionTaxApplied = true;
-  var wishToastTimer = null;
+  window.availableItemsData = [];
+  window.currentSelectedItem = null;
+  window.isAuctionTaxApplied = true;
+  window.wishToastTimer = null;
 
-  function showWishToast(message, icon = "✅") {
+  window.showWishToast = function(message, icon = "✅") {
     const toast = document.getElementById("wishToastBox");
     const msg = document.getElementById("wishToastMsg");
     const ic = document.getElementById("wishToastIcon");
@@ -290,38 +295,42 @@
     ic.innerText = icon;
     toast.classList.add("show");
 
-    if (wishToastTimer) clearTimeout(wishToastTimer);
-    wishToastTimer = setTimeout(() => {
+    if (window.wishToastTimer) clearTimeout(window.wishToastTimer);
+    window.wishToastTimer = setTimeout(() => {
       toast.classList.remove("show");
     }, 2400);
-  }
+  };
 
-  function closeWishSuccessModal() {
-    document.getElementById("wishSuccessModal").style.display = "none";
-  }
+  window.closeWishSuccessModal = function() {
+    const modal = document.getElementById("wishSuccessModal");
+    if (modal) modal.style.display = "none";
+  };
 
-  function setAuctionTaxMode(isApplied) {
-    isAuctionTaxApplied = isApplied;
+  window.setAuctionTaxMode = function(isApplied) {
+    window.isAuctionTaxApplied = isApplied;
     const btnDeduct = document.getElementById('btnTaxDeduct');
     const btnNone = document.getElementById('btnTaxNone');
     const statusText = document.getElementById('taxStatusText');
 
-    if (isApplied) {
-      btnDeduct.classList.add('active');
-      btnNone.classList.remove('active');
-      statusText.innerText = "세율 5% 자동 차감 적용";
-      statusText.className = "text-info small";
-    } else {
-      btnDeduct.classList.remove('active');
-      btnNone.classList.add('active');
-      statusText.innerText = "세율 미적용 (100% 기준)";
-      statusText.className = "text-secondary small";
+    if (btnDeduct && btnNone && statusText) {
+      if (isApplied) {
+        btnDeduct.classList.add('active');
+        btnNone.classList.remove('active');
+        statusText.innerText = "세율 5% 자동 차감 적용";
+        statusText.className = "text-info small";
+      } else {
+        btnDeduct.classList.remove('active');
+        btnNone.classList.add('active');
+        statusText.innerText = "세율 미적용 (100% 기준)";
+        statusText.className = "text-secondary small";
+      }
     }
-    calculateNShare();
-  }
+    window.calculateNShare();
+  };
 
-  async function loadStockItems() {
+  window.loadStockItems = async function() {
     const container = document.getElementById('stockItemContainer');
+    if (!container) return;
     container.innerHTML = '<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-1"></i>보유 아이템 불러오는 중...</div>';
 
     try {
@@ -329,7 +338,7 @@
       const settledKeys = new Set((settled || []).map(s => s.item_key));
 
       const raids = await apiRequest("boss_participations?select=*&order=id.desc");
-      availableItemsData = [];
+      window.availableItemsData = [];
 
       (raids || []).forEach(r => {
         if (!r.drop_items || r.drop_items === '없음') return;
@@ -338,7 +347,7 @@
         items.forEach((itemName, idx) => {
           const itemKey = `${r.id}_${idx}_${itemName}`;
           if (!settledKeys.has(itemKey)) {
-            availableItemsData.push({
+            window.availableItemsData.push({
               itemKey: itemKey,
               raidId: r.id,
               bossName: r.boss_name,
@@ -351,21 +360,22 @@
         });
       });
 
-      renderStockItems(availableItemsData);
+      window.renderStockItems(window.availableItemsData);
     } catch (err) {
       container.innerHTML = `<div class="text-danger small text-center py-2">조회 실패: ${err.message}</div>`;
     }
-  }
+  };
 
-  function renderStockItems(items) {
+  window.renderStockItems = function(items) {
     const container = document.getElementById('stockItemContainer');
+    if (!container) return;
     if (!items || items.length === 0) {
       container.innerHTML = '<div class="text-secondary small text-center py-2">현재 분배할 미정산 아이템이 없습니다.</div>';
       return;
     }
 
     container.innerHTML = items.map((item, idx) => `
-      <div class="stock-item-card" onclick="selectItem(${idx}, this)">
+      <div class="stock-item-card" onclick="window.selectItem(${idx}, this)">
         <div class="d-flex justify-content-between align-items-center">
           <span class="fw-bold text-white fs-6">📦 ${item.itemName}</span>
           <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
@@ -374,109 +384,120 @@
         </div>
       </div>
     `).join('');
-  }
+  };
 
-  function selectItem(idx, elem) {
+  window.selectItem = function(idx, elem) {
     document.querySelectorAll('.stock-item-card').forEach(c => c.classList.remove('selected'));
-    elem.classList.add('selected');
-    currentSelectedItem = availableItemsData[idx];
+    if (elem) elem.classList.add('selected');
+    window.currentSelectedItem = window.availableItemsData[idx];
 
-    document.getElementById('selectedSummaryBox').innerHTML = `
-      <div class="d-flex justify-content-between align-items-center">
-        <strong class="text-white">${currentSelectedItem.itemName}</strong>
-        <span class="text-info small">[${currentSelectedItem.bossName}]</span>
-      </div>
-      <div class="text-secondary small mt-1" style="font-size: 0.75rem;">
-        <strong>N/1 대상자(${currentSelectedItem.memberCount}명):</strong> ${currentSelectedItem.members.join(', ')}
-      </div>
-    `;
-    calculateNShare();
-  }
-
-  function calculateNShare() {
-    if (!currentSelectedItem) return;
-    const priceVal = parseInt(document.getElementById('wishPrice').value) || 0;
-    const feeRate = parseInt(document.getElementById('guildFeeSelect').value) || 0;
-    const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
-    const notice = document.getElementById('shareCalcNotice');
-    
-    if (priceVal > 0 || extraFund > 0) {
-      const gameTax = isAuctionTaxApplied ? Math.floor(priceVal * 0.05) : 0;
-      const netAuctionPrice = priceVal - gameTax;
-      const guildFee = Math.floor(netAuctionPrice * (feeRate / 100));
-      const pool = (netAuctionPrice - guildFee) + extraFund;
-      const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(pool / currentSelectedItem.memberCount) : 0;
-
-      document.getElementById('gameTaxText').innerText = isAuctionTaxApplied ? `-${gameTax.toLocaleString()} 다이아 (5%)` : '0 다이아 (미적용)';
-      document.getElementById('vaultNetIncomeText').innerText = `${netAuctionPrice.toLocaleString()} 다이아`;
-      document.getElementById('guildFeeText').innerText = `${guildFee.toLocaleString()} 다이아 (${feeRate}%)`;
-      document.getElementById('guildExtraText').innerText = `+${extraFund.toLocaleString()} 다이아`;
-      document.getElementById('perShareText').innerText = `${perShare.toLocaleString()} 다이아 (총 ${currentSelectedItem.memberCount}명)`;
-      notice.style.display = 'block';
-    } else {
-      notice.style.display = 'none';
+    const box = document.getElementById('selectedSummaryBox');
+    if (box && window.currentSelectedItem) {
+      box.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+          <strong class="text-white">${window.currentSelectedItem.itemName}</strong>
+          <span class="text-info small">[${window.currentSelectedItem.bossName}]</span>
+        </div>
+        <div class="text-secondary small mt-1" style="font-size: 0.75rem;">
+          <strong>N/1 대상자(${window.currentSelectedItem.memberCount}명):</strong> ${window.currentSelectedItem.members.join(', ')}
+        </div>
+      `;
     }
-  }
+    window.calculateNShare();
+  };
 
-  async function loadMemberListForWish() {
+  window.calculateNShare = function() {
+    if (!window.currentSelectedItem) return;
+    const priceElem = document.getElementById('wishPrice');
+    const feeElem = document.getElementById('guildFeeSelect');
+    const extraElem = document.getElementById('wishExtraFund');
+    const notice = document.getElementById('shareCalcNotice');
+
+    const priceVal = priceElem ? (parseInt(priceElem.value) || 0) : 0;
+    const feeRate = feeElem ? (parseInt(feeElem.value) || 0) : 0;
+    const extraFund = extraElem ? (parseInt(extraElem.value) || 0) : 0;
+    
+    if (notice) {
+      if (priceVal > 0 || extraFund > 0) {
+        const gameTax = window.isAuctionTaxApplied ? Math.floor(priceVal * 0.05) : 0;
+        const netAuctionPrice = priceVal - gameTax;
+        const guildFee = Math.floor(netAuctionPrice * (feeRate / 100));
+        const pool = (netAuctionPrice - guildFee) + extraFund;
+        const perShare = window.currentSelectedItem.memberCount > 0 ? Math.floor(pool / window.currentSelectedItem.memberCount) : 0;
+
+        document.getElementById('gameTaxText').innerText = window.isAuctionTaxApplied ? `-${gameTax.toLocaleString()} 다이아 (5%)` : '0 다이아 (미적용)';
+        document.getElementById('vaultNetIncomeText').innerText = `${netAuctionPrice.toLocaleString()} 다이아`;
+        document.getElementById('guildFeeText').innerText = `${guildFee.toLocaleString()} 다이아 (${feeRate}%)`;
+        document.getElementById('guildExtraText').innerText = `+${extraFund.toLocaleString()} 다이아`;
+        document.getElementById('perShareText').innerText = `${perShare.toLocaleString()} 다이아 (총 ${window.currentSelectedItem.memberCount}명)`;
+        notice.style.display = 'block';
+      } else {
+        notice.style.display = 'none';
+      }
+    }
+  };
+
+  window.loadMemberListForWish = async function() {
     try {
       const list = await apiRequest("guild_members?select=name&order=name.asc");
       const select = document.getElementById('wishMemberSelect');
+      if (!select) return;
       select.innerHTML = '<option value="">길드원 선택...</option>';
       if (list && list.length > 0) {
         list.forEach(m => select.innerHTML += `<option value="${m.name}">${m.name}</option>`);
       }
     } catch (e) {}
-  }
+  };
 
-  // 🎯 낙찰 등록 & 분배 실행 (실존하는 정밀 컬럼만 단일 전송)
-  async function executeWishDistributionProcess() {
+  window.executeWishDistributionProcess = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       try {
         const permRow = await apiRequest("guild_settings?key=eq.perm_wish_distribute");
         const permVal = (permRow && permRow.length > 0) ? permRow[0].value : 'true';
         if (permVal === 'false') {
-          return showWishToast("분배희망신청 권한이 비활성화되어 있습니다.", "⚠️");
+          return window.showWishToast("분배희망신청 권한이 비활성화되어 있습니다.", "⚠️");
         }
       } catch (e) {}
     }
 
-    if (!currentSelectedItem) return showWishToast("분배할 아이템을 먼저 선택해주세요!", "⚠️");
+    if (!window.currentSelectedItem) return window.showWishToast("분배할 아이템을 먼저 선택해주세요!", "⚠️");
 
     const memberName = document.getElementById('wishMemberSelect').value;
     const price = parseInt(document.getElementById('wishPrice').value) || 0;
     const feeRate = parseInt(document.getElementById('guildFeeSelect').value) || 0;
     const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
 
-    if (!memberName) return showWishToast("낙찰받은 길드원을 선택해주세요!", "⚠️");
-    if (!price) return showWishToast("낙찰 금액을 입력해주세요!", "⚠️");
+    if (!memberName) return window.showWishToast("낙찰받은 길드원을 선택해주세요!", "⚠️");
+    if (!price) return window.showWishToast("낙찰 금액을 입력해주세요!", "⚠️");
 
     const btn = document.getElementById('btnDistSubmitAction');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>반영 중...';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>반영 중...';
+    }
 
-    const gameTax = isAuctionTaxApplied ? Math.floor(price * 0.05) : 0;
+    const gameTax = window.isAuctionTaxApplied ? Math.floor(price * 0.05) : 0;
     const netAuctionPrice = price - gameTax;
     const guildFeeAmount = Math.floor(netAuctionPrice * (feeRate / 100));
     const distributionPool = (netAuctionPrice - guildFeeAmount) + extraFund;
-    const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / currentSelectedItem.memberCount) : 0;
+    const perShare = window.currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / window.currentSelectedItem.memberCount) : 0;
 
     try {
-      // 1. item_distributions: 실존 확인된 winner_name, price, per_share, members 전송
+      // 1. item_distributions 테이블 반영
       await apiRequest("item_distributions", "POST", [{
-        item_key: currentSelectedItem.itemKey,
-        boss_name: currentSelectedItem.bossName,
-        item_name: currentSelectedItem.itemName,
+        item_key: window.currentSelectedItem.itemKey,
+        boss_name: window.currentSelectedItem.bossName,
+        item_name: window.currentSelectedItem.itemName,
         winner_name: memberName,
         price: price,
         per_share: perShare,
-        members: currentSelectedItem.members
+        members: window.currentSelectedItem.members
       }]);
 
-      // 2. guild_finances: 실제 DB에 존재하는 tx_type, category, amount, reason 만 전송
-      const depositReason = `[${currentSelectedItem.bossName}] ${currentSelectedItem.itemName} 낙찰 (${memberName})`;
-      const withdrawReason = `[${currentSelectedItem.itemName}] ${currentSelectedItem.memberCount}명 N/1 분배금 지급`;
+      // 2. guild_finances 테이블 반영
+      const depositReason = `[${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName} 낙찰 (${memberName})`;
+      const withdrawReason = `[${window.currentSelectedItem.itemName}] ${window.currentSelectedItem.memberCount}명 N/1 분배금 지급`;
 
       const financeLogs = [];
       financeLogs.push({
@@ -497,40 +518,45 @@
 
       await apiRequest("guild_finances", "POST", financeLogs);
 
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
+      }
 
-      // 다크 모달 안내창
+      // 모달 표시
       const detailHtml = `
-        <div>• <strong>아이템:</strong> [${currentSelectedItem.bossName}] ${currentSelectedItem.itemName}</div>
+        <div>• <strong>아이템:</strong> [${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName}</div>
         <div>• <strong>낙찰자:</strong> ${memberName}</div>
         <div>• <strong>금고 실입금(세후):</strong> +${netAuctionPrice.toLocaleString()} 다이아</div>
         <div>• <strong>참여자 총분배:</strong> -${distributionPool.toLocaleString()} 다이아</div>
         ${guildFeeAmount > 0 ? `<div>• <strong>길드금고 순적립:</strong> +${guildFeeAmount.toLocaleString()} 다이아</div>` : ''}
         <div class="mt-1 pt-1 border-top border-secondary border-opacity-25 text-info fw-bold">
-          👉 참여자(${currentSelectedItem.memberCount}명) 1인당: ${perShare.toLocaleString()} 다이아
+          👉 참여자(${window.currentSelectedItem.memberCount}명) 1인당: ${perShare.toLocaleString()} 다이아
         </div>
       `;
       document.getElementById('wishSuccessDetails').innerHTML = detailHtml;
       document.getElementById('wishSuccessModal').style.display = 'flex';
 
-      currentSelectedItem = null;
+      window.currentSelectedItem = null;
       document.getElementById('selectedSummaryBox').innerHTML = '<div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>';
       document.getElementById('wishPrice').value = '';
       document.getElementById('wishExtraFund').value = '';
       document.getElementById('shareCalcNotice').style.display = 'none';
 
-      await loadStockItems();
-      await loadDistHistory();
+      await window.loadStockItems();
+      await window.loadDistHistory();
     } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
-      showWishToast("분배 실패: " + err.message, "❌");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
+      }
+      window.showWishToast("분배 실패: " + err.message, "❌");
     }
-  }
+  };
 
-  async function loadDistHistory() {
+  window.loadDistHistory = async function() {
     const container = document.getElementById('distHistoryList');
+    if (!container) return;
     try {
       const history = await apiRequest("item_distributions?select=*&order=id.desc&limit=20");
       if (!history || history.length === 0) {
@@ -560,18 +586,15 @@
     } catch (e) {
       container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
     }
-  }
+  };
 
-  // 버튼 이벤트 리스너 바인딩
-  const submitActionBtn = document.getElementById('btnDistSubmitAction');
-  if (submitActionBtn) {
-    submitActionBtn.onclick = executeWishDistributionProcess;
-  }
-  window.handleDistributionSubmitClick = executeWishDistributionProcess;
+  // 🎯 페이지 초기화 안전 실행 함수
+  window.initWishPage = async function() {
+    await window.loadStockItems();
+    await window.loadMemberListForWish();
+    await window.loadDistHistory();
+  };
 
-  (async function initWishPageModule() {
-    await loadStockItems();
-    await loadMemberListForWish();
-    await loadDistHistory();
-  })();
+  // 실행
+  window.initWishPage();
 </script>
