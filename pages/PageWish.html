@@ -429,7 +429,7 @@
     } catch (e) {}
   }
 
-  // 🎯 낙찰 등록 & 분배 실행 (winner_name, reason, tx_type 모든 DB 컬럼 완벽 호환)
+  // 🎯 낙찰 등록 & 분배 실행 (실존하는 정밀 컬럼만 단일 전송)
   async function executeWishDistributionProcess() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
@@ -463,42 +463,35 @@
     const perShare = currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / currentSelectedItem.memberCount) : 0;
 
     try {
-      // 1. item_distributions: winner_name과 member_name 둘 다 전송
+      // 1. item_distributions: 실존 확인된 winner_name, price, per_share, members 전송
       await apiRequest("item_distributions", "POST", [{
         item_key: currentSelectedItem.itemKey,
         boss_name: currentSelectedItem.bossName,
         item_name: currentSelectedItem.itemName,
         winner_name: memberName,
-        member_name: memberName,
         price: price,
         per_share: perShare,
         members: currentSelectedItem.members
       }]);
 
-      // 2. guild_finances: reason, tx_type, type, category 등 모든 스키마 호환 전송
+      // 2. guild_finances: 실제 DB에 존재하는 tx_type, category, amount, reason 만 전송
       const depositReason = `[${currentSelectedItem.bossName}] ${currentSelectedItem.itemName} 낙찰 (${memberName})`;
       const withdrawReason = `[${currentSelectedItem.itemName}] ${currentSelectedItem.memberCount}명 N/1 분배금 지급`;
 
       const financeLogs = [];
       financeLogs.push({
         tx_type: '입금',
-        type: '입금',
         category: '경매낙찰',
         amount: netAuctionPrice,
-        reason: depositReason,
-        memo: depositReason,
-        description: depositReason
+        reason: depositReason
       });
 
       if (distributionPool > 0) {
         financeLogs.push({
           tx_type: '출금',
-          type: '출금',
           category: 'N/1분배',
           amount: distributionPool,
-          reason: withdrawReason,
-          memo: withdrawReason,
-          description: withdrawReason
+          reason: withdrawReason
         });
       }
 
@@ -507,7 +500,7 @@
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
 
-      // 커스텀 다크 모달 안내창
+      // 다크 모달 안내창
       const detailHtml = `
         <div>• <strong>아이템:</strong> [${currentSelectedItem.bossName}] ${currentSelectedItem.itemName}</div>
         <div>• <strong>낙찰자:</strong> ${memberName}</div>
