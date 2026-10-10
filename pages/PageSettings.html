@@ -7,20 +7,20 @@
     background: rgba(18, 26, 45, 0.95);
     backdrop-filter: blur(14px);
     border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 20px;
-    padding: 18px;
+    border-radius: 22px;
+    padding: 20px;
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
   }
 
-  .settings-box {
+  .settings-section-box {
     background: #0d1527;
     border: 1px solid #1e2c47;
     border-radius: 14px;
     padding: 16px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
 
-  .input-custom-settings {
+  .input-custom-set {
     background-color: #080d1a !important;
     border: 1px solid #233554 !important;
     color: #ffffff !important;
@@ -28,14 +28,14 @@
     padding: 8px 12px !important;
     font-size: 0.85rem !important;
     color-scheme: dark;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease;
   }
-  .input-custom-settings:focus {
+  .input-custom-set:focus {
     border-color: #38bdf8 !important;
     outline: none !important;
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.2) !important;
   }
-  .input-custom-settings::placeholder {
+  .input-custom-set::placeholder {
     color: #64748b !important;
     opacity: 1 !important;
   }
@@ -50,7 +50,7 @@
     border-color: #38bdf8;
   }
 
-  .btn-settings-save {
+  .btn-settings-action {
     background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
     border: none;
     color: #ffffff;
@@ -62,12 +62,23 @@
     transition: all 0.15s;
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   }
-  .btn-settings-save:hover {
+  .btn-settings-action:hover {
     opacity: 0.95;
     transform: translateY(-1px);
   }
 
-  /* 커스텀 토스트 알림창 */
+  .boss-score-row {
+    background: #080d1a;
+    border: 1px solid #1b263b;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* 커스텀 토스트 알림 */
   .custom-settings-toast {
     position: fixed;
     top: 24px;
@@ -100,48 +111,48 @@
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div class="d-flex align-items-center gap-2">
       <span style="font-size: 1.3rem;">⚙️</span>
-      <h6 class="fw-bold mb-0 text-white">시스템 및 환경 설정</h6>
+      <h6 class="fw-bold mb-0 text-white">길드 환경 및 시스템 설정</h6>
     </div>
-    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.72rem;" id="adminRoleBadge">
+    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.74rem;" id="setAdminBadge">
       최고 관리자
     </span>
   </div>
 
   <!-- 1. 길드 기본 정보 설정 -->
-  <div class="settings-box">
+  <div class="settings-section-box">
     <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-shield-halved me-1 text-info"></i> 길드 기본 정보</div>
     <div class="mb-3">
-      <label class="form-label small text-secondary mb-1">길드 이름</label>
-      <input type="text" id="settingGuildName" class="form-control input-custom-settings" placeholder="길드 이름을 입력하세요 (예: ECLIPSE)">
+      <label class="form-label small text-secondary mb-1">길드 명칭 (카톡 복사 및 보고서 표시)</label>
+      <input type="text" id="inpGuildName" class="form-control input-custom-set" placeholder="예: 불편한사람들, ECLIPSE 등">
     </div>
-    <button type="button" class="btn btn-settings-save w-100" onclick="window.saveGuildBaseSettings()">
-      <i class="fa-solid fa-floppy-disk me-1"></i> 길드 기본 정보 저장
+    <button type="button" class="btn btn-settings-action w-100" onclick="window.saveGuildNameSetting()">
+      <i class="fa-solid fa-floppy-disk me-1"></i> 길드 명칭 저장
     </button>
   </div>
 
-  <!-- 2. 모듈별 기능 권한 제어 -->
-  <div class="settings-box">
-    <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-lock me-1 text-warning"></i> 모듈 및 기능 권한 제어</div>
+  <!-- 2. 모듈별 기능 권한 제어 (공지사항/분배희망/길드자금) -->
+  <div class="settings-section-box">
+    <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-lock me-1 text-warning"></i> 모듈 및 기능 접근 권한 제어</div>
     
     <!-- 📢 공지사항 작성 권한 토글 -->
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-25">
       <div>
         <div class="text-white small fw-bold">📢 공지사항 작성 권한</div>
-        <div class="text-secondary" style="font-size: 0.72rem;">일반 관리자의 공지사항 신규 등록 가능 여부를 제어합니다.</div>
+        <div class="text-secondary" style="font-size: 0.72rem;">일반 관리자의 신규 공지사항 등록 가능 여부를 제어합니다.</div>
       </div>
       <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" id="permNoticeWriteToggle" onchange="window.saveNoticePermission(this.checked)">
+        <input class="form-check-input" type="checkbox" id="swPermNoticeWrite" onchange="window.savePermSetting('perm_notice_write', this.checked, '공지사항 작성')">
       </div>
     </div>
 
-    <!-- 🎁 아이템 분배/낙찰 권한 토글 -->
+    <!-- 🎁 분배희망신청 권한 토글 -->
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-25">
       <div>
         <div class="text-white small fw-bold">🎁 분배희망신청 권한</div>
-        <div class="text-secondary" style="font-size: 0.72rem;">아이템 분배 및 낙찰 처리 기능 사용 여부를 제어합니다.</div>
+        <div class="text-secondary" style="font-size: 0.72rem;">아이템 분배 및 N/1 정산 등록 기능 사용 여부를 제어합니다.</div>
       </div>
       <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" id="permWishDistributeToggle" onchange="window.saveWishPermission(this.checked)">
+        <input class="form-check-input" type="checkbox" id="swPermWishDistribute" onchange="window.savePermSetting('perm_wish_distribute', this.checked, '분배희망신청')">
       </div>
     </div>
 
@@ -149,29 +160,82 @@
     <div class="d-flex justify-content-between align-items-center py-2">
       <div>
         <div class="text-white small fw-bold">💰 길드자금 분배 집행 권한</div>
-        <div class="text-secondary" style="font-size: 0.72rem;">정산 탭에서 금고 분배 집행 폼을 열고 실행할 수 있는 권한입니다.</div>
+        <div class="text-secondary" style="font-size: 0.72rem;">정산 탭의 [길드자금 분배] 폼 접근 및 집행 권한을 제어합니다.</div>
       </div>
       <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" id="permSettleDistributeToggle" onchange="window.saveSettlePermission(this.checked)">
+        <input class="form-check-input" type="checkbox" id="swPermSettleDistribute" onchange="window.savePermSetting('perm_settle_distribute', this.checked, '길드자금 분배')">
       </div>
     </div>
   </div>
 
-  <!-- 3. 관리자 비밀번호 변경 -->
-  <div class="settings-box mb-0">
-    <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-key me-1 text-danger"></i> 관리자 접속 비밀번호 변경</div>
+  <!-- 3. 보스별 기본 배점 및 가중치 점수 설정 -->
+  <div class="settings-section-box">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="small fw-bold text-white"><i class="fa-solid fa-dragon me-1 text-danger"></i> 보스 토벌 배점 규정</span>
+      <span class="text-secondary small" style="font-size: 0.72rem;">기본 1점 + 보스별 가중치</span>
+    </div>
+    <div class="text-secondary small mb-2" style="font-size: 0.72rem;">
+      보스 토벌 참여 시 자동 산정될 가중 점수 규칙을 지정합니다.
+    </div>
+
+    <div id="bossScoreSettingList">
+      <div class="boss-score-row">
+        <span class="text-white small fw-bold">⚔️ 레마넌트</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" id="score_remanent" class="form-control input-custom-set py-0 px-2 text-center" style="width: 70px; font-size: 0.8rem;" value="0">
+          <span class="text-secondary small">점 추가</span>
+        </div>
+      </div>
+      <div class="boss-score-row">
+        <span class="text-white small fw-bold">⚔️ 베나토리아</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" id="score_venatoria" class="form-control input-custom-set py-0 px-2 text-center" style="width: 70px; font-size: 0.8rem;" value="0">
+          <span class="text-secondary small">점 추가</span>
+        </div>
+      </div>
+      <div class="boss-score-row">
+        <span class="text-white small fw-bold">⚔️ 샤렌나</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" id="score_sharenna" class="form-control input-custom-set py-0 px-2 text-center" style="width: 70px; font-size: 0.8rem;" value="0">
+          <span class="text-secondary small">점 추가</span>
+        </div>
+      </div>
+      <div class="boss-score-row">
+        <span class="text-white small fw-bold">⚔️ 칼리브락스</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" id="score_calibrax" class="form-control input-custom-set py-0 px-2 text-center" style="width: 70px; font-size: 0.8rem;" value="0">
+          <span class="text-secondary small">점 추가</span>
+        </div>
+      </div>
+      <div class="boss-score-row">
+        <span class="text-white small fw-bold">⚔️ 인터/쟁 보스 (공통 가중치)</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" id="score_interboss" class="form-control input-custom-set py-0 px-2 text-center" style="width: 70px; font-size: 0.8rem;" value="1">
+          <span class="text-secondary small">점 추가</span>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-outline-info btn-sm w-100 fw-bold mt-2 py-2" onclick="window.saveBossScores()">
+      <i class="fa-solid fa-check me-1"></i> 보스 가중 배점 저장
+    </button>
+  </div>
+
+  <!-- 4. 관리자 접속 PIN/비밀번호 변경 -->
+  <div class="settings-section-box mb-0">
+    <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-key me-1 text-danger"></i> 관리자 보안 비밀번호 변경</div>
     <div class="row g-2 mb-2">
       <div class="col-6">
-        <label class="form-label small text-secondary mb-1">새 비밀번호</label>
-        <input type="password" id="newAdminPassword" class="form-control input-custom-settings" placeholder="새 비밀번호 입력">
+        <label class="form-label small text-secondary mb-1">새 비밀번호 (PIN)</label>
+        <input type="password" id="inpNewAdminPw" class="form-control input-custom-set" placeholder="새 비밀번호 입력">
       </div>
       <div class="col-6">
         <label class="form-label small text-secondary mb-1">비밀번호 확인</label>
-        <input type="password" id="confirmAdminPassword" class="form-control input-custom-settings" placeholder="새 비밀번호 재입력">
+        <input type="password" id="inpConfirmAdminPw" class="form-control input-custom-set" placeholder="새 비밀번호 재입력">
       </div>
     </div>
-    <button type="button" class="btn btn-outline-danger btn-sm w-100 fw-bold py-2" onclick="window.changeAdminPassword()">
-      <i class="fa-solid fa-lock me-1"></i> 비밀번호 변경 적용
+    <button type="button" class="btn btn-outline-danger btn-sm w-100 fw-bold py-2" onclick="window.saveAdminPasswordSetting()">
+      <i class="fa-solid fa-lock me-1"></i> 관리자 비밀번호 변경 적용
     </button>
   </div>
 </div>
@@ -199,45 +263,45 @@
     window.settingsToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   };
 
-  // 🎯 설정값 로드
-  window.loadSystemSettings = async function() {
+  // 🎯 전체 환경 설정 로드
+  window.loadAllGuildSettings = async function() {
     try {
       const rows = await apiRequest("guild_settings?select=*");
-      const settingsMap = {};
-      (rows || []).forEach(r => {
-        settingsMap[r.key] = r.value;
-      });
+      const map = {};
+      (rows || []).forEach(r => { map[r.key] = r.value; });
 
-      // 1. 길드명 설정
-      const guildName = settingsMap["guild_name"] || "ECLIPSE";
-      document.getElementById("settingGuildName").value = guildName;
+      // 1. 길드 이름
+      const guildName = map["guild_name"] || "ECLIPSE";
+      document.getElementById("inpGuildName").value = guildName;
       sessionStorage.setItem("guild_name", guildName);
 
-      // 2. 권한 토글 설정
-      const permNotice = (settingsMap["perm_notice_write"] !== 'false');
-      const permWish = (settingsMap["perm_wish_distribute"] !== 'false');
-      const permSettle = (settingsMap["perm_settle_distribute"] !== 'false');
+      // 2. 권한 토글 (기본값 true)
+      document.getElementById("swPermNoticeWrite").checked = (map["perm_notice_write"] !== 'false');
+      document.getElementById("swPermWishDistribute").checked = (map["perm_wish_distribute"] !== 'false');
+      document.getElementById("swPermSettleDistribute").checked = (map["perm_settle_distribute"] !== 'false');
 
-      document.getElementById("permNoticeWriteToggle").checked = permNotice;
-      document.getElementById("permWishDistributeToggle").checked = permWish;
-      document.getElementById("permSettleDistributeToggle").checked = permSettle;
+      // 3. 보스 가중 배점
+      if (map["boss_score_remanent"] !== undefined) document.getElementById("score_remanent").value = map["boss_score_remanent"];
+      if (map["boss_score_venatoria"] !== undefined) document.getElementById("score_venatoria").value = map["boss_score_venatoria"];
+      if (map["boss_score_sharenna"] !== undefined) document.getElementById("score_sharenna").value = map["boss_score_sharenna"];
+      if (map["boss_score_calibrax"] !== undefined) document.getElementById("score_calibrax").value = map["boss_score_calibrax"];
+      if (map["boss_score_interboss"] !== undefined) document.getElementById("score_interboss").value = map["boss_score_interboss"];
 
-      // 3. 관리자 뱃지
+      // 4. 배지 표기
       const isSuper = (sessionStorage.getItem("admin_role") === "super");
-      const badge = document.getElementById("adminRoleBadge");
+      const badge = document.getElementById("setAdminBadge");
       if (badge) {
         badge.innerText = isSuper ? "최고 관리자" : "일반 관리자";
       }
-
     } catch (err) {
-      window.showSettingsToast("설정 로드 실패: " + err.message, "❌");
+      window.showSettingsToast("설정 불러오기 실패: " + err.message, "❌");
     }
   };
 
-  // 🎯 길드 기본 정보 저장
-  window.saveGuildBaseSettings = async function() {
-    const nameVal = (document.getElementById("settingGuildName").value || "").trim();
-    if (!nameVal) return window.showSettingsToast("길드 이름을 입력해주세요.", "⚠️");
+  // 🎯 길드 명칭 저장
+  window.saveGuildNameSetting = async function() {
+    const nameVal = (document.getElementById("inpGuildName").value || "").trim();
+    if (!nameVal) return window.showSettingsToast("길드 명칭을 입력해주세요.", "⚠️");
 
     try {
       await apiRequest("guild_settings", "POST", [{
@@ -252,55 +316,45 @@
     }
   };
 
-  // 🎯 공지사항 작성 권한 토글 저장
-  window.saveNoticePermission = async function(isChecked) {
+  // 🎯 개별 권한 토글 저장
+  window.savePermSetting = async function(key, isChecked, labelName) {
     try {
       await apiRequest("guild_settings", "POST", [{
-        key: "perm_notice_write",
+        key: key,
         value: isChecked ? "true" : "false"
       }], { on_conflict: "key" });
 
-      window.showSettingsToast(isChecked ? "공지사항 작성이 허용되었습니다." : "공지사항 작성이 비활성화되었습니다.", "📢");
+      window.showSettingsToast(`${labelName} 권한이 ${isChecked ? '활성화' : '비활성화'}되었습니다.`, "🔒");
     } catch (err) {
       window.showSettingsToast("권한 저장 실패: " + err.message, "❌");
     }
   };
 
-  // 🎯 분배희망신청 권한 토글 저장
-  window.saveWishPermission = async function(isChecked) {
+  // 🎯 보스 가중 배점 저장
+  window.saveBossScores = async function() {
+    const scores = [
+      { key: "boss_score_remanent", value: String(parseInt(document.getElementById("score_remanent").value) || 0) },
+      { key: "boss_score_venatoria", value: String(parseInt(document.getElementById("score_venatoria").value) || 0) },
+      { key: "boss_score_sharenna", value: String(parseInt(document.getElementById("score_sharenna").value) || 0) },
+      { key: "boss_score_calibrax", value: String(parseInt(document.getElementById("score_calibrax").value) || 0) },
+      { key: "boss_score_interboss", value: String(parseInt(document.getElementById("score_interboss").value) || 0) }
+    ];
+
     try {
-      await apiRequest("guild_settings", "POST", [{
-        key: "perm_wish_distribute",
-        value: isChecked ? "true" : "false"
-      }], { on_conflict: "key" });
-
-      window.showSettingsToast(isChecked ? "분배희망신청이 활성화되었습니다." : "분배희망신청이 비활성화되었습니다.", "🎁");
+      await apiRequest("guild_settings", "POST", scores, { on_conflict: "key" });
+      window.showSettingsToast("보스별 가중 배점이 저장되었습니다!", "⚔️");
     } catch (err) {
-      window.showSettingsToast("권한 저장 실패: " + err.message, "❌");
-    }
-  };
-
-  // 🎯 길드자금 분배 집행 권한 토글 저장
-  window.saveSettlePermission = async function(isChecked) {
-    try {
-      await apiRequest("guild_settings", "POST", [{
-        key: "perm_settle_distribute",
-        value: isChecked ? "true" : "false"
-      }], { on_conflict: "key" });
-
-      window.showSettingsToast(isChecked ? "길드자금 분배가 활성화되었습니다." : "길드자금 분배가 비활성화되었습니다.", "💰");
-    } catch (err) {
-      window.showSettingsToast("권한 저장 실패: " + err.message, "❌");
+      window.showSettingsToast("배점 저장 실패: " + err.message, "❌");
     }
   };
 
   // 🎯 관리자 비밀번호 변경
-  window.changeAdminPassword = async function() {
-    const newPw = document.getElementById("newAdminPassword").value;
-    const confirmPw = document.getElementById("confirmAdminPassword").value;
+  window.saveAdminPasswordSetting = async function() {
+    const newPw = document.getElementById("inpNewAdminPw").value;
+    const confirmPw = document.getElementById("inpConfirmAdminPw").value;
 
     if (!newPw) return window.showSettingsToast("새 비밀번호를 입력해주세요.", "⚠️");
-    if (newPw !== confirmPw) return window.showSettingsToast("비밀번호가 일치하지 않습니다.", "⚠️");
+    if (newPw !== confirmPw) return window.showSettingsToast("비밀번호 확인이 일치하지 않습니다.", "⚠️");
 
     try {
       await apiRequest("guild_settings", "POST", [{
@@ -308,9 +362,9 @@
         value: newPw
       }], { on_conflict: "key" });
 
-      window.showSettingsToast("관리자 비밀번호가 성공적으로 변경되었습니다!", "🔐");
-      document.getElementById("newAdminPassword").value = '';
-      document.getElementById("confirmAdminPassword").value = '';
+      window.showSettingsToast("관리자 비밀번호가 안전하게 변경되었습니다!", "🔐");
+      document.getElementById("inpNewAdminPw").value = '';
+      document.getElementById("inpConfirmAdminPw").value = '';
     } catch (err) {
       window.showSettingsToast("비밀번호 변경 실패: " + err.message, "❌");
     }
@@ -318,6 +372,6 @@
 
   // 🎯 초기 실행
   (function initSettingsModule() {
-    window.loadSystemSettings();
+    window.loadAllGuildSettings();
   })();
 </script>
