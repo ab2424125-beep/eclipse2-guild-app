@@ -8,220 +8,401 @@
     backdrop-filter: blur(14px);
     border: 1px solid rgba(56, 189, 248, 0.25);
     border-radius: 20px;
-    padding: 16px;
+    padding: 18px;
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
   }
 
-  .notice-item-box {
+  .notice-box {
     background: #0d1527;
     border: 1px solid #1e2c47;
     border-radius: 14px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+  }
+
+  /* 일관된 다크 인풋 스타일 */
+  .input-custom-notice {
+    background-color: #080d1a !important;
+    border: 1px solid #233554 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 9px 12px !important;
+    font-size: 0.85rem !important;
+    color-scheme: dark;
     transition: all 0.15s ease;
   }
-  .notice-item-box:hover {
+  .input-custom-notice:focus, .input-custom-notice:hover {
+    border-color: #38bdf8 !important;
+    outline: none !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2) !important;
+  }
+  .input-custom-notice::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+  }
+  select.input-custom-notice option {
+    background-color: #0d1527;
+    color: #ffffff;
+  }
+
+  /* 헤더 유틸 버튼 */
+  .btn-header-notice {
+    background: #111a2e;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-header-notice:hover {
     border-color: #38bdf8;
-    background: #101a30;
+    color: #ffffff;
   }
-
-  .badge-notice-important {
-    background: rgba(244, 63, 94, 0.2);
-    border: 1px solid #f43f5e;
-    color: #fb7185;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
-  }
-  .badge-notice-normal {
-    background: rgba(56, 189, 248, 0.15);
-    border: 1px solid rgba(56, 189, 248, 0.3);
+  .btn-header-notice.active-btn {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
     color: #38bdf8;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
   }
 
-  .notice-body {
-    color: #cbd5e1;
-    font-size: 0.84rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  /* 저장 버튼 그라데이션 */
+  .btn-notice-submit {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+    border: none;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   }
+  .btn-notice-submit:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+  }
+
+  /* 공지 리스트 카드 */
+  .notice-item-card {
+    background: #090e1c;
+    border: 1px solid #1b263b;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+  }
+  .notice-item-card:hover {
+    border-color: rgba(56, 189, 248, 0.5);
+    background: #0d162d;
+  }
+  .notice-item-card.is-important {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, #090e1c 100%);
+  }
+
+  /* 구분 뱃지 */
+  .badge-notice-type {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .badge-type-normal {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+  }
+  .badge-type-urgent {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+  .badge-type-event {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+  }
+
+  /* 토스트 알림창 */
+  .custom-notice-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0d1830;
+    border: 1.5px solid #38bdf8;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 99999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .custom-notice-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 
 <div class="notice-card mb-4">
-  <!-- 상단 헤더 & 등록/새로고침 버튼 -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div class="d-flex align-items-center gap-2">
       <span style="font-size: 1.3rem;">📢</span>
       <h6 class="fw-bold mb-0 text-white">길드 공지사항</h6>
     </div>
     <div class="d-flex gap-1">
-      <button class="btn btn-outline-info btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="toggleNoticeForm()">
+      <button type="button" class="btn-header-notice" id="btnToggleNoticeForm" onclick="window.toggleNoticeRegisterForm()">
         <i class="fa-solid fa-pen me-1"></i>공지 등록
       </button>
-      <button class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="loadGuildNotices()">
+      <button type="button" class="btn-header-notice" onclick="window.loadNoticeList()">
         <i class="fa-solid fa-arrows-rotate"></i>
       </button>
     </div>
   </div>
 
-  <!-- 공지 등록 폼 (접이식) -->
-  <div class="box-dark mb-3" id="noticeWriteBox" style="display: none; border: 1px solid rgba(56, 189, 248, 0.3);">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small fw-bold text-info"><i class="fa-solid fa-pen-to-square me-1"></i>신규 공지사항 등록</span>
-      <button class="btn-close btn-close-white" style="font-size: 0.7rem;" onclick="toggleNoticeForm()"></button>
+  <!-- 신규 공지사항 등록 폼 (다크 스타일 전면 개편) -->
+  <div class="notice-box border-info border-opacity-50" id="noticeRegisterBox" style="display: none; background: #0b1324;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="small fw-bold text-info"><i class="fa-solid fa-pen-to-square me-1"></i> 신규 공지사항 등록</span>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.72rem;" onclick="window.toggleNoticeRegisterForm()"></button>
     </div>
 
     <div class="row g-2 mb-2">
       <div class="col-4">
-        <label class="small text-secondary mb-1">구분</label>
-        <select id="noticeBadge" class="form-select input-custom py-1" style="font-size: 0.8rem;">
-          <option value="📢 일반" selected>📢 일반</option>
-          <option value="🚨 필독">🚨 필독</option>
-          <option value="⚔️ 쟁/공성">⚔️ 쟁/공성</option>
-          <option value="🎉 이벤트">🎉 이벤트</option>
+        <label class="form-label small text-secondary mb-1">구분</label>
+        <select id="noticeTypeSelect" class="form-select input-custom-notice">
+          <option value="일반">📢 일반</option>
+          <option value="중요">🚨 중요/필독</option>
+          <option value="이벤트">🎁 이벤트</option>
         </select>
       </div>
       <div class="col-4">
-        <label class="small text-secondary mb-1">작성자</label>
-        <input type="text" id="noticeAuthor" class="form-control input-custom py-1" placeholder="길드장" value="길드장" style="font-size: 0.8rem;">
+        <label class="form-label small text-secondary mb-1">작성자</label>
+        <input type="text" id="noticeWriterInput" class="form-control input-custom-notice" placeholder="작성자 명">
       </div>
       <div class="col-4">
-        <label class="small text-secondary mb-1">공지 일자</label>
-        <input type="date" id="noticeDate" class="form-control input-custom py-1" style="font-size: 0.8rem;">
-      </div>
-      <div class="col-12">
-        <label class="small text-secondary mb-1">공지 제목</label>
-        <input type="text" id="noticeTitle" class="form-control input-custom" placeholder="제목을 입력하세요">
-      </div>
-      <div class="col-12">
-        <label class="small text-secondary mb-1">공지 내용</label>
-        <textarea id="noticeContent" class="form-control input-custom" rows="4" placeholder="공지 내용을 자세히 입력하세요"></textarea>
-      </div>
-      <div class="col-12 mt-2">
-        <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="handleSubmitNotice()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none;">
-          <i class="fa-solid fa-check me-1"></i> 공지사항 저장하기
-        </button>
+        <label class="form-label small text-secondary mb-1">공지 일자</label>
+        <input type="date" id="noticeDateInput" class="form-control input-custom-notice">
       </div>
     </div>
-  </div>
 
-  <div class="p-2 mb-3 rounded" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
-    <div class="text-secondary small" style="font-size: 0.75rem;">
-      💡 길드 중요 공지 및 전달사항이 실시간으로 안내됩니다.
+    <div class="mb-2">
+      <label class="form-label small text-secondary mb-1">공지 제목</label>
+      <input type="text" id="noticeTitleInput" class="form-control input-custom-notice" placeholder="제목을 입력하세요">
     </div>
+
+    <div class="mb-3">
+      <label class="form-label small text-secondary mb-1">공지 내용</label>
+      <textarea id="noticeContentInput" class="form-control input-custom-notice" rows="4" placeholder="공지 내용을 자세히 입력하세요..." style="resize: vertical;"></textarea>
+    </div>
+
+    <button type="button" class="btn btn-notice-submit w-100" id="btnNoticeSubmitAction" onclick="window.submitNoticeRecord()">
+      <i class="fa-solid fa-check me-1"></i> 공지사항 저장하기
+    </button>
   </div>
 
-  <!-- 공지사항 리스트 영역 -->
-  <div id="noticeListArea" style="max-height: 520px; overflow-y: auto;">
+  <!-- 상단 안내 인포바 -->
+  <div class="p-2 px-3 rounded mb-3 d-flex align-items-center gap-2" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+    <span>💡</span>
+    <span class="small text-secondary" style="font-size: 0.76rem;">길드 중요 공지 및 전달사항이 실시간으로 안내됩니다.</span>
+  </div>
+
+  <!-- 공지사항 목록 컨테이너 -->
+  <div id="noticeListContainer">
     <div class="text-secondary small text-center py-4">공지사항을 불러오는 중...</div>
   </div>
 </div>
 
+<!-- 플로팅 토스트 -->
+<div id="noticeToastBox" class="custom-notice-toast">
+  <span id="noticeToastIcon">✅</span>
+  <span id="noticeToastMsg">알림</span>
+</div>
+
 <script>
-  (async function initNoticePage() {
+  window.noticeToastTimer = null;
+
+  window.showNoticeToast = function(msg, icon = "✅") {
+    const toast = document.getElementById("noticeToastBox");
+    const m = document.getElementById("noticeToastMsg");
+    const ic = document.getElementById("noticeToastIcon");
+    if (!toast) return;
+
+    m.innerText = msg;
+    ic.innerText = icon;
+    toast.classList.add("show");
+
+    if (window.noticeToastTimer) clearTimeout(window.noticeToastTimer);
+    window.noticeToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+  };
+
+  function setNoticeDefaultValues() {
     const today = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('noticeDate');
+    const dateInput = document.getElementById('noticeDateInput');
     if (dateInput) dateInput.value = today;
 
-    await loadGuildNotices();
-  })();
-
-  function toggleNoticeForm() {
-    const box = document.getElementById('noticeWriteBox');
-    if (box) {
-      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    const writerInput = document.getElementById('noticeWriterInput');
+    if (writerInput) {
+      const loggedUser = sessionStorage.getItem("admin_user") || "길드장";
+      writerInput.value = loggedUser;
     }
   }
 
-  // 1. 공지사항 목록 조회 (Supabase)
-  async function loadGuildNotices() {
-    const container = document.getElementById('noticeListArea');
-    if (!container) return;
+  // 🎯 공지 등록 폼 토글 (관리자 권한 검증)
+  window.toggleNoticeRegisterForm = async function() {
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    const isAdmin = sessionStorage.getItem("is_admin") === "true";
 
-    container.innerHTML = '<div class="text-secondary small text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>공지 조회 중...</div>';
+    if (!isSuper && !isAdmin) {
+      return window.showNoticeToast("공지사항 등록은 관리자만 가능합니다.", "⚠️");
+    }
+
+    const box = document.getElementById('noticeRegisterBox');
+    const isOpening = (box.style.display === 'none' || !box.style.display);
+    box.style.display = isOpening ? 'block' : 'none';
+
+    if (isOpening) {
+      setNoticeDefaultValues();
+      document.getElementById('noticeTitleInput').focus();
+    }
+  };
+
+  // 🎯 공지사항 목록 조회 (Supabase DB 조회)
+  window.loadNoticeList = async function() {
+    const container = document.getElementById('noticeListContainer');
+    if (container) {
+      container.innerHTML = '<div class="text-secondary small text-center py-4"><i class="fa-solid fa-spinner fa-spin me-1"></i>공지사항을 불러오는 중...</div>';
+    }
 
     try {
-      const list = await apiRequest("guild_notices?select=*&order=id.desc");
+      // guild_notices 테이블 조회
+      const notices = await apiRequest("guild_notices?select=*&order=id.desc");
 
-      if (!list || list.length === 0) {
-        container.innerHTML = '<div class="text-secondary small text-center py-4">등록된 공지사항이 없습니다.<br>우측 상단의 [+ 공지 등록]을 눌러 첫 공지를 작성해보세요!</div>';
+      if (!notices || notices.length === 0) {
+        container.innerHTML = `
+          <div class="text-secondary small text-center py-5">
+            <div>등록된 공지사항이 없습니다.</div>
+            <div class="mt-1" style="font-size: 0.75rem; color: #64748b;">우측 상단의 [+ 공지 등록]을 눌러 첫 공지를 작성해보세요!</div>
+          </div>
+        `;
         return;
       }
 
-      container.innerHTML = list.map(item => {
-        const badge = item.badge || '📢 일반';
-        const isImportant = badge.includes('필독') || badge.includes('긴급') || badge.includes('중요');
-        const badgeClass = isImportant ? 'badge-notice-important' : 'badge-notice-normal';
-        const dateOnly = item.notice_date || (item.created_at ? item.created_at.slice(0, 10) : '');
+      container.innerHTML = notices.map(item => {
+        const type = item.type || '일반';
+        let badgeClass = 'badge-type-normal';
+        let isImp = false;
+
+        if (type.includes('중요') || type.includes('필독')) {
+          badgeClass = 'badge-type-urgent';
+          isImp = true;
+        } else if (type.includes('이벤트')) {
+          badgeClass = 'badge-type-event';
+        }
+
+        const dateStr = (item.created_at || item.date || '').slice(0, 10);
+        const writer = item.writer || item.author || '관리자';
+        const title = item.title || '제목 없음';
+        const content = (item.content || '').replace(/\n/g, '<br>');
 
         return `
-          <div class="notice-item-box">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="${badgeClass}">${badge}</span>
+          <div class="notice-item-card ${isImp ? 'is-important' : ''}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
               <div class="d-flex align-items-center gap-2">
-                <span class="text-secondary" style="font-size: 0.72rem;">📅 ${dateOnly} • ✍️ ${item.author || '관리자'}</span>
-                <button type="button" class="btn btn-outline-danger btn-xs py-0 px-1" style="font-size: 0.65rem;" onclick="deleteNotice(${item.id})">삭제</button>
+                <span class="badge-notice-type ${badgeClass}">${type}</span>
+                <span class="fw-bold text-white small">${title}</span>
               </div>
+              <span class="text-secondary" style="font-size: 0.72rem;">${dateStr}</span>
             </div>
-            <div class="fw-bold text-white fs-6 mt-2">${item.title}</div>
-            <div class="notice-body">${item.content}</div>
+            <div class="text-secondary mb-2" style="font-size: 0.8rem; line-height: 1.6; color: #cbd5e1 !important;">
+              ${content}
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25" style="font-size: 0.7rem;">
+              <span class="text-secondary">작성자: <strong class="text-info">${writer}</strong></span>
+              ${sessionStorage.getItem("admin_role") === "super" ? `
+                <button type="button" class="btn btn-link btn-xs p-0 text-danger" style="font-size: 0.7rem; text-decoration: none;" onclick="window.deleteNoticeItem(${item.id})">
+                  <i class="fa-solid fa-trash me-1"></i>삭제
+                </button>
+              ` : ''}
+            </div>
           </div>
         `;
       }).join('');
+
     } catch (err) {
-      container.innerHTML = `<div class="text-danger small text-center py-4">공지 로드 실패: ${err.message}</div>`;
+      if (container) {
+        container.innerHTML = `<div class="text-danger small text-center py-4">공지사항 조회 실패: ${err.message}</div>`;
+      }
     }
-  }
+  };
 
-  // 2. 신규 공지사항 등록
-  async function handleSubmitNotice() {
-    const badge = document.getElementById('noticeBadge').value;
-    const author = document.getElementById('noticeAuthor').value.trim() || '관리자';
-    const notice_date = document.getElementById('noticeDate').value;
-    const title = document.getElementById('noticeTitle').value.trim();
-    const content = document.getElementById('noticeContent').value.trim();
+  // 🎯 공지사항 저장 처리
+  window.submitNoticeRecord = async function() {
+    const type = document.getElementById('noticeTypeSelect').value;
+    const writer = (document.getElementById('noticeWriterInput').value || '').trim();
+    const title = (document.getElementById('noticeTitleInput').value || '').trim();
+    const content = (document.getElementById('noticeContentInput').value || '').trim();
+    const dateVal = document.getElementById('noticeDateInput').value;
 
-    if (!title || !content) {
-      return alert("제목과 내용을 모두 입력해주세요!");
-    }
+    if (!title) return window.showNoticeToast("공지 제목을 입력해주세요!", "⚠️");
+    if (!content) return window.showNoticeToast("공지 내용을 입력해주세요!", "⚠️");
+
+    const btn = document.getElementById('btnNoticeSubmitAction');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>저장 중...';
 
     try {
       await apiRequest("guild_notices", "POST", [{
-        badge,
-        author,
-        notice_date,
-        title,
-        content
+        type: type,
+        writer: writer || '길드장',
+        title: title,
+        content: content,
+        created_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
       }]);
 
-      alert("✅ 공지사항이 성공적으로 등록되었습니다.");
-      document.getElementById('noticeTitle').value = '';
-      document.getElementById('noticeContent').value = '';
-      toggleNoticeForm();
-      await loadGuildNotices();
-    } catch (err) {
-      alert("공지 등록 실패: " + err.message);
-    }
-  }
+      window.showNoticeToast("공지사항이 성공적으로 등록되었습니다!", "🎉");
+      document.getElementById('noticeTitleInput').value = '';
+      document.getElementById('noticeContentInput').value = '';
+      document.getElementById('noticeRegisterBox').style.display = 'none';
 
-  // 3. 공지사항 삭제
-  async function deleteNotice(id) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
+
+      await window.loadNoticeList();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
+      window.showNoticeToast("등록 실패: " + err.message, "❌");
+    }
+  };
+
+  // 🎯 공지사항 삭제 처리 (슈퍼관리자)
+  window.deleteNoticeItem = async function(id) {
     if (!confirm("해당 공지사항을 삭제하시겠습니까?")) return;
 
     try {
       await apiRequest(`guild_notices?id=eq.${id}`, "DELETE");
-      await loadGuildNotices();
+      window.showNoticeToast("공지사항이 삭제되었습니다.", "🗑️");
+      await window.loadNoticeList();
     } catch (err) {
-      alert("삭제 실패: " + err.message);
+      window.showNoticeToast("삭제 실패: " + err.message, "❌");
     }
-  }
+  };
+
+  // 🎯 초기 실행
+  (function initNoticeModule() {
+    setNoticeDefaultValues();
+    window.loadNoticeList();
+  })();
 </script>
