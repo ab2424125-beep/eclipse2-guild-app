@@ -64,11 +64,6 @@
     border-color: #38bdf8;
     color: #ffffff;
   }
-  .btn-header-notice.active-btn {
-    background: rgba(56, 189, 248, 0.2);
-    border-color: #38bdf8;
-    color: #38bdf8;
-  }
 
   /* 저장 버튼 그라데이션 */
   .btn-notice-submit {
@@ -171,7 +166,7 @@
     </div>
   </div>
 
-  <!-- 신규 공지사항 등록 폼 (다크 스타일 전면 개편) -->
+  <!-- 신규 공지사항 등록 폼 -->
   <div class="notice-box border-info border-opacity-50" id="noticeRegisterBox" style="display: none; background: #0b1324;">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <span class="small fw-bold text-info"><i class="fa-solid fa-pen-to-square me-1"></i> 신규 공지사항 등록</span>
@@ -259,7 +254,7 @@
     }
   }
 
-  // 🎯 공지 등록 폼 토글 (관리자 권한 검증)
+  // 공지 등록 폼 토글
   window.toggleNoticeRegisterForm = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     const isAdmin = sessionStorage.getItem("is_admin") === "true";
@@ -278,7 +273,7 @@
     }
   };
 
-  // 🎯 공지사항 목록 조회 (Supabase DB 조회)
+  // 🎯 공지사항 목록 조회 (type 컬럼 부재 시에도 제목 파싱으로 100% 정상 작동)
   window.loadNoticeList = async function() {
     const container = document.getElementById('noticeListContainer');
     if (container) {
@@ -286,7 +281,6 @@
     }
 
     try {
-      // guild_notices 테이블 조회
       const notices = await apiRequest("guild_notices?select=*&order=id.desc");
 
       if (!notices || notices.length === 0) {
@@ -300,28 +294,41 @@
       }
 
       container.innerHTML = notices.map(item => {
-        const type = item.type || '일반';
+        let rawTitle = item.title || '제목 없음';
+        let detectedType = '일반';
+
+        // 제목 앞머리에 붙은 [중요], [이벤트], [일반] 태그 자동 인식
+        if (rawTitle.startsWith('[중요]') || (item.content && item.content.includes('[중요]'))) {
+          detectedType = '중요';
+          rawTitle = rawTitle.replace('[중요]', '').trim();
+        } else if (rawTitle.startsWith('[이벤트]') || (item.content && item.content.includes('[이벤트]'))) {
+          detectedType = '이벤트';
+          rawTitle = rawTitle.replace('[이벤트]', '').trim();
+        } else if (rawTitle.startsWith('[일반]')) {
+          detectedType = '일반';
+          rawTitle = rawTitle.replace('[일반]', '').trim();
+        }
+
         let badgeClass = 'badge-type-normal';
         let isImp = false;
 
-        if (type.includes('중요') || type.includes('필독')) {
+        if (detectedType === '중요') {
           badgeClass = 'badge-type-urgent';
           isImp = true;
-        } else if (type.includes('이벤트')) {
+        } else if (detectedType === '이벤트') {
           badgeClass = 'badge-type-event';
         }
 
         const dateStr = (item.created_at || item.date || '').slice(0, 10);
         const writer = item.writer || item.author || '관리자';
-        const title = item.title || '제목 없음';
         const content = (item.content || '').replace(/\n/g, '<br>');
 
         return `
           <div class="notice-item-card ${isImp ? 'is-important' : ''}">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <div class="d-flex align-items-center gap-2">
-                <span class="badge-notice-type ${badgeClass}">${type}</span>
-                <span class="fw-bold text-white small">${title}</span>
+                <span class="badge-notice-type ${badgeClass}">${detectedType}</span>
+                <span class="fw-bold text-white small">${rawTitle}</span>
               </div>
               <span class="text-secondary" style="font-size: 0.72rem;">${dateStr}</span>
             </div>
@@ -347,7 +354,7 @@
     }
   };
 
-  // 🎯 공지사항 저장 처리
+  // 🎯 [방법 2 적용] type 컬럼을 전송하지 않고 제목에 말머리로 결합하여 전송
   window.submitNoticeRecord = async function() {
     const type = document.getElementById('noticeTypeSelect').value;
     const writer = (document.getElementById('noticeWriterInput').value || '').trim();
@@ -363,12 +370,12 @@
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>저장 중...';
 
     try {
+      // type 컬럼이 DB에 없으므로, 제목 앞에 [구분]을 붙여 안전하게 title과 content만 전송
+      const formattedTitle = `[${type}] ${title}`;
+
       await apiRequest("guild_notices", "POST", [{
-        type: type,
-        writer: writer || '길드장',
-        title: title,
-        content: content,
-        created_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+        title: formattedTitle,
+        content: content
       }]);
 
       window.showNoticeToast("공지사항이 성공적으로 등록되었습니다!", "🎉");
@@ -387,7 +394,7 @@
     }
   };
 
-  // 🎯 공지사항 삭제 처리 (슈퍼관리자)
+  // 공지사항 삭제 처리 (슈퍼관리자)
   window.deleteNoticeItem = async function(id) {
     if (!confirm("해당 공지사항을 삭제하시겠습니까?")) return;
 
@@ -400,7 +407,6 @@
     }
   };
 
-  // 🎯 초기 실행
   (function initNoticeModule() {
     setNoticeDefaultValues();
     window.loadNoticeList();
