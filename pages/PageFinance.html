@@ -139,27 +139,12 @@
     align-items: center;
   }
 
-  /* ==========================================
-     입출금 내역 전용 슬림 다크 커스텀 스크롤바
-     ========================================== */
-  #financeLogsList::-webkit-scrollbar {
-    width: 6px;
-  }
-  #financeLogsList::-webkit-scrollbar-track {
-    background: #080d1a;
-    border-radius: 8px;
-  }
-  #financeLogsList::-webkit-scrollbar-thumb {
-    background: #1e2d4a;
-    border-radius: 8px;
-  }
-  #financeLogsList::-webkit-scrollbar-thumb:hover {
-    background: #38bdf8;
-  }
-  #financeLogsList {
-    scrollbar-width: thin;
-    scrollbar-color: #1e2d4a #080d1a;
-  }
+  /* 입출금 내역 슬림 스크롤바 */
+  #financeLogsList::-webkit-scrollbar { width: 6px; }
+  #financeLogsList::-webkit-scrollbar-track { background: #080d1a; border-radius: 8px; }
+  #financeLogsList::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 8px; }
+  #financeLogsList::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+  #financeLogsList { scrollbar-width: thin; scrollbar-color: #1e2d4a #080d1a; }
 
   .custom-fin-toast {
     position: fixed;
@@ -345,7 +330,6 @@
 
     <!-- 기타 수입(입금) -->
     <div id="formIncomeArea">
-      <!-- 입력 모드 선택 토글 (총액 입력 vs 차액 직접 입력) -->
       <div class="d-flex gap-1 mb-3">
         <div class="income-mode-pill active" id="pillModeTotal" onclick="window.setIncomeCalcMode('total')">
           <i class="fa-solid fa-calculator me-1"></i>게임 금고 총액 입력
@@ -365,7 +349,6 @@
           <input type="text" id="incomeAmount" class="form-control input-custom-finance" placeholder="예: 150,000" onkeyup="window.formatCommaInput(this); window.calculateIncomeDiff();">
         </div>
 
-        <!-- 총액 입력 시 실시간 차액 계산 결과 박스 -->
         <div class="col-12" id="boxIncomeDiffCalc">
           <div class="diff-calc-info">
             <div class="d-flex justify-content-between align-items-center small text-secondary">
@@ -423,7 +406,7 @@
     </div>
   </div>
 
-  <!-- 4. 금고 입출금 전체 히스토리 (슬림 다크 스크롤바 적용) -->
+  <!-- 4. 금고 입출금 전체 히스토리 -->
   <div class="finance-box mb-0">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <span class="small fw-bold text-secondary">📜 금고 입출금 내역</span>
@@ -437,7 +420,6 @@
   </div>
 </div>
 
-<!-- 플로팅 알림창 -->
 <div id="finToastBox" class="custom-fin-toast">
   <span id="finToastIcon">✅</span>
   <span id="finToastMsg">알림</span>
@@ -449,7 +431,7 @@
   window.isManagerFeeIncluded = true;
   window.currentIncomeMode = 'total';
   window.calculatedNetIncome = 0;
-  window.activeGuildName = "ECLIPSE"; // 기본 길드명 (설정값에서 동적 로드)
+  window.activeGuildName = "ECLIPSE";
   window.finToastTimer = null;
 
   window.showFinToast = function(msg, icon = "✅") {
@@ -466,7 +448,6 @@
     window.finToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   };
 
-  // 🎯 설정창에서 등록한 실제 길드명 조회
   async function loadConfiguredGuildName() {
     try {
       const cached = sessionStorage.getItem("guild_name");
@@ -484,6 +465,7 @@
     }
   }
 
+  // 로컬 타임존 기준 YYYY-MM-DD 변환
   window.formatDateToYYYYMMDD = function(d) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -491,7 +473,6 @@
     return `${year}-${month}-${day}`;
   };
 
-  // 실시간 천 단위 콤마 포맷터
   window.formatCommaInput = function(elem) {
     const val = elem.value.replace(/[^0-9]/g, '');
     if (!val) {
@@ -501,7 +482,6 @@
     elem.value = Number(val).toLocaleString();
   };
 
-  // 입금 방식 전환 (총액 차액 자동계산 vs 직접 입력)
   window.setIncomeCalcMode = function(mode) {
     window.currentIncomeMode = mode;
     const pillTotal = document.getElementById('pillModeTotal');
@@ -526,7 +506,6 @@
     window.calculateIncomeDiff();
   };
 
-  // 실시간 차액 자동 계산
   window.calculateIncomeDiff = function() {
     const prevBalance = window.lastFinanceData.currentBalance || 0;
     document.getElementById('diffPrevBalanceText').innerText = prevBalance.toLocaleString() + ' D';
@@ -564,12 +543,11 @@
     }
   };
 
-  // 🎯 메인 주간 수익금 퀵 레인지 필터
   window.setFinanceQuickRange = function(type) {
     document.querySelectorAll('#fBtnThisWeek, #fBtnLastWeek, #fBtnThisMonth, #fBtnAll').forEach(b => b.classList.remove('active'));
 
     const today = new Date();
-    const currentDay = (today.getDay() + 6) % 7; // 월요일 기준
+    const currentDay = (today.getDay() + 6) % 7; // 월요일 시작
 
     let start = null;
     let end = null;
@@ -596,7 +574,6 @@
     window.loadFinanceData();
   };
 
-  // 🎯 유동적 지급계산기 모달 토글
   window.togglePayoutCalcModal = function() {
     const box = document.getElementById('payoutCalcBox');
     const isOpening = (box.style.display === 'none' || !box.style.display);
@@ -606,7 +583,6 @@
     }
   };
 
-  // 계산기 날짜 필터
   window.setCalcQuickRange = function(type) {
     document.querySelectorAll('#cBtnThisWeek, #cBtnLastWeek, #cBtnThisMonth, #cBtnAll').forEach(b => b.classList.remove('active'));
 
@@ -644,22 +620,31 @@
     window.fetchIncomeForCalc();
   };
 
-  // 계산기 기준 수익금 산출
+  // 🎯 [핵심 개선]: 선택 기간의 "순수익(입금 - 지출)"을 정확히 산출하여 계산기 원금으로 세팅
   window.fetchIncomeForCalc = function() {
     const s = document.getElementById('calcStartDate').value;
     const e = document.getElementById('calcEndDate').value;
 
     let periodIncome = 0;
+    let periodExpense = 0;
+
     (window.lastFinanceData.logs || []).forEach(l => {
-      const isIncome = (l.type === '입금');
-      if (!isIncome) return;
       const d = (l.dateTime || '').slice(0, 10);
       if (s && d < s) return;
       if (e && d > e) return;
-      periodIncome += (Number(l.amount) || 0);
+
+      if (l.type === '입금') {
+        periodIncome += (Number(l.amount) || 0);
+      } else if (l.type === '출금') {
+        periodExpense += (Number(l.amount) || 0);
+      }
     });
 
-    document.getElementById('calcBaseAmount').value = Number(periodIncome).toLocaleString();
+    // 선택 기간에 실제로 벌어들인 순수익 (입금 - 지출)
+    let netPeriodProfit = periodIncome - periodExpense;
+    if (netPeriodProfit < 0) netPeriodProfit = 0;
+
+    document.getElementById('calcBaseAmount').value = Number(netPeriodProfit).toLocaleString();
     window.runPayoutSimulation();
   };
 
@@ -691,24 +676,28 @@
     window.runPayoutSimulation();
   };
 
-  // 🎯 지급 계산기 분배율 시뮬레이션 계산
+  // 🎯 지급 비율 선택에 따른 실시간 정확한 계산 로직
   window.runPayoutSimulation = function() {
     const totalBase = parseInt(String(document.getElementById('calcBaseAmount').value).replace(/[^0-9]/g, ''), 10) || 0;
-    const distRate = window.selectedDistRate;
-    const reserveRate = 100 - distRate;
+    const distRate = window.selectedDistRate;       // 선택한 총 분배율 (예: 70%)
+    const reserveRate = 100 - distRate;             // 금고 잔여율 (예: 30%)
 
+    // 총 분배 집행액 = 기준 원금 * 분배율
     const totalDistAmount = Math.floor(totalBase * (distRate / 100));
+    // 금고 잔여 적립금 = 기준 원금 - 총 분배 집행액
     const reserveAmount = totalBase - totalDistAmount;
 
     let managerShare = 0;
     let memberPool = totalDistAmount;
 
     if (window.isManagerFeeIncluded) {
+      // 관리비 포함 시: 기준 원금의 10%
       managerShare = Math.floor(totalBase * 0.10);
       if (managerShare > totalDistAmount) managerShare = totalDistAmount;
       memberPool = totalDistAmount - managerShare;
     }
 
+    // 실제 비율 표시 계산
     const memberRateCalc = totalBase > 0 ? Math.round((memberPool / totalBase) * 100) : (window.isManagerFeeIncluded ? distRate - 10 : distRate);
     const managerRateCalc = totalBase > 0 ? Math.round((managerShare / totalBase) * 100) : (window.isManagerFeeIncluded ? 10 : 0);
 
@@ -725,7 +714,6 @@
     document.getElementById('calcReserveText').innerText = reserveAmount.toLocaleString() + ' D';
   };
 
-  // 🎯 계산기 결과 카톡 복사
   window.copyCalcResultForKakao = function() {
     const totalBase = document.getElementById('calcBaseAmount').value || '0';
     const distRate = document.getElementById('calcTotalDistRateText').innerText;
@@ -768,7 +756,6 @@
     }
   };
 
-  // 🎯 Supabase guild_finances 데이터 로드
   window.loadFinanceData = async function() {
     const start = document.getElementById('financeStartDate').value;
     const end = document.getElementById('financeEndDate').value;
@@ -782,7 +769,12 @@
       const rows = await apiRequest("guild_finances?select=*&order=id.desc");
       const logs = (rows || []).map(r => {
         const typeStr = (r.tx_type || r.type || '입금');
-        const dStr = (r.created_at || '').slice(0, 10);
+        // KST 기준 날짜 안전 파싱
+        let dStr = '';
+        if (r.created_at) {
+          const dObj = new Date(r.created_at);
+          dStr = window.formatDateToYYYYMMDD(dObj);
+        }
         const inFilter = (!start || dStr >= start) && (!end || dStr <= end);
         return {
           id: r.id,
@@ -826,6 +818,12 @@
 
       window.renderFinanceLogs(logs);
       window.calculateIncomeDiff();
+
+      // 만약 계산기 창이 열려있다면 계산기도 최신 데이터로 동기화
+      const calcBox = document.getElementById('payoutCalcBox');
+      if (calcBox && calcBox.style.display !== 'none') {
+        window.fetchIncomeForCalc();
+      }
     } catch (err) {
       if (list) {
         list.innerHTML = `<div class="text-danger small text-center py-2">조회 실패: ${err.message}</div>`;
@@ -862,7 +860,6 @@
     }).join('');
   };
 
-  // 🎯 입금 처리 실행
   window.handleIncomeSubmitClick = async function() {
     const date = document.getElementById('incomeDate').value;
     const reason = document.getElementById('incomeReason').value.trim();
@@ -917,7 +914,6 @@
     }
   };
 
-  // 🎯 지출 처리 실행
   window.handleExpenseSubmitClick = async function() {
     const date = document.getElementById('expenseDate').value;
     const reason = document.getElementById('expenseReason').value.trim();
@@ -950,7 +946,6 @@
     }
   };
 
-  // 🎯 주간 순수익 카카오톡 보고 복사 (설정된 길드명 연동)
   window.copyFinanceReportForKakao = function() {
     const start = document.getElementById('financeStartDate').value || '시작';
     const end = document.getElementById('financeEndDate').value || '현재';
@@ -974,7 +969,6 @@
     }
   };
 
-  // 🎯 초기 실행
   (async function initFinanceModule() {
     await loadConfiguredGuildName();
     const today = new Date().toISOString().split('T')[0];
