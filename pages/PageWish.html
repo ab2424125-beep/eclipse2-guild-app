@@ -20,14 +20,25 @@
     margin-bottom: 14px;
   }
 
+  /* 세련되고 선명한 다크 인풋 */
   .input-custom-wish {
     background-color: #080d1a !important;
     border: 1px solid #233554 !important;
     color: #ffffff !important;
     border-radius: 10px !important;
-    padding: 8px 12px !important;
+    padding: 9px 12px !important;
     font-size: 0.85rem !important;
     color-scheme: dark;
+    transition: all 0.15s ease;
+  }
+  .input-custom-wish:focus, .input-custom-wish:hover {
+    border-color: #38bdf8 !important;
+    outline: none !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+  }
+  .input-custom-wish::placeholder {
+    color: #475569 !important;
+    opacity: 1 !important;
   }
 
   .tax-toggle-btn {
@@ -36,7 +47,7 @@
     color: #94a3b8;
     font-size: 0.75rem;
     font-weight: 700;
-    padding: 6px 10px;
+    padding: 7px 10px;
     border-radius: 8px;
     transition: all 0.15s;
     cursor: pointer;
@@ -51,7 +62,7 @@
     background: #10192d;
     border: 1px solid #1f2e4d;
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     margin-bottom: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -84,7 +95,7 @@
     background: #090e1c;
     border: 1px solid #1b263b;
     border-radius: 10px;
-    padding: 9px 12px;
+    padding: 10px 12px;
     margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
@@ -164,12 +175,12 @@
   <div class="wish-section-box">
     <div class="small fw-bold text-white mb-2"><i class="fa-solid fa-gavel me-1 text-info"></i> 낙찰 등록 & N/1 분배</div>
 
-    <div class="p-2 mb-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;" id="selectedSummaryBox">
+    <div class="p-2 mb-3 rounded" style="background: #080d1a; border: 1px solid #1e2c47;" id="selectedSummaryBox">
       <div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>
     </div>
 
     <!-- 게임 경매 수수료 토글 -->
-    <div class="mb-2 p-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;">
+    <div class="mb-3 p-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;">
       <div class="d-flex justify-content-between align-items-center mb-1">
         <label class="form-label small text-secondary mb-0">⚖️ 게임 시스템 경매 수수료 (5%)</label>
         <span class="text-info small" style="font-size: 0.72rem;" id="taxStatusText">세율 5% 자동 차감 적용</span>
@@ -184,7 +195,8 @@
       </div>
     </div>
 
-    <div class="row g-2 mb-2">
+    <!-- 가져간 길드원 & 낙찰 금액 -->
+    <div class="row g-2 mb-3">
       <div class="col-6">
         <label class="form-label small text-secondary mb-1">가져간 길드원</label>
         <select id="wishMemberSelect" class="form-select input-custom-wish">
@@ -193,28 +205,33 @@
       </div>
       <div class="col-6">
         <label class="form-label small text-secondary mb-1">낙찰 금액 (다이아)</label>
-        <input type="number" id="wishPrice" class="form-control input-custom-wish" placeholder="예: 10000" onkeyup="calculateNShare()">
+        <input type="number" id="wishPrice" class="form-control input-custom-wish" placeholder="예: 7000" onkeyup="calculateNShare()">
       </div>
     </div>
 
-    <div class="row g-2 mb-2">
+    <!-- 길드비용 적립 비율 & 길드자금 추가지원 (개선된 UI) -->
+    <div class="row g-2 mb-3">
       <div class="col-6">
         <label class="form-label small text-secondary mb-1">🏛️ 길드비용 적립 비율</label>
         <select id="guildFeeSelect" class="form-select input-custom-wish" onchange="calculateNShare()">
-          <option value="10" selected>10% 적립</option>
+          <option value="0" selected>0% (전액 분배)</option>
           <option value="5">5% 적립</option>
+          <option value="10">10% 적립</option>
           <option value="15">15% 적립</option>
           <option value="20">20% 적립</option>
-          <option value="0">0% (전액 분배)</option>
         </select>
       </div>
       <div class="col-6">
-        <label class="form-label small text-secondary mb-1">➕ 길드자금 추가지원 (선택)</label>
-        <input type="number" id="wishExtraFund" class="form-control input-custom-wish" placeholder="예: 2000" onkeyup="calculateNShare()">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label small text-secondary mb-0">➕ 추가 지원금 (선택)</label>
+          <span class="text-success" style="font-size: 0.7rem; font-weight: 600;">+길드지원</span>
+        </div>
+        <input type="number" id="wishExtraFund" class="form-control input-custom-wish" placeholder="0 (다이아 입력)" onkeyup="calculateNShare()">
       </div>
     </div>
 
-    <div id="shareCalcNotice" class="p-2 rounded mb-3" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); display: none;">
+    <!-- 정산 금액 미리보기 인포박스 -->
+    <div id="shareCalcNotice" class="p-3 rounded mb-3" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); display: none;">
       <div class="small text-secondary d-flex justify-content-between">
         <span>게임 경매 수수료 (5%):</span>
         <strong id="gameTaxText" class="text-danger">-0 다이아</strong>
@@ -231,9 +248,9 @@
         <span>길드 자금 추가 지원금:</span>
         <strong id="guildExtraText" class="text-success">+0 다이아</strong>
       </div>
-      <div class="small text-secondary d-flex justify-content-between mt-1 pt-1 border-top border-secondary border-opacity-25">
-        <span>참여자 1인당 N/1 최종 배당금:</span>
-        <strong id="perShareText" class="text-info fs-6">0 다이아</strong>
+      <div class="small text-secondary d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25 align-items-center">
+        <span class="text-white fw-bold">참여자 1인당 최종 배당금:</span>
+        <strong id="perShareText" class="text-info fs-6 fw-bold">0 다이아</strong>
       </div>
     </div>
 
@@ -282,7 +299,6 @@
   window.isAuctionTaxApplied = true;
   window.wishToastTimer = null;
 
-  // 🧹 [메모리 클린업 등록]: 페이지 퇴장 시 타이머 정리
   window.__currentModuleCleanup = function() {
     if (window.wishToastTimer) {
       clearTimeout(window.wishToastTimer);
@@ -454,9 +470,7 @@
     } catch (e) {}
   };
 
-  // 🔒 [보안 강화]: 관리자 인증 & 권한 검증 및 DB 단일 트랜잭션 RPC 실행
   window.executeWishDistributionProcess = async function() {
-    // 1. 관리자 로그인 여부 확인
     const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) {
       alert("⚠️ 낙찰 및 분배 등록은 관리자만 가능합니다.\n우측 상단의 [관리자 로그인]을 먼저 진행해주세요.");
@@ -464,7 +478,6 @@
       return;
     }
 
-    // 2. 권한 설정 확인
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       try {
@@ -501,7 +514,6 @@
     const perShare = window.currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / window.currentSelectedItem.memberCount) : 0;
 
     try {
-      // 🛡️ DB 단일 트랜잭션 함수 호출 (원자성 100% 보장)
       const res = await apiRequest("rpc/process_wish_distribution_transaction", "POST", {
         p_item_key: window.currentSelectedItem.itemKey,
         p_boss_name: window.currentSelectedItem.bossName,
@@ -550,7 +562,6 @@
     }
   };
 
-  // 🛡️ [이력 필터링 보강]: 순수 보스 아이템 분배 내역만 엄격 필터링 (주간점수/시트관리비 배제)
   window.loadDistHistory = async function() {
     const container = document.getElementById('distHistoryList');
     if (!container) return;
