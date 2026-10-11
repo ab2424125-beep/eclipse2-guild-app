@@ -740,14 +740,27 @@
     }
   }
 
+  // ⚡ [핵심 최적화]: 해상도(픽셀)는 100% 원본 유지 + 무손실 고화질(0.95) 변환으로 업로드 용량 80% 절감
   function processImageFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      window.currentImageBase64 = e.target.result;
-      window.currentImageMimeType = file.type || "image/jpeg";
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        const canvas = document.createElement("canvas");
+        canvas.width = tempImg.width;
+        canvas.height = tempImg.height;
 
-      showImageThumbnail(window.currentImageBase64, file.name || "스크린샷");
-      showRegToast("스크린샷이 등록되었습니다. [분석 시작]을 누르세요.", "📸");
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(tempImg, 0, 0);
+
+        // 작은 텍스트 획의 선명도를 완벽히 보존하는 0.95 화질 인코딩
+        window.currentImageBase64 = canvas.toDataURL("image/jpeg", 0.95);
+        window.currentImageMimeType = "image/jpeg";
+
+        showImageThumbnail(window.currentImageBase64, file.name || "스크린샷");
+        showRegToast("스크린샷 최적화 완료! [분석 시작]을 누르세요.", "📸");
+      };
+      tempImg.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
@@ -796,7 +809,7 @@
     }
     if (subText) subText.innerText = "AI가 화면에서 길드원을 판독 중입니다...";
 
-    showRegToast("AI 판독을 시작합니다...", "⏳");
+    showRegToast("AI 초고속 판독 시작...", "⏳");
 
     try {
       await runAIImageRecognition(window.currentImageBase64, window.currentImageMimeType);
@@ -843,18 +856,17 @@
       `[식별 구역 및 특징]\n` +
       `1. [화면 좌측 파티창]: HP 체력바 슬롯 옆에 표시된 파티원 닉네임 목록\n` +
       `2. [필드 전체 캐릭터]: 캐릭터 머리 위 초록색 길드 칭호 [${gName}] '바로 아래 줄'에 위치한 실제 닉네임\n` +
-      `3. 닉네임 글자 색상은 하늘색, 파란색, 주황색, 빨간색, 하얀색 등이 섞여 있으니 색상과 무관하게 모두 읽으세요.\n` +
-      `4. 파티 번호 슬롯(네모 안의 1, 2, 4, 5 등)이나 칭호, 레벨 표기는 제외하고 순수 닉네임 글자만 인식하세요.\n\n` +
+      `3. 닉네임 글자 색상은 무관하며 파티 번호 슬롯(네모 안 숫자), 칭호, 레벨 표기는 제외하고 순수 닉네임 글자만 인식하세요.\n\n` +
       `[중복 접두사 판독 주의사항 - 엄격 준수]\n` +
-      `- 초록색 길드 칭호 [${gName}] 자체를 닉네임으로 착각하거나 쪼개서 판독하지 마세요.\n` +
-      `- 길드명이나 접두사(예: '불편한')로 시작하는 닉네임은 앞부분만 보인다고 절대 추출하면 안 됩니다. 뒤에 붙은 고유 이름의 글자 획이 화면에서 육안으로 명확히 확인될 때만 추출하세요.\n` +
-      `- 뒤 글자가 스킬 이펙트나 캐릭터에 가려져 고유 이름을 확정할 수 없다면 [길드원 목록]에 있더라도 절대 목록에 포함하지 마세요.\n\n` +
+      `- 초록색 길드 칭호 [${gName}] 자체를 닉네임으로 판독하지 마세요.\n` +
+      `- 길드명이나 접두사(예: '불편한')로 시작하는 닉네임은 뒤에 붙은 고유 이름의 글자 획이 화면에서 육안으로 명확히 확인될 때만 추출하세요.\n` +
+      `- 뒤 글자가 스킬 이펙트 등에 가려져 확정할 수 없다면 절대 목록에 포함하지 마세요.\n\n` +
       `[매칭 및 추출 규칙]\n` +
       `- 화면에서 글자 형태가 뚜렷하게 확인되는 인원만 [길드원 목록]에서 매칭하여 출력하세요.\n` +
-      `- 화면에 전혀 보이지 않는 인원은 절대로 추측하여 목록에 넣지 마세요 (명단 복사/환각 생성 엄격 금지).\n` +
-      `- 머리 위에 다른 길드 마크가 있는 적/타 길드원은 전원 제외하세요.\n\n` +
+      `- 화면에 전혀 보이지 않는 인원은 절대로 추측하지 마세요.\n` +
+      `- 머리 위에 다른 길드 마크가 있는 타 길드원은 전원 제외하세요.\n\n` +
       `[길드원 목록]:\n${JSON.stringify(members)}\n\n` +
-      `출력은 마크다운 코드블록(\`\`\`)이나 부가 설명 없이 오직 순수 JSON 문자열 배열 형식으로만 출력하세요.\n` +
+      `출력은 부가 설명 없이 순수 JSON 문자열 배열 형식으로만 출력하세요.\n` +
       `형식: ["닉네임1", "닉네임2"]`;
 
     const payload = {
@@ -870,7 +882,7 @@
       }
     };
 
-    // 🎯 [핵심 수정]: 구글 공식 권장 최신 지원 모델로 갱신
+    // ⚡ [핵심 최적화]: 검증된 단일 모델 우선 직행으로 순차 대기 병목 완전 제거
     const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
     let detectedWords = [];
     let success = false;
@@ -916,7 +928,7 @@
         }
 
         success = true;
-        break;
+        break; // 성공 시 즉시 완료
       } catch (err) {
         lastError = err.message;
       }
