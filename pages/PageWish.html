@@ -454,17 +454,28 @@
     } catch (e) {}
   };
 
-  // 🔒 [트랜잭션 강화]: 개별 3회 분산 호출 대신 DB 단일 트랜잭션 RPC 실행
+  // 🔒 [보안 강화]: 관리자 인증 & 권한 검증 및 DB 단일 트랜잭션 RPC 실행
   window.executeWishDistributionProcess = async function() {
+    // 1. 관리자 로그인 여부 확인
+    const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAuth) {
+      alert("⚠️ 낙찰 및 분배 등록은 관리자만 가능합니다.\n우측 상단의 [관리자 로그인]을 먼저 진행해주세요.");
+      if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+      return;
+    }
+
+    // 2. 권한 설정 확인
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       try {
         const permRow = await apiRequest("guild_settings?key=eq.perm_wish_distribute");
         const permVal = (permRow && permRow.length > 0) ? permRow[0].value : 'true';
         if (permVal === 'false') {
-          return window.showWishToast("분배희망신청 권한이 비활성화되어 있습니다.", "⚠️");
+          return window.showWishToast("일반 관리자에게는 분배 등록 권한이 비활성화되어 있습니다.", "⚠️");
         }
-      } catch (e) {}
+      } catch (e) {
+        return window.showWishToast("권한 확인 중 오류가 발생했습니다.", "⚠️");
+      }
     }
 
     if (!window.currentSelectedItem) return window.showWishToast("분배할 아이템을 먼저 선택해주세요!", "⚠️");
@@ -475,7 +486,7 @@
     const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
 
     if (!memberName) return window.showWishToast("낙찰받은 길드원을 선택해주세요!", "⚠️");
-    if (!price) return window.showWishToast("낙찰 금액을 입력해주세요!", "⚠️");
+    if (!price || price <= 0) return window.showWishToast("낙찰 금액을 정확히 입력해주세요!", "⚠️");
 
     const btn = document.getElementById('btnDistSubmitAction');
     if (btn) {
@@ -508,11 +519,6 @@
         throw new Error(res?.error || "트랜잭션 실행 중 오류가 발생했습니다.");
       }
 
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
-      }
-
       const detailHtml = `
         <div>• <strong>아이템:</strong> [${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName}</div>
         <div>• <strong>낙찰자:</strong> ${memberName}</div>
@@ -535,45 +541,55 @@
       await window.loadStockItems();
       await window.loadDistHistory();
     } catch (err) {
+      window.showWishToast("분배 실패: " + err.message, "❌");
+    } finally {
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
       }
-      window.showWishToast("분배 실패: " + err.message, "❌");
     }
   };
 
+  // 🛡️ [이력 필터링 보강]: 순수 보스 아이템 분배 내역만 엄격 필터링 (주간점수/시트관리비 배제)
   window.loadDistHistory = async function() {
     const container = document.getElementById('distHistoryList');
     if (!container) return;
     try {
-      const history = await apiRequest("item_distributions?select=*&order=id.desc&limit=20");
-      if (!history || history.length === 0) {
-        container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
+      const history = await apiRequest("item_distributions?select=*&order=id.desc&limit=30");
+      
+      const filteredList = (history || []).filter(item => {
+        const bName = String(item.boss_name || '').trim();
+        const iKey = String(item.item_key || '').trim();
+        return bName !== '주간점수정산' && bName !== '시트관리비' && !iKey.startsWith('SETTLE_');
+      });
+
+      if (!filteredList || filteredList.length === 0) {
+        container.innerHTML = '<div class="text-secondary small text-center py-2">최근 분배 완료된 아이템 이력이 없습니다.</div>';
         return;
       }
 
-      container.innerHTML = history.map(item => {
+      container.innerHTML = filteredList.map(item => {
         const winner = item.winner_name || item.member_name || '-';
+        const membersCount = Array.isArray(item.members) ? item.members.length : 0;
         return `
           <div class="dist-history-row">
             <div class="dist-history-left">
               <div class="fw-bold text-white small text-truncate">📦 ${item.item_name}</div>
               <div class="text-secondary text-truncate" style="font-size: 0.72rem;">
-                ${item.boss_name} • 1인당 ${Number(item.per_share).toLocaleString()} 다이아
+                [${item.boss_name}] ${membersCount > 0 ? membersCount + '명 참여 • ' : ''}1인당 ${Number(item.per_share || 0).toLocaleString()} 다이아
               </div>
             </div>
             <div class="dist-history-right">
               <span class="fw-bold text-info" style="font-size: 0.84rem;">${winner}</span>
               <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; font-size: 0.72rem;">
-                ${Number(item.price).toLocaleString()} 다이아
+                ${Number(item.price || 0).toLocaleString()} 다이아
               </span>
             </div>
           </div>
         `;
       }).join('');
     } catch (e) {
-      container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역이 없습니다.</div>';
+      container.innerHTML = '<div class="text-secondary small text-center py-2">분배 내역 로드 실패</div>';
     }
   };
 
