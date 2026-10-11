@@ -166,12 +166,17 @@
     </div>
   </div>
 
-  <!-- 신규 공지사항 등록 폼 -->
+  <!-- 신규 / 수정 공지사항 폼 -->
   <div class="notice-box border-info border-opacity-50" id="noticeRegisterBox" style="display: none; background: #0b1324;">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <span class="small fw-bold text-info"><i class="fa-solid fa-pen-to-square me-1"></i> 신규 공지사항 등록</span>
-      <button type="button" class="btn-close btn-close-white" style="font-size: 0.72rem;" onclick="window.toggleNoticeRegisterForm()"></button>
+      <span class="small fw-bold text-info" id="noticeFormTitle">
+        <i class="fa-solid fa-pen-to-square me-1"></i> 신규 공지사항 등록
+      </span>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.72rem;" onclick="window.closeNoticeForm()"></button>
     </div>
+
+    <!-- 수정 대상 ID 보관 (신규 등록 시 비어있음) -->
+    <input type="hidden" id="editingNoticeId" value="">
 
     <div class="row g-2 mb-2">
       <div class="col-4">
@@ -202,9 +207,14 @@
       <textarea id="noticeContentInput" class="form-control input-custom-notice" rows="4" placeholder="공지 내용을 자세히 입력하세요..." style="resize: vertical;"></textarea>
     </div>
 
-    <button type="button" class="btn btn-notice-submit w-100" id="btnNoticeSubmitAction" onclick="window.submitNoticeRecord()">
-      <i class="fa-solid fa-check me-1"></i> 공지사항 저장하기
-    </button>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-secondary btn-sm px-3" style="background:#1e293b; border-color:#334155; font-size: 0.85rem;" onclick="window.closeNoticeForm()">
+        취소
+      </button>
+      <button type="button" class="btn btn-notice-submit flex-fill" id="btnNoticeSubmitAction" onclick="window.submitNoticeRecord()">
+        <i class="fa-solid fa-check me-1"></i> 공지사항 저장하기
+      </button>
+    </div>
   </div>
 
   <!-- 상단 안내 인포바 -->
@@ -227,6 +237,15 @@
 
 <script>
   window.noticeToastTimer = null;
+  window.cachedNoticesList = [];
+
+  // 🧹 [메모리 클린업 등록]
+  window.__currentModuleCleanup = function() {
+    if (window.noticeToastTimer) {
+      clearTimeout(window.noticeToastTimer);
+      window.noticeToastTimer = null;
+    }
+  };
 
   window.showNoticeToast = function(msg, icon = "✅") {
     const toast = document.getElementById("noticeToastBox");
@@ -242,10 +261,10 @@
     window.noticeToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   };
 
-  // 🎯 공지사항 작성 권한 체크 함수
+  // 공지사항 작성/수정 권한 체크 함수
   async function checkNoticeWritePermission() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
-    if (isSuper) return true; // 최고관리자는 항상 허용
+    if (isSuper) return true;
 
     try {
       const permRow = await apiRequest("guild_settings?key=eq.perm_notice_write");
@@ -253,11 +272,11 @@
         return permRow[0].value !== 'false';
       }
     } catch (e) {}
-    return true; // 기본값 허용
+    return true;
   }
 
   function setNoticeDefaultValues() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = typeof getKSTDateString === "function" ? getKSTDateString() : new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('noticeDateInput');
     if (dateInput) dateInput.value = today;
 
@@ -268,7 +287,7 @@
     }
   }
 
-  // 🎯 공지 등록 폼 토글 (설정된 권한 검증)
+  // 신규 공지 등록 폼 열기
   window.toggleNoticeRegisterForm = async function() {
     const hasPerm = await checkNoticeWritePermission();
     if (!hasPerm) {
@@ -277,15 +296,77 @@
 
     const box = document.getElementById('noticeRegisterBox');
     const isOpening = (box.style.display === 'none' || !box.style.display);
-    box.style.display = isOpening ? 'block' : 'none';
-
+    
     if (isOpening) {
+      // 신규 등록 모드로 리셋
+      document.getElementById('editingNoticeId').value = "";
+      document.getElementById('noticeFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square me-1"></i> 신규 공지사항 등록';
+      document.getElementById('btnNoticeSubmitAction').innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
+      document.getElementById('noticeTitleInput').value = "";
+      document.getElementById('noticeContentInput').value = "";
+      document.getElementById('noticeTypeSelect').value = "일반";
       setNoticeDefaultValues();
+      box.style.display = 'block';
       document.getElementById('noticeTitleInput').focus();
+    } else {
+      window.closeNoticeForm();
     }
   };
 
-  // 🎯 공지사항 목록 조회 (제목 태그 파싱으로 100% 정상 작동)
+  window.closeNoticeForm = function() {
+    const box = document.getElementById('noticeRegisterBox');
+    if (box) box.style.display = 'none';
+    document.getElementById('editingNoticeId').value = "";
+  };
+
+  // 🎯 [핵심 추가]: 공지사항 수정 모드로 전환
+  window.editNoticeItem = async function(id) {
+    const hasPerm = await checkNoticeWritePermission();
+    if (!hasPerm) {
+      return window.showNoticeToast("공지사항 수정 권한이 없습니다.", "⚠️");
+    }
+
+    const item = window.cachedNoticesList.find(n => n.id === id);
+    if (!item) return window.showNoticeToast("수정할 공지사항 정보를 찾을 수 없습니다.", "⚠️");
+
+    let rawTitle = item.title || '';
+    let detectedType = '일반';
+
+    if (rawTitle.startsWith('[중요]')) {
+      detectedType = '중요';
+      rawTitle = rawTitle.replace('[중요]', '').trim();
+    } else if (rawTitle.startsWith('[필독]')) {
+      detectedType = '중요';
+      rawTitle = rawTitle.replace('[필독]', '').trim();
+    } else if (rawTitle.startsWith('[이벤트]')) {
+      detectedType = '이벤트';
+      rawTitle = rawTitle.replace('[이벤트]', '').trim();
+    } else if (rawTitle.startsWith('[일반]')) {
+      detectedType = '일반';
+      rawTitle = rawTitle.replace('[일반]', '').trim();
+    }
+
+    // 폼에 기존 내용 채우기
+    document.getElementById('editingNoticeId').value = String(item.id);
+    document.getElementById('noticeFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square me-1 text-warning"></i> 공지사항 내용 수정';
+    document.getElementById('btnNoticeSubmitAction').innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> 공지사항 수정 완료';
+
+    document.getElementById('noticeTypeSelect').value = detectedType;
+    document.getElementById('noticeTitleInput').value = rawTitle;
+    document.getElementById('noticeContentInput').value = item.content || '';
+    
+    const dateStr = (item.created_at || item.date || '').slice(0, 10);
+    if (dateStr) {
+      document.getElementById('noticeDateInput').value = dateStr;
+    }
+
+    const box = document.getElementById('noticeRegisterBox');
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('noticeTitleInput').focus();
+  };
+
+  // 공지사항 목록 조회
   window.loadNoticeList = async function() {
     const container = document.getElementById('noticeListContainer');
     if (container) {
@@ -294,6 +375,7 @@
 
     try {
       const notices = await apiRequest("guild_notices?select=*&order=id.desc");
+      window.cachedNoticesList = notices || [];
 
       if (!notices || notices.length === 0) {
         container.innerHTML = `
@@ -305,14 +387,16 @@
         return;
       }
 
+      const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+
       container.innerHTML = notices.map(item => {
         let rawTitle = item.title || '제목 없음';
         let detectedType = '일반';
 
-        if (rawTitle.startsWith('[중요]') || (item.content && item.content.includes('[중요]'))) {
+        if (rawTitle.startsWith('[중요]') || rawTitle.startsWith('[필독]')) {
           detectedType = '중요';
-          rawTitle = rawTitle.replace('[중요]', '').trim();
-        } else if (rawTitle.startsWith('[이벤트]') || (item.content && item.content.includes('[이벤트]'))) {
+          rawTitle = rawTitle.replace(/[중요]|[필독]/g, '').trim();
+        } else if (rawTitle.startsWith('[이벤트]')) {
           detectedType = '이벤트';
           rawTitle = rawTitle.replace('[이벤트]', '').trim();
         } else if (rawTitle.startsWith('[일반]')) {
@@ -334,6 +418,18 @@
         const writer = item.writer || item.author || '관리자';
         const content = (item.content || '').replace(/\n/g, '<br>');
 
+        // 🎯 [삭제] 옆에 [수정] 버튼 배치
+        const actionTools = isAdmin ? `
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-link btn-xs p-0 text-info" style="font-size: 0.72rem; text-decoration: none;" onclick="window.editNoticeItem(${item.id})">
+              <i class="fa-solid fa-pen-to-square me-1"></i>수정
+            </button>
+            <button type="button" class="btn btn-link btn-xs p-0 text-danger" style="font-size: 0.72rem; text-decoration: none;" onclick="window.deleteNoticeItem(${item.id})">
+              <i class="fa-solid fa-trash me-1"></i>삭제
+            </button>
+          </div>
+        ` : '';
+
         return `
           <div class="notice-item-card ${isImp ? 'is-important' : ''}">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -348,11 +444,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25" style="font-size: 0.7rem;">
               <span class="text-secondary">작성자: <strong class="text-info">${writer}</strong></span>
-              ${sessionStorage.getItem("admin_role") === "super" ? `
-                <button type="button" class="btn btn-link btn-xs p-0 text-danger" style="font-size: 0.7rem; text-decoration: none;" onclick="window.deleteNoticeItem(${item.id})">
-                  <i class="fa-solid fa-trash me-1"></i>삭제
-                </button>
-              ` : ''}
+              ${actionTools}
             </div>
           </div>
         `;
@@ -365,13 +457,14 @@
     }
   };
 
-  // 🎯 공지사항 저장 처리 (권한 체크 및 스키마 안심 저장)
+  // 🎯 공지사항 신규 등록 또는 수정 저장
   window.submitNoticeRecord = async function() {
     const hasPerm = await checkNoticeWritePermission();
     if (!hasPerm) {
-      return window.showNoticeToast("공지사항 작성 권한이 없습니다.", "⚠️");
+      return window.showNoticeToast("공지사항 작성/수정 권한이 없습니다.", "⚠️");
     }
 
+    const editId = document.getElementById('editingNoticeId').value.trim();
     const type = document.getElementById('noticeTypeSelect').value;
     const title = (document.getElementById('noticeTitleInput').value || '').trim();
     const content = (document.getElementById('noticeContentInput').value || '').trim();
@@ -381,21 +474,28 @@
 
     const btn = document.getElementById('btnNoticeSubmitAction');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>저장 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>처리 중...';
 
     try {
       const formattedTitle = `[${type}] ${title}`;
 
-      await apiRequest("guild_notices", "POST", [{
-        title: formattedTitle,
-        content: content
-      }]);
+      if (editId) {
+        // [수정 UPDATE 모드]
+        await apiRequest(`guild_notices?id=eq.${editId}`, "PATCH", {
+          title: formattedTitle,
+          content: content
+        });
+        window.showNoticeToast("공지사항이 성공적으로 수정되었습니다!", "🎉");
+      } else {
+        // [신규 INSERT 모드]
+        await apiRequest("guild_notices", "POST", [{
+          title: formattedTitle,
+          content: content
+        }]);
+        window.showNoticeToast("공지사항이 성공적으로 등록되었습니다!", "🎉");
+      }
 
-      window.showNoticeToast("공지사항이 성공적으로 등록되었습니다!", "🎉");
-      document.getElementById('noticeTitleInput').value = '';
-      document.getElementById('noticeContentInput').value = '';
-      document.getElementById('noticeRegisterBox').style.display = 'none';
-
+      window.closeNoticeForm();
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
 
@@ -403,7 +503,7 @@
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
-      window.showNoticeToast("등록 실패: " + err.message, "❌");
+      window.showNoticeToast("저장 실패: " + err.message, "❌");
     }
   };
 
