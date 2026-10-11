@@ -478,7 +478,12 @@
       <span class="text-secondary" style="font-size: 0.68rem;">입력 후 [추가]</span>
     </div>
     <div class="item-input-wrapper">
-      <input type="text" id="inputDropItemName" class="form-control input-item-custom" placeholder="아이템명 입력 (예: 영웅 무기, 축순)" onkeypress="if(event.keyCode==13){ addDropItem(); }">
+      <!-- 🛡️ 브라우저 자동완성 오인 차단 (autocomplete="off") -->
+      <input type="text" id="inputDropItemName" class="form-control input-item-custom" 
+             placeholder="아이템명 입력 (예: 영웅 무기, 축순)" 
+             autocomplete="off" 
+             value="" 
+             onkeypress="if(event.keyCode==13){ addDropItem(); }">
       <button type="button" class="btn-item-inline-add" onclick="addDropItem()">+ 추가</button>
     </div>
     <div id="dropItemsContainer" class="d-flex flex-wrap gap-1 mt-1"></div>
@@ -531,7 +536,11 @@
 
     <div class="mb-3 text-start">
       <label class="form-label small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (PIN)</label>
-      <input type="password" id="modalSelfMemberPw" class="form-control input-self-modal" placeholder="비밀번호 입력" maxlength="12" onkeypress="if(event.keyCode==13){ submitModalSelfCheckin(); }">
+      <!-- 🛡️ 브라우저 자동완성 폼 오인 방지 (autocomplete="new-password") -->
+      <input type="password" id="modalSelfMemberPw" class="form-control input-self-modal" 
+             placeholder="비밀번호 입력" maxlength="12" 
+             autocomplete="new-password" 
+             onkeypress="if(event.keyCode==13){ submitModalSelfCheckin(); }">
     </div>
 
     <div class="d-flex gap-2">
@@ -553,7 +562,6 @@
   window.useSelfCheckinSetting = true;
   window.allowBossRegisterPerm = true;
 
-  // 자가 등록 전용 변수
   window.modalCheckinRaidId = null;
   window.modalCheckinCreatedAt = null;
   window.modalCheckinInterval = null;
@@ -576,7 +584,7 @@
     }
   };
 
-  // 🚪 [핵심] 창 안전 닫기 함수 (인앱 브라우저 및 새창 완벽 대응)
+  // 🚪 [핵심] 창 안전 닫기 함수
   window.closeSelfCheckinSafeExit = function() {
     if (window.modalCheckinInterval) {
       clearInterval(window.modalCheckinInterval);
@@ -595,11 +603,9 @@
       `;
     }
 
-    // 브라우저 닫기 시도
     window.close();
     try { window.open('', '_self').close(); } catch(e) {}
 
-    // 모바일 뒤로가기 시도
     setTimeout(() => {
       if (window.history && window.history.length > 1) {
         window.history.back();
@@ -607,7 +613,6 @@
     }, 180);
   };
 
-  // 🔔 안내 팝업 띄운 후 [확인] 누르면 창 전체 닫기
   function alertAndCloseModal(message) {
     alert(message);
     window.closeSelfCheckinSafeExit();
@@ -1222,6 +1227,11 @@
       document.getElementById('checkInternalWar').checked = false;
       document.getElementById('checkInterWar').checked = false;
       document.getElementById('selectExtraScoreCustom').value = "0";
+
+      // 🛡️ 등록 완료 후 아이템 입력창 강제 비우기
+      const dropInput = document.getElementById('inputDropItemName');
+      if (dropInput) dropInput.value = '';
+
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> 등록 완료 및 단톡방 복사`;
@@ -1255,9 +1265,7 @@
     }
   }
 
-  // ==========================================
   // 🚪 [자가 등록(#SelfCheckin) 라우팅 및 검증 엔진]
-  // ==========================================
   window.checkAndOpenSelfCheckinModal = async function() {
     const hash = window.location.hash || "";
     if (hash.indexOf("#SelfCheckin") === -1) return;
@@ -1272,7 +1280,6 @@
       return alertAndCloseModal("⚠️ 유효하지 않은 자가 등록 링크입니다.");
     }
 
-    // 🎯 1. 접속 시점에 이미 3분이 지난 경우
     const now = Date.now();
     if (now - window.modalCheckinCreatedAt > 3 * 60 * 1000) {
       return alertAndCloseModal("⏰ 3분 유효시간이 만료된 링크입니다.\n창을 닫습니다.");
@@ -1281,7 +1288,6 @@
     const modal = document.getElementById("selfCheckinModalContainer");
     if (modal) modal.style.display = "flex";
 
-    // 타이머 가동
     const timerElem = document.getElementById("modalCheckinTimerText");
     if (window.modalCheckinInterval) clearInterval(window.modalCheckinInterval);
 
@@ -1294,7 +1300,6 @@
         window.modalCheckinInterval = null;
         if (timerElem) timerElem.innerText = "00:00 (만료됨)";
 
-        // 🎯 3분 경과 시 확인 누르면 즉시 닫기
         alertAndCloseModal("⏰ 3분 유효시간이 만료되었습니다.\n창을 닫습니다.");
         return;
       }
@@ -1308,7 +1313,6 @@
     }, 1000);
 
     try {
-      // 보스 토벌 정보 로드
       const raidRes = await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`);
       if (!raidRes || raidRes.length === 0) {
         return alertAndCloseModal("❌ 해당 토벌 기록을 찾을 수 없습니다.");
@@ -1319,7 +1323,6 @@
         infoElem.innerHTML = `<strong>${r.boss_name}</strong> • ${(r.raid_time || '').replace('T', ' ').slice(0, 16)}`;
       }
 
-      // 길드원 명단 로드
       const mRes = await apiRequest("guild_members?select=name&order=name.asc");
       const sel = document.getElementById("modalSelfMemberSelect");
       if (sel && mRes) {
@@ -1331,9 +1334,7 @@
     }
   };
 
-  // 🚀 모달에서 자가등록 제출
   window.submitModalSelfCheckin = async function() {
-    // 🎯 1. 3분 만료 재검증
     const now = Date.now();
     if (now - window.modalCheckinCreatedAt > 3 * 60 * 1000) {
       return alertAndCloseModal("⏰ 3분 유효시간이 만료되었습니다.\n창을 닫습니다.");
@@ -1350,7 +1351,6 @@
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i>확인 중...`;
 
     try {
-      // 2. 비밀번호 일치 확인
       const memberRow = await apiRequest(`guild_members?name=eq.${encodeURIComponent(memberName)}`);
       if (!memberRow || memberRow.length === 0) {
         btn.disabled = false;
@@ -1360,14 +1360,12 @@
 
       const dbPw = String(memberRow[0].password || '').trim();
 
-      // 🎯 비밀번호 불일치 시 안내 메시지 후 확인 누르면 창 닫기
       if (dbPw !== password) {
         btn.disabled = false;
         btn.innerHTML = "등록하기";
         return alertAndCloseModal("❌ 비밀번호가 일치하지 않습니다.\n보안을 위해 창을 종료합니다.");
       }
 
-      // 3. 토벌 참여자 최신 명단 조회
       const freshRaid = await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`);
       if (!freshRaid || freshRaid.length === 0) {
         btn.disabled = false;
@@ -1377,14 +1375,12 @@
 
       let membersList = Array.isArray(freshRaid[0].members) ? freshRaid[0].members : [];
 
-      // 🎯 동일 인원 중복 참여 확인 시 안내 후 확인 누르면 창 닫기
       if (membersList.includes(memberName)) {
         btn.disabled = false;
         btn.innerHTML = "등록하기";
         return alertAndCloseModal(`ℹ️ [${memberName}] 님은 이미 해당 토벌에 등록되어 있습니다.\n창을 종료합니다.`);
       }
 
-      // 4. 참여자 명단에 추가 업데이트
       membersList.push(memberName);
 
       await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`, "PATCH", {
@@ -1392,7 +1388,6 @@
         member_count: membersList.length
       });
 
-      // 🎯 정상 등록 완료 시 성공 안내 후 확인 누르면 창 닫기
       alert(`🎉 [${memberName}] 님 추가 참여가 성공적으로 등록되었습니다!\n창을 종료합니다.`);
       window.closeSelfCheckinSafeExit();
 
@@ -1410,10 +1405,13 @@
     await loadBossOptions();
     await loadGuildMembersForChips();
 
+    // 🛡️ 페이지 로드 직후 아이템 입력창 비우기 (브라우저 자동완성 제거)
+    const dropInput = document.getElementById('inputDropItemName');
+    if (dropInput) dropInput.value = '';
+
     window.removeEventListener("paste", handleGlobalImagePaste);
     window.addEventListener("paste", handleGlobalImagePaste);
 
-    // URL에 #SelfCheckin이 포함되어 열렸는지 감지 및 자동 실행
     await window.checkAndOpenSelfCheckinModal();
   })();
 </script>
