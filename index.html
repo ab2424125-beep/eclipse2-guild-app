@@ -346,7 +346,7 @@
     <span id="globalToastMsg">알림 내용</span>
   </div>
 
-  <!-- 🎯 관리자 로그인 모달 -->
+  <!-- 관리자 로그인 모달 -->
   <div id="globalAuthModal" class="admin-auth-backdrop" style="display: none;">
     <div class="admin-auth-box">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -375,7 +375,7 @@
     </div>
   </div>
 
-  <!-- 🚨 비상 복구 모달 -->
+  <!-- 비상 복구 모달 -->
   <div id="globalRecoveryModal" class="admin-auth-backdrop" style="display: none;">
     <div class="admin-auth-box">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -452,6 +452,18 @@
     var targetSelfRaidData = null;
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
+
+    // 🧹 [메모리 누수 방지 핵심] 이전 페이지의 타이머/리스너 강제 해제 함수
+    function runCurrentModuleCleanup() {
+      if (typeof window.__currentModuleCleanup === "function") {
+        try {
+          window.__currentModuleCleanup();
+        } catch (e) {
+          console.warn("모듈 정리 중 예외 발생:", e);
+        }
+        window.__currentModuleCleanup = null;
+      }
+    }
 
     function showGlobalToast(message, icon = "✅") {
       const toast = document.getElementById("globalToastBox");
@@ -562,7 +574,6 @@
       document.getElementById("globalRecoveryModal").style.display = "none";
     }
 
-    // 🔒 [보안 강화 1] 비상 복구 코드를 클라이언트가 아닌 DB 내부 RPC에서 대조
     async function submitGlobalRecoveryReset() {
       const inputCode = document.getElementById("globalRecoveryKeyInput").value.trim();
       if (!inputCode) {
@@ -583,7 +594,6 @@
       }
     }
 
-    // 🔒 [보안 강화 2] DB 테이블의 비밀번호를 읽어오지 않고, 서버(DB)에서 검증 후 권한만 반환
     async function submitGlobalAuth() {
       const inputPin = document.getElementById("globalAuthPinInput").value.trim();
       if (!inputPin) return alert("PIN 번호를 입력해주세요.");
@@ -627,7 +637,9 @@
         }
       } catch (e) {}
 
-      const todayKey = "visited_date_" + new Date().toISOString().slice(0, 10);
+      // KST 기준 일자 키 사용
+      const todayKst = typeof getKSTDateString === "function" ? getKSTDateString() : new Date().toISOString().slice(0, 10);
+      const todayKey = "visited_date_" + todayKst;
       let localCount = parseInt(localStorage.getItem("system_visits"), 10) || 1;
 
       if (!sessionStorage.getItem(todayKey)) {
@@ -648,7 +660,6 @@
       document.getElementById("todayVisitCount").innerText = localCount;
     }
 
-    // 🎯 일반 관리자 권한 사전 검증 및 메뉴 진입 제어
     async function checkPermissionBeforeOpen(pageName) {
       if (isSuperAdminLoggedIn()) return true;
 
@@ -685,9 +696,11 @@
         }
       }
 
-      // 일반 관리자 권한 체크
       const isAllowed = await checkPermissionBeforeOpen(pageName);
       if (!isAllowed) return;
+
+      // 🧹 모듈 열기 전 이전 모듈의 타이머/리스너 완벽 정리
+      runCurrentModuleCleanup();
 
       currentActiveModule = pageName;
       document.getElementById("homeDashboardView").style.display = "none";
@@ -726,6 +739,9 @@
     }
 
     function goHome(pushHistory = true) {
+      // 🧹 홈으로 나갈 때도 실행 중인 이전 페이지 모듈 정리
+      runCurrentModuleCleanup();
+
       currentActiveModule = "";
       document.getElementById("btnHeaderBack").style.display = "none";
       document.getElementById("detailPageView").style.display = "none";
