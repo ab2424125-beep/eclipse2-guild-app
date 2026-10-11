@@ -37,7 +37,9 @@
     gap: 6px;
     overflow-x: auto;
     padding-bottom: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
   }
   .btn-timer-filter {
     background: #0d1527;
@@ -57,21 +59,22 @@
     color: #38bdf8;
   }
 
-  /* 보스 카드 아이템 */
+  /* 🎯 보스 카드 아이템 (가림 방지 및 z-index 처리) */
   .boss-timer-item {
+    position: relative;
     background: #090e1c;
     border: 1px solid #1b263b;
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 9px;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    z-index: 1;
   }
   .boss-timer-item:hover {
     border-color: #38bdf8;
     background: #0d162d;
-    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 2;
   }
   /* 젠 완료 보스 하이라이트 */
   .boss-timer-item.is-spawned {
@@ -83,6 +86,27 @@
   .boss-timer-item.is-imminent {
     border-color: rgba(245, 158, 11, 0.5);
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, #090e1c 100%);
+  }
+
+  /* 리스트 컨테이너 (상하 패딩 확보로 첫 카드 테두리 잘림 방지) */
+  #bossTimerListContainer {
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 4px 2px;
+  }
+  #bossTimerListContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+  #bossTimerListContainer::-webkit-scrollbar-track {
+    background: #080d1a;
+    border-radius: 8px;
+  }
+  #bossTimerListContainer::-webkit-scrollbar-thumb {
+    background: #1e2d4a;
+    border-radius: 8px;
+  }
+  #bossTimerListContainer::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
   }
 
   /* 카운트다운 뱃지 */
@@ -158,7 +182,6 @@
   }
   .btn-cut-now:hover {
     opacity: 0.95;
-    transform: translateY(-1px);
   }
 
   .btn-cut-reserve {
@@ -280,12 +303,12 @@
   </div>
 
   <!-- 보스 타이머 리스트 -->
-  <div id="bossTimerListContainer" style="max-height: 520px; overflow-y: auto;">
+  <div id="bossTimerListContainer">
     <div class="text-secondary small text-center py-4">보스타임을 불러오는 중...</div>
   </div>
 </div>
 
-<!-- 🎯 [컷 예약 커스텀 모달] -->
+<!-- 컷 예약 커스텀 모달 -->
 <div id="modalReserveCut" class="custom-timer-modal-bg" style="display: none;">
   <div class="custom-timer-modal-box">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -346,7 +369,7 @@
 <script>
   window.bossTimerList = [];
   window.timerInterval = null;
-  window.currentTimerFilter = 'all'; // all, imminent, cool, fixed
+  window.currentTimerFilter = 'all';
   window.activeGuildName = "ECLIPSE";
   window.timerToastTimer = null;
   window.currentReservingBoss = null;
@@ -382,7 +405,6 @@
     }
   }
 
-  // 1. 보스 목록 및 스케줄 불러오기
   window.loadBossTimers = async function() {
     const container = document.getElementById('bossTimerListContainer');
     if (!container) return;
@@ -391,7 +413,6 @@
       const data = await apiRequest("boss_timers?select=*&order=id.asc");
       window.bossTimerList = data || [];
 
-      // 고정 젠 보스 다음 젠 일시 계산
       const now = new Date();
       window.bossTimerList.forEach(b => {
         if (b.is_fixed && b.fixed_schedule) {
@@ -433,7 +454,6 @@
     return null;
   }
 
-  // 2. 화면 렌더링
   window.renderBossTimers = function() {
     const container = document.getElementById('bossTimerListContainer');
     if (!container) return;
@@ -448,7 +468,6 @@
     let countImminent = 0;
     let countNormal = 0;
 
-    // 통계 집계
     window.bossTimerList.forEach(b => {
       if (!b.next_spawn_time) {
         countNormal++;
@@ -464,14 +483,12 @@
     document.getElementById('statImminentCount').innerText = countImminent;
     document.getElementById('statNormalCount').innerText = countNormal;
 
-    // 다음 젠 시간 순으로 정렬
     window.bossTimerList.sort((a, b) => {
       const tA = a.next_spawn_time ? new Date(a.next_spawn_time).getTime() : 9999999999999;
       const tB = b.next_spawn_time ? new Date(b.next_spawn_time).getTime() : 9999999999999;
       return tA - tB;
     });
 
-    // 필터링 적용
     const filtered = window.bossTimerList.filter(b => {
       if (window.currentTimerFilter === 'all') return true;
       if (window.currentTimerFilter === 'fixed') return b.is_fixed;
@@ -479,7 +496,7 @@
       if (window.currentTimerFilter === 'imminent') {
         if (!b.next_spawn_time) return false;
         const diff = (new Date(b.next_spawn_time).getTime() - now) / 1000;
-        return diff <= 3600; // 젠 완료 또는 1시간 이내
+        return diff <= 3600;
       }
       return true;
     });
@@ -560,7 +577,6 @@
     return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}(${dayNames[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // 3. 실시간 초단위 카운트다운
   window.updateCountdowns = function() {
     const now = Date.now();
 
@@ -589,7 +605,6 @@
     });
   };
 
-  // 4. [지금 컷] 실행 (현재 시각 기준)
   window.recordCutNow = async function(id, bossName, cycleMin) {
     const cutTime = new Date();
     const nextSpawn = new Date(cutTime.getTime() + (cycleMin * 60 * 1000));
@@ -607,7 +622,6 @@
     }
   };
 
-  // 5. [컷 예약] 모달 컨트롤
   window.openReserveCutModal = function(id, bossName, cycleMin) {
     window.currentReservingBoss = { id, bossName, cycleMin };
     document.getElementById("reserveTargetBossName").innerText = bossName;
@@ -617,7 +631,6 @@
     const cycleStr = (cycleHours > 0 ? cycleHours + '시간 ' : '') + (cycleMins > 0 ? cycleMins + '분' : '');
     document.getElementById("reserveTargetBossCycle").innerText = `쿨타임 ${cycleStr}`;
 
-    // 초기값: 현재 시각 설정
     window.quickAdjustCutTime(0);
     document.getElementById("modalReserveCut").style.display = "flex";
   };
@@ -627,7 +640,6 @@
     window.currentReservingBoss = null;
   };
 
-  // 퀵 시간 보정 (offsetMinutes = 0, -5, -10 등)
   window.quickAdjustCutTime = function(offsetMinutes) {
     const d = new Date(Date.now() + (offsetMinutes * 60 * 1000));
     const pad = n => (n < 10 ? '0' + n : n);
@@ -637,7 +649,6 @@
     window.previewNextSpawnFromInput();
   };
 
-  // 인풋 값 기준 다음 젠 시간 프리뷰
   window.previewNextSpawnFromInput = function() {
     if (!window.currentReservingBoss) return;
     const inputVal = document.getElementById("reserveCutDatetimeInput").value;
@@ -651,7 +662,6 @@
     document.getElementById("reservePreviewNextSpawnText").innerText = formatDisplayTime(nextSpawnDate.toISOString());
   };
 
-  // 컷 예약 확정 저장
   window.confirmReserveCutAction = async function() {
     if (!window.currentReservingBoss) return;
     const inputVal = document.getElementById("reserveCutDatetimeInput").value;
@@ -674,7 +684,6 @@
     }
   };
 
-  // 필터 탭 선택
   window.setTimerFilter = function(filterType) {
     window.currentTimerFilter = filterType;
     document.querySelectorAll(".btn-timer-filter").forEach(b => b.classList.remove("active"));
@@ -693,7 +702,6 @@
     window.renderBossTimers();
   };
 
-  // 6. 카카오톡 단톡방 공유 양식 복사
   window.copyTimersForKakao = function() {
     if (window.bossTimerList.length === 0) return window.showTimerToast("공유할 보스타임 데이터가 없습니다.", "⚠️");
 
@@ -730,6 +738,8 @@
       navigator.clipboard.writeText(shareText).then(() => {
         window.showTimerToast("보스타임 현황이 클립보드에 복사되었습니다!", "📋");
       });
+    } else {
+      window.showTimerToast("보스타임 현황이 클립보드에 복사되었습니다!", "📋");
     }
   };
 
