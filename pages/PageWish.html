@@ -94,7 +94,6 @@
   .dist-history-left { min-width: 0; flex: 1; }
   .dist-history-right { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 
-  /* 커스텀 토스트 알림 */
   .custom-wish-toast {
     position: fixed;
     top: 24px;
@@ -122,7 +121,6 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  /* 커스텀 완료 안내 모달 */
   .wish-modal-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -170,7 +168,7 @@
       <div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>
     </div>
 
-    <!-- 게임 시스템 경매 세율 (5%) 포함/제외 토글 버튼 -->
+    <!-- 게임 경매 수수료 토글 -->
     <div class="mb-2 p-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;">
       <div class="d-flex justify-content-between align-items-center mb-1">
         <label class="form-label small text-secondary mb-0">⚖️ 게임 시스템 경매 수수료 (5%)</label>
@@ -258,13 +256,12 @@
   </div>
 </div>
 
-<!-- 플로팅 토스트 -->
 <div id="wishToastBox" class="custom-wish-toast">
   <span id="wishToastIcon" style="font-size: 1.1rem;">✅</span>
   <span id="wishToastMsg">알림</span>
 </div>
 
-<!-- 낙찰 완료 커스텀 결과 모달 -->
+<!-- 낙찰 완료 결과 모달 -->
 <div id="wishSuccessModal" class="wish-modal-backdrop" style="display: none;">
   <div class="wish-modal-box">
     <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 2px solid #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 14px;">
@@ -284,6 +281,14 @@
   window.currentSelectedItem = null;
   window.isAuctionTaxApplied = true;
   window.wishToastTimer = null;
+
+  // 🧹 [메모리 클린업 등록]: 페이지 퇴장 시 타이머 정리
+  window.__currentModuleCleanup = function() {
+    if (window.wishToastTimer) {
+      clearTimeout(window.wishToastTimer);
+      window.wishToastTimer = null;
+    }
+  };
 
   window.showWishToast = function(message, icon = "✅") {
     const toast = document.getElementById("wishToastBox");
@@ -449,6 +454,7 @@
     } catch (e) {}
   };
 
+  // 🔒 [트랜잭션 강화]: 개별 3회 분산 호출 대신 DB 단일 트랜잭션 RPC 실행
   window.executeWishDistributionProcess = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
@@ -484,46 +490,29 @@
     const perShare = window.currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / window.currentSelectedItem.memberCount) : 0;
 
     try {
-      // 1. item_distributions 테이블 반영
-      await apiRequest("item_distributions", "POST", [{
-        item_key: window.currentSelectedItem.itemKey,
-        boss_name: window.currentSelectedItem.bossName,
-        item_name: window.currentSelectedItem.itemName,
-        winner_name: memberName,
-        price: price,
-        per_share: perShare,
-        members: window.currentSelectedItem.members
-      }]);
-
-      // 2. guild_finances 테이블 반영
-      const depositReason = `[${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName} 낙찰 (${memberName})`;
-      const withdrawReason = `[${window.currentSelectedItem.itemName}] ${window.currentSelectedItem.memberCount}명 N/1 분배금 지급`;
-
-      const financeLogs = [];
-      financeLogs.push({
-        tx_type: '입금',
-        category: '경매낙찰',
-        amount: netAuctionPrice,
-        reason: depositReason
+      // 🛡️ DB 단일 트랜잭션 함수 호출 (원자성 100% 보장)
+      const res = await apiRequest("rpc/process_wish_distribution_transaction", "POST", {
+        p_item_key: window.currentSelectedItem.itemKey,
+        p_boss_name: window.currentSelectedItem.bossName,
+        p_item_name: window.currentSelectedItem.itemName,
+        p_winner_name: memberName,
+        p_price: price,
+        p_per_share: perShare,
+        p_members: window.currentSelectedItem.members,
+        p_net_auction_price: netAuctionPrice,
+        p_distribution_pool: distributionPool,
+        p_member_count: window.currentSelectedItem.memberCount
       });
 
-      if (distributionPool > 0) {
-        financeLogs.push({
-          tx_type: '출금',
-          category: 'N/1분배',
-          amount: distributionPool,
-          reason: withdrawReason
-        });
+      if (!res || !res.success) {
+        throw new Error(res?.error || "트랜잭션 실행 중 오류가 발생했습니다.");
       }
-
-      await apiRequest("guild_finances", "POST", financeLogs);
 
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 낙찰 완료 및 정산/금고 반영';
       }
 
-      // 모달 표시
       const detailHtml = `
         <div>• <strong>아이템:</strong> [${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName}</div>
         <div>• <strong>낙찰자:</strong> ${memberName}</div>
@@ -588,13 +577,11 @@
     }
   };
 
-  // 🎯 페이지 초기화 안전 실행 함수
   window.initWishPage = async function() {
     await window.loadStockItems();
     await window.loadMemberListForWish();
     await window.loadDistHistory();
   };
 
-  // 실행
   window.initWishPage();
 </script>
