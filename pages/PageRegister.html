@@ -497,7 +497,6 @@
     inter: 2
   };
 
-  // 🧹 [메모리 클린업 등록]: 페이지 퇴장 시 paste 리스너 및 타이머 제거
   window.__currentModuleCleanup = function() {
     window.removeEventListener("paste", handleGlobalImagePaste);
     if (window.regToastTimer) {
@@ -538,7 +537,6 @@
   }
 
   function initDefaultRaidTime() {
-    // 🕒 KST 유틸리티 사용 (9시간 밀림 방지)
     const localIso = typeof getKSTDateTimeLocalString === "function" 
       ? getKSTDateTimeLocalString(new Date()) 
       : new Date().toISOString().slice(0, 16);
@@ -725,7 +723,6 @@
     }
   };
 
-  // 붙여넣기 이벤트 리스너 함수 분리
   function handleGlobalImagePaste(event) {
     const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
     if (!items) return;
@@ -873,7 +870,8 @@
       }
     };
 
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+    // 🎯 [핵심 수정]: 구글 공식 권장 최신 지원 모델로 갱신
+    const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
     let detectedWords = [];
     let success = false;
     let lastError = "";
@@ -1147,7 +1145,6 @@
     await loadBossOptions();
     await loadGuildMembersForChips();
 
-    // paste 이벤트 리스너 등록
     window.removeEventListener("paste", handleGlobalImagePaste);
     window.addEventListener("paste", handleGlobalImagePaste);
   })();
