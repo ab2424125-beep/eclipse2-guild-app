@@ -75,7 +75,7 @@
       transition: all 0.15s;
     }
     .btn-admin-pill:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: #38bdf8; }
-    .btn-admin-pill.logged-in-admin { background: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #34d399; font-weight: 700; }
+    .btn-admin-pill.logged-in-admin { background: rgba(160, 185, 129, 0.18); border-color: #10b981; color: #34d399; font-weight: 700; }
     .btn-admin-pill.logged-in-super { background: rgba(168, 85, 247, 0.22); border-color: #a855f7; color: #facc15; font-weight: 800; box-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
 
     .app-container { max-width: 520px; margin: 0 auto; padding: 6px 14px 20px 14px; }
@@ -453,7 +453,6 @@
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
 
-    // 🧹 [메모리 누수 방지 핵심] 이전 페이지의 타이머/리스너 강제 해제 함수
     function runCurrentModuleCleanup() {
       if (typeof window.__currentModuleCleanup === "function") {
         try {
@@ -624,40 +623,57 @@
       }
     }
 
+    // 🎯 [핵심 개선] DB의 실제 오늘 방문자 수(today_visits)와 100% 실시간 동기화
     async function initSystemSettings() {
+      // 1. 한국 시간(KST) 오늘 날짜 구하기 (YYYY-MM-DD)
+      const now = new Date();
+      const kstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
+      const pad = n => (n < 10 ? '0' + n : n);
+      const todayKst = `${kstTime.getFullYear()}-${pad(kstTime.getMonth() + 1)}-${pad(kstTime.getDate())}`;
+
+      let currentDbVisits = 0;
+      let lastRecordedDate = "";
+
       try {
         const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
-          settings.forEach(s => cachedGuildSettingsMap[s.key] = s.value);
+          settings.forEach(s => {
+            cachedGuildSettingsMap[s.key] = s.value;
+            if (s.key === "today_visits") currentDbVisits = parseInt(s.value, 10) || 0;
+            if (s.key === "today_visits_date") lastRecordedDate = String(s.value).trim();
+          });
+
           if (cachedGuildSettingsMap['guild_name']) {
             const guildName = cachedGuildSettingsMap['guild_name'];
             document.getElementById("topHeaderTitle").innerText = `${guildName} 길드관리`;
             document.title = `ECLIPSE ${guildName} 길드관리`;
           }
         }
-      } catch (e) {}
 
-      // KST 기준 일자 키 사용
-      const todayKst = typeof getKSTDateString === "function" ? getKSTDateString() : new Date().toISOString().slice(0, 10);
-      const todayKey = "visited_date_" + todayKst;
-      let localCount = parseInt(localStorage.getItem("system_visits"), 10) || 1;
-
-      if (!sessionStorage.getItem(todayKey)) {
-        sessionStorage.setItem(todayKey, "1");
-        localCount += 1;
-        localStorage.setItem("system_visits", localCount);
-
-        try {
-          const res = await apiRequest("guild_settings?key=eq.today_visits");
-          if (res && res.length > 0) {
-            const dbCount = (parseInt(res[0].value, 10) || 0) + 1;
-            await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: String(dbCount) });
-            localCount = dbCount;
+        // 2. 날짜가 바뀌었으면(새로운 날) DB 카운트를 1로 리셋
+        if (lastRecordedDate !== todayKst) {
+          currentDbVisits = 1;
+          await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: "1" });
+          await apiRequest("guild_settings?key=eq.today_visits_date", "PATCH", { value: todayKst });
+          sessionStorage.setItem("visited_date_" + todayKst, "1");
+        } else {
+          // 3. 같은 날인데 이 세션(탭)에서 첫 방문인 경우에만 DB 카운트 +1 증가
+          const sessionKey = "visited_date_" + todayKst;
+          if (!sessionStorage.getItem(sessionKey)) {
+            sessionStorage.setItem(sessionKey, "1");
+            currentDbVisits += 1;
+            await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: String(currentDbVisits) });
           }
-        } catch (e) {}
+        }
+      } catch (e) {
+        console.warn("방문자수 동기화 중 오류:", e);
       }
 
-      document.getElementById("todayVisitCount").innerText = localCount;
+      // 4. 화면에는 항상 최신 DB 기준 방문자 수를 정확하게 반영
+      const displayElem = document.getElementById("todayVisitCount");
+      if (displayElem) {
+        displayElem.innerText = currentDbVisits > 0 ? currentDbVisits : 1;
+      }
     }
 
     async function checkPermissionBeforeOpen(pageName) {
@@ -699,7 +715,6 @@
       const isAllowed = await checkPermissionBeforeOpen(pageName);
       if (!isAllowed) return;
 
-      // 🧹 모듈 열기 전 이전 모듈의 타이머/리스너 완벽 정리
       runCurrentModuleCleanup();
 
       currentActiveModule = pageName;
@@ -739,7 +754,6 @@
     }
 
     function goHome(pushHistory = true) {
-      // 🧹 홈으로 나갈 때도 실행 중인 이전 페이지 모듈 정리
       runCurrentModuleCleanup();
 
       currentActiveModule = "";
