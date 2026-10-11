@@ -39,7 +39,6 @@
     color: #ffffff;
   }
 
-  /* 검색창 영역 간격 정돈 */
   .search-wrapper-settle {
     position: relative;
     margin-bottom: 14px;
@@ -136,7 +135,6 @@
     padding: 10px 12px;
   }
 
-  /* 🎯 마우스 오버 시 검색창 침범/가림 방지 스타일 */
   .payout-item-card {
     position: relative;
     background: #0e172a;
@@ -158,24 +156,27 @@
     z-index: 2;
   }
 
-  /* 목록 컨테이너 상/하단 여백 및 슬림 스크롤바 */
   #payoutListContainer {
     max-height: 290px;
     overflow-y: auto;
     padding: 4px 2px;
   }
-  #payoutListContainer::-webkit-scrollbar {
+  #payoutListContainer::-webkit-scrollbar,
+  #customMembersContainer::-webkit-scrollbar {
     width: 6px;
   }
-  #payoutListContainer::-webkit-scrollbar-track {
+  #payoutListContainer::-webkit-scrollbar-track,
+  #customMembersContainer::-webkit-scrollbar-track {
     background: #080d1a;
     border-radius: 8px;
   }
-  #payoutListContainer::-webkit-scrollbar-thumb {
+  #payoutListContainer::-webkit-scrollbar-thumb,
+  #customMembersContainer::-webkit-scrollbar-thumb {
     background: #1e2d4a;
     border-radius: 8px;
   }
-  #payoutListContainer::-webkit-scrollbar-thumb:hover {
+  #payoutListContainer::-webkit-scrollbar-thumb:hover,
+  #customMembersContainer::-webkit-scrollbar-thumb:hover {
     background: #38bdf8;
   }
 
@@ -237,23 +238,54 @@
     color: #ffffff;
   }
 
+  /* 🎯 [개선] 임의 분배 대상 길드원 정렬 그리드 레이아웃 */
+  .custom-members-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    max-height: 140px;
+    overflow-y: auto;
+    background: #080d1a;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+  }
+  @media (max-width: 480px) {
+    .custom-members-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+  }
+
   .member-chip-select {
-    display: inline-block;
-    padding: 3px 8px;
-    font-size: 0.72rem;
-    background: #16223b;
-    border: 1px solid #233554;
-    border-radius: 6px;
-    margin: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.74rem;
+    background: #111a2e;
+    border: 1px solid #1e2c47;
+    border-radius: 7px;
     cursor: pointer;
-    color: #cbd5e1;
+    color: #94a3b8;
     user-select: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .member-chip-select:hover {
+    border-color: #38bdf8;
+    color: #ffffff;
+    background: #162442;
   }
   .member-chip-select.selected {
-    background: rgba(56, 189, 248, 0.2);
+    background: rgba(56, 189, 248, 0.22);
     border-color: #38bdf8;
     color: #38bdf8;
-    font-weight: 700;
+    font-weight: 800;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
   }
 
   .member-detail-modal-bg {
@@ -311,7 +343,6 @@
       <span style="font-size: 1.3rem;">💰</span>
       <h6 class="fw-bold mb-0 text-white">길드 정산 및 자금 배분</h6>
     </div>
-    <!-- 권한 검증이 연동된 길드자금 분배 버튼 -->
     <button class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.toggleDirectDistForm()">
       <i class="fa-solid fa-hand-holding-dollar me-1"></i>길드자금 분배
     </button>
@@ -442,14 +473,15 @@
       </div>
     </div>
 
-    <!-- 5. 임의 분배 대상 선택 -->
+    <!-- 5. 임의 분배 대상 선택 (그리드 적용) -->
     <div id="areaCustomMembers" class="mb-2" style="display: none;">
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="text-secondary small" style="font-size: 0.72rem;">👥 분배 대상 길드원: <strong id="selectedCustomMemberCount" class="text-white">0</strong>명</span>
         <button class="btn btn-link btn-xs p-0 text-info" style="font-size: 0.72rem; text-decoration: none;" onclick="window.toggleSelectAllCustomMembers()">전체 선택/해제</button>
       </div>
-      <div id="customMembersContainer" style="max-height: 90px; overflow-y: auto; background: #080d1a; padding: 6px; border-radius: 8px; border: 1px solid #1e293b;">
-        <span class="text-secondary small">길드원 로드 중...</span>
+      <!-- 균일한 4열 그리드 컨테이너 -->
+      <div id="customMembersContainer" class="custom-members-grid">
+        <span class="text-secondary small w-100 py-2 text-center" style="grid-column: 1 / -1;">길드원 로드 중...</span>
       </div>
     </div>
 
@@ -539,7 +571,7 @@
     </button>
   </div>
 
-  <!-- 3. 길드원별 수령액 (가림 방지 스타일 적용) -->
+  <!-- 3. 길드원별 수령액 -->
   <div id="viewPayout">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <span class="text-secondary small fw-bold">길드원별 최종 합산 수령액 <small class="text-info fw-normal">(활동 점수 순위순 / 클릭 시 상세 내역 확인)</small></span>
@@ -551,7 +583,7 @@
       <input type="text" id="searchSettleMember" class="search-input-settle" placeholder="길드원 닉네임 검색..." onkeyup="window.filterPayoutMembers()">
     </div>
 
-    <!-- 카드 목록 (검색창과 여유 간격 확보) -->
+    <!-- 카드 목록 -->
     <div id="payoutListContainer">
       <div class="text-secondary small text-center py-3">데이터를 집계하는 중...</div>
     </div>
@@ -684,11 +716,9 @@
     }
   }
 
-  // 🎯 권한 검증이 연동된 길드자금 분배 폼 토글
   window.toggleDirectDistForm = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     
-    // 슈퍼관리자가 아닌 경우 설정된 분배 권한 검증
     if (!isSuper) {
       try {
         const permRow = await apiRequest("guild_settings?key=eq.perm_settle_distribute");
@@ -706,7 +736,6 @@
     if (isOpening) {
       window.clearDistFormState();
 
-      // 금고 잔액 조회
       try {
         const logs = await apiRequest("guild_finances?select=amount,tx_type,type");
         let bal = 0;
@@ -752,10 +781,15 @@
     window.calcWeeklyDistributionPreview();
   };
 
+  // 🎯 [핵심] 길드원 목록 가나다/한국어 자연 정렬 (Natural Sort)
   async function loadMemberListData() {
     try {
-      const list = await apiRequest("guild_members?select=name&order=name.asc");
-      window.allGuildMembers = (list || []).map(m => m.name);
+      const list = await apiRequest("guild_members?select=name");
+      const names = (list || []).map(m => m.name).filter(Boolean);
+      // 영문, 한글, 숫자 혼합 정렬
+      names.sort((a, b) => a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' }));
+      window.allGuildMembers = names;
+      
       populateManagerDropdown();
       renderCustomMemberChips();
     } catch (e) {}
@@ -828,16 +862,23 @@
     window.calcWeeklyDistributionPreview();
   };
 
+  // 🎯 [핵심] 임의 분배 대상 길드원 목록 그리드 렌더링
   function renderCustomMemberChips() {
     const container = document.getElementById('customMembersContainer');
+    if (!container) return;
+
     if (window.allGuildMembers.length === 0) {
-      container.innerHTML = '<span class="text-secondary small">길드원 목록 없음</span>';
+      container.innerHTML = '<span class="text-secondary small w-100 py-2 text-center" style="grid-column: 1 / -1;">등록된 길드원이 없습니다.</span>';
       return;
     }
+
     container.innerHTML = window.allGuildMembers.map(m => {
       const isSel = window.selectedCustomMembers.has(m);
-      return `<span class="member-chip-select ${isSel ? 'selected' : ''}" onclick="window.toggleCustomMember('${m}')">${m}</span>`;
+      return `<div class="member-chip-select ${isSel ? 'selected' : ''}" onclick="window.toggleCustomMember('${m}')" title="${m}">
+        ${m}
+      </div>`;
     }).join('');
+
     document.getElementById('selectedCustomMemberCount').innerText = window.selectedCustomMembers.size;
   }
 
@@ -860,7 +901,7 @@
   };
 
   window.switchDistMode = function(mode) {
-    window.currentDistMode = mode;
+    currentDistMode = mode;
     const areaScoreCuts = document.getElementById('areaScoreCutConditions');
 
     if (mode === 'score') {
@@ -1006,7 +1047,6 @@
     document.getElementById('previewManagerPerShare').innerText = mgrCount > 0 ? `(1인당: ${perManager.toLocaleString()} D • 총 ${mgrCount}명)` : '(지정 없음)';
   };
 
-  // 🎯 길드 자금 분배 실행 (DB 컬럼 완벽 연동)
   window.submitWeeklyDistribution = async function() {
     if (window.isDistributingNow) return;
 
@@ -1024,7 +1064,7 @@
 
     if (!rawAmount || parseInt(rawAmount) <= 0) return window.showSettleToast("분배할 총 다이아 금액을 입력해주세요!", "⚠️");
 
-    if (window.currentDistMode === "custom" && customMembers.length === 0) {
+    if (currentDistMode === "custom" && customMembers.length === 0) {
       return window.showSettleToast("임의 분배 대상 길드원을 1명 이상 선택해주세요!", "⚠️");
     }
 
@@ -1033,7 +1073,7 @@
     const reserve = totalVal - distAmt;
 
     let condText = "";
-    if (window.currentDistMode === 'score') {
+    if (currentDistMode === 'score') {
       const sDesc = minScore > 0 ? `${minScore}점 이상` : '제한 없음';
       const iDesc = minInterCount > 0 ? `${minInterCount}회 이상` : '제한 없음';
       condText = `• 참여 조건: 활동점수 [${sDesc}] / 인터쟁 [${iDesc}]\n`;
@@ -1045,7 +1085,7 @@
       `• 총 분배율: ${window.currentDistRate}% (${distAmt.toLocaleString()} D)\n` +
       `• 금고 잔여 적립금: ${reserve.toLocaleString()} 다이아\n` +
       `• 시트 관리원: ${managerNames.length > 0 ? managerNames.join(', ') + ' (' + managerNames.length + '명, ' + window.currentManagerRate + '%)' : '없음'}\n` +
-      `• 분배 방식: ${window.currentDistMode === 'score' ? '주간 활동 점수 차등' : '선택 길드원 임의 분배'}\n` +
+      `• 분배 방식: ${currentDistMode === 'score' ? '주간 활동 점수 차등' : '선택 길드원 임의 분배'}\n` +
       condText +
       `\n해당 내역으로 정산을 집행하시겠습니까?`;
 
@@ -1058,7 +1098,7 @@
 
     try {
       let targetMembers = [];
-      if (window.currentDistMode === 'custom') {
+      if (currentDistMode === 'custom') {
         targetMembers = customMembers;
       } else {
         targetMembers = window.allGuildMembers.filter(m => {
@@ -1087,11 +1127,10 @@
 
       const nowKey = Date.now().toString();
 
-      // 1. item_distributions 기록 생성
       const distRecords = [];
       distRecords.push({
         item_key: `WEEKLY_${nowKey}_MEMBERS`,
-        boss_name: window.currentDistMode === 'score' ? '주간점수정산' : '임의자금정산',
+        boss_name: currentDistMode === 'score' ? '주간점수정산' : '임의자금정산',
         item_name: `길드자금 분배 (${window.currentDistRate}%)`,
         winner_name: '길드원분배',
         price: memberPool,
@@ -1113,7 +1152,6 @@
 
       await apiRequest("item_distributions", "POST", distRecords);
 
-      // 2. guild_finances 금고 출금 내역 기록
       await apiRequest("guild_finances", "POST", [{
         tx_type: '출금',
         category: '길드자금분배',
@@ -1169,7 +1207,6 @@
     window.fetchSettlementData();
   };
 
-  // 🎯 정산 데이터 집계 및 파싱
   window.fetchSettlementData = async function() {
     const start = document.getElementById('settleStartDate').value;
     const end = document.getElementById('settleEndDate').value;
