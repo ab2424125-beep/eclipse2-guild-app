@@ -539,7 +539,12 @@
   <div id="viewMembers">
     <div class="search-wrapper-stat">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" id="statMemberSearch" class="search-input-stat" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberStats()">
+      <!-- 🛡️ 브라우저 자동완성 오인 차단 (autocomplete="off", value="") -->
+      <input type="text" id="statMemberSearch" class="search-input-stat" 
+             placeholder="길드원 닉네임 검색..." 
+             autocomplete="off" 
+             value="" 
+             onkeyup="filterMemberStats()">
     </div>
     <div id="memberStatsList" style="max-height: 480px; overflow-y: auto;">
       <div class="text-secondary small text-center py-3">데이터를 불러오는 중...</div>
@@ -640,7 +645,6 @@
     scoreInter: 2
   };
 
-  // 🛡️ 관리자 권한 확인 및 일반 관리자 perm_boss_records_edit 검증
   async function verifyAdminPermission() {
     const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) {
@@ -714,6 +718,11 @@
   }
 
   (async function initRecordsPage() {
+    // 🛡️ 검색창 강제 비우기
+    const sInput = document.getElementById('statMemberSearch');
+    if (sInput) {
+      sInput.value = '';
+    }
     setStatPeriod('thisWeek');
   })();
 
@@ -891,6 +900,9 @@
       renderMemberStats(rawStatsData.memberStats);
       renderWarLogList(rawStatsData.warRecords);
       renderHistoryList(rawStatsData.records);
+
+      // 🛡️ 렌더링 완료 후 검색창 다시 확인 및 필터링 적용
+      filterMemberStats();
 
     } catch (err) {
       showRecordsToast("통계 조회 실패: " + err.message, "❌");
@@ -1232,7 +1244,8 @@
   }
 
   function filterMemberStats() {
-    const q = document.getElementById('statMemberSearch').value.trim().toLowerCase();
+    const inputElem = document.getElementById('statMemberSearch');
+    const q = inputElem ? inputElem.value.trim().toLowerCase() : '';
     const cards = document.querySelectorAll('.member-stat-card');
     cards.forEach(card => {
       const header = card.querySelector('.member-card-header');
