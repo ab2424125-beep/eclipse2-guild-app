@@ -451,7 +451,6 @@
     var selfTimerInterval = null;
     var targetSelfRaidData = null;
     var globalToastTimer = null;
-    var GLOBAL_RECOVERY_SECRET = "ECLIPSE-RECOVERY-9999";
     var cachedGuildSettingsMap = {};
 
     function showGlobalToast(message, icon = "✅") {
@@ -563,57 +562,47 @@
       document.getElementById("globalRecoveryModal").style.display = "none";
     }
 
+    // 🔒 [보안 강화 1] 비상 복구 코드를 클라이언트가 아닌 DB 내부 RPC에서 대조
     async function submitGlobalRecoveryReset() {
       const inputCode = document.getElementById("globalRecoveryKeyInput").value.trim();
-      if (inputCode !== GLOBAL_RECOVERY_SECRET) {
-        return alert("❌ 비상 복구 시크릿 코드가 올바르지 않습니다.");
+      if (!inputCode) {
+        return alert("시크릿 코드를 입력해주세요.");
       }
 
       try {
-        const defaultHash = await sha256("000000");
-        await apiRequest("guild_settings?key=eq.super_admin_pin", "PATCH", { value: defaultHash });
-        alert("🚨 슈퍼 마스터키가 기본값 [ 000000 ] 으로 안전하게 초기화되었습니다.\n다시 로그인해주세요.");
-        closeGlobalRecoveryModal();
-        handleAdminAuthToggle();
+        const res = await apiRequest("rpc/reset_master_key_emergency", "POST", { secret_code: inputCode });
+        if (res && res.success) {
+          alert("🚨 슈퍼 마스터키가 기본값 [ 000000 ] 으로 안전하게 초기화되었습니다.\n다시 로그인해주세요.");
+          closeGlobalRecoveryModal();
+          handleAdminAuthToggle();
+        } else {
+          alert("❌ " + (res?.message || "비상 복구 시크릿 코드가 올바르지 않습니다."));
+        }
       } catch (err) {
         alert("초기화 실패: " + err.message);
       }
     }
 
+    // 🔒 [보안 강화 2] DB 테이블의 비밀번호를 읽어오지 않고, 서버(DB)에서 검증 후 권한만 반환
     async function submitGlobalAuth() {
       const inputPin = document.getElementById("globalAuthPinInput").value.trim();
       if (!inputPin) return alert("PIN 번호를 입력해주세요.");
 
       try {
-        let adminPin = "3003";
-        let superPin = "000000";
+        const res = await apiRequest("rpc/verify_admin_pin", "POST", { input_pin: inputPin });
 
-        const settings = await apiRequest("guild_settings?select=*");
-        if (settings && settings.length > 0) {
-          settings.forEach(s => {
-            if (s.key === "admin_pin") adminPin = s.value;
-            if (s.key === "super_admin_pin") superPin = s.value;
-            cachedGuildSettingsMap[s.key] = s.value;
-          });
-        }
-
-        const inputHash = await sha256(inputPin);
-
-        if (inputPin === superPin.trim() || inputHash === superPin.trim()) {
+        if (res && res.success) {
           sessionStorage.setItem("admin_auth", "true");
-          sessionStorage.setItem("admin_role", "super");
+          sessionStorage.setItem("admin_role", res.role);
           sessionStorage.setItem("admin_auth_expire", Date.now() + (60 * 60 * 1000));
           closeGlobalAuthModal();
           updateAdminAuthUI();
-          showGlobalToast("👑 슈퍼관리자(Master)로 인증되었습니다.");
-          if (currentActiveModule) openModule(currentActiveModule, false);
-        } else if (inputPin === adminPin.trim() || inputHash === adminPin.trim()) {
-          sessionStorage.setItem("admin_auth", "true");
-          sessionStorage.setItem("admin_role", "admin");
-          sessionStorage.setItem("admin_auth_expire", Date.now() + (60 * 60 * 1000));
-          closeGlobalAuthModal();
-          updateAdminAuthUI();
-          showGlobalToast("✅ 일반 관리자로 인증되었습니다.");
+
+          if (res.role === "super") {
+            showGlobalToast("👑 슈퍼관리자(Master)로 인증되었습니다.");
+          } else {
+            showGlobalToast("✅ 일반 관리자로 인증되었습니다.");
+          }
           if (currentActiveModule) openModule(currentActiveModule, false);
         } else {
           alert("❌ 비밀번호가 올바르지 않습니다.");
@@ -627,7 +616,7 @@
 
     async function initSystemSettings() {
       try {
-        const settings = await apiRequest("guild_settings?select=*");
+        const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
           settings.forEach(s => cachedGuildSettingsMap[s.key] = s.value);
           if (cachedGuildSettingsMap['guild_name']) {
@@ -664,7 +653,7 @@
       if (isSuperAdminLoggedIn()) return true;
 
       try {
-        const settings = await apiRequest("guild_settings?select=*");
+        const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
           settings.forEach(s => cachedGuildSettingsMap[s.key] = s.value);
         }
@@ -713,7 +702,6 @@
       container.innerHTML = `<div class="text-secondary small text-center py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>화면을 불러오는 중...</div>`;
 
       try {
-        // 캐시 무효화 타임스탬프 쿼리
         const response = await fetch(`pages/${pageName}.html?_t=${Date.now()}`);
         if (!response.ok) throw new Error(`페이지 로드 실패 (${response.status})`);
         const html = await response.text();
