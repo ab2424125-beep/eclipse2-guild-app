@@ -469,7 +469,6 @@
     </div>
   </div>
 
-  <!-- 🎯 구버전 함수 충돌을 차단하기 위해 고유 함수명(executeBossRaidRegistration) 직접 바인딩 -->
   <button type="button" class="btn-submit-register w-100" id="btnSubmitRaid" onclick="executeBossRaidRegistration()">
     <i class="fa-solid fa-floppy-disk me-1"></i> 등록 완료 및 단톡방 복사
   </button>
@@ -496,6 +495,15 @@
     base: 1,
     internal: 1,
     inter: 2
+  };
+
+  // 🧹 [메모리 클린업 등록]: 페이지 퇴장 시 paste 리스너 및 타이머 제거
+  window.__currentModuleCleanup = function() {
+    window.removeEventListener("paste", handleGlobalImagePaste);
+    if (window.regToastTimer) {
+      clearTimeout(window.regToastTimer);
+      window.regToastTimer = null;
+    }
   };
 
   function showRegToast(message, icon = "✅") {
@@ -530,9 +538,11 @@
   }
 
   function initDefaultRaidTime() {
-    const now = new Date();
-    const pad = n => (n < 10 ? '0' + n : n);
-    const localIso = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    // 🕒 KST 유틸리티 사용 (9시간 밀림 방지)
+    const localIso = typeof getKSTDateTimeLocalString === "function" 
+      ? getKSTDateTimeLocalString(new Date()) 
+      : new Date().toISOString().slice(0, 16);
+
     const timeElem = document.getElementById('regRaidTime');
     if (timeElem) timeElem.value = localIso;
     handleTimeChange(localIso);
@@ -715,8 +725,11 @@
     }
   };
 
-  window.addEventListener("paste", function(event) {
-    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  // 붙여넣기 이벤트 리스너 함수 분리
+  function handleGlobalImagePaste(event) {
+    const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
+    if (!items) return;
+
     let imageItem = null;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf("image") !== -1) {
@@ -728,7 +741,7 @@
       const blob = imageItem.getAsFile();
       if (blob) processImageFile(blob);
     }
-  });
+  }
 
   function processImageFile(file) {
     const reader = new FileReader();
@@ -860,7 +873,7 @@
       }
     };
 
-    const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
     let detectedWords = [];
     let success = false;
     let lastError = "";
@@ -994,7 +1007,6 @@
     }
   }
 
-  // 🎯 고유 함수명으로 등록: settlements 테이블 호출 코드를 단 1줄도 남기지 않고 단일 처리
   window.executeBossRaidRegistration = async function() {
     const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) {
@@ -1003,7 +1015,6 @@
       return;
     }
 
-    // 일반 관리자 권한 검증 (perm_boss_register)
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       try {
@@ -1058,7 +1069,6 @@
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i>등록 중...`;
 
     try {
-      // 🎯 boss_participations 단일 테이블에만 토벌 및 아이템(drop_items) 저장
       const insertResult = await apiRequest("boss_participations", "POST", [{
         boss_name: bossName,
         raid_time: raidTime,
@@ -1104,7 +1114,6 @@
     }
   };
 
-  // 구버전 호환용 바인딩 (구버전 함수가 호출되어도 새 함수로 우회 실행)
   window.submitRaidParticipation = window.executeBossRaidRegistration;
 
   function copyRaidReportToClipboard(boss, time, war, members, items, totalScore, selfAddUrl) {
@@ -1137,5 +1146,9 @@
     await loadSystemConfig();
     await loadBossOptions();
     await loadGuildMembersForChips();
+
+    // paste 이벤트 리스너 등록
+    window.removeEventListener("paste", handleGlobalImagePaste);
+    window.addEventListener("paste", handleGlobalImagePaste);
   })();
 </script>
