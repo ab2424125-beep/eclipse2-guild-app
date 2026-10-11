@@ -109,6 +109,16 @@
     color: #fff;
   }
 
+  /* 🎯 높낮이 및 여백 균일화 (수평 일치) */
+  .control-label-header {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    box-sizing: border-box;
+  }
+
   .time-touch-box {
     background: #080d1a;
     border: 1px solid #233554;
@@ -121,6 +131,7 @@
     cursor: pointer;
     position: relative;
     user-select: none;
+    box-sizing: border-box;
   }
   .time-touch-box:hover {
     border-color: #38bdf8;
@@ -149,11 +160,13 @@
     border: 1px solid #233554 !important;
     color: #ffffff !important;
     border-radius: 12px !important;
-    padding: 8px 34px 8px 12px !important;
+    padding: 0 34px 0 12px !important;
     font-size: 0.82rem !important;
     font-weight: 600;
     color-scheme: dark;
-    height: 42px;
+    height: 42px !important;
+    line-height: 40px !important;
+    box-sizing: border-box !important;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -162,6 +175,7 @@
     background-position: right 10px center !important;
     background-size: 16px 16px !important;
     cursor: pointer;
+    margin: 0 !important;
   }
 
   .war-badge-check-custom {
@@ -174,6 +188,7 @@
     justify-content: space-between;
     margin-bottom: 12px;
     height: 44px;
+    box-sizing: border-box;
   }
 
   .custom-checkbox-label {
@@ -242,6 +257,7 @@
     font-size: 0.82rem !important;
     height: 42px;
     width: 100%;
+    box-sizing: border-box;
   }
   .input-item-custom::placeholder { color: #94a3b8 !important; }
   .btn-item-inline-add {
@@ -344,7 +360,6 @@
   }
   .custom-reg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* 🚪 자가등록 팝업 모달 스타일 */
   .self-checkin-modal-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -415,9 +430,11 @@
     <input type="file" id="ocrFileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
   </div>
 
-  <div class="row g-2 mb-2">
+  <!-- 🎯 완벽 정렬된 토벌 일시 & 보스 선택 2단 그리드 -->
+  <div class="row g-2 mb-2 align-items-end">
+    <!-- 1. 토벌 일시 -->
     <div class="col-6">
-      <div class="d-flex justify-content-between align-items-center mb-1">
+      <div class="control-label-header">
         <label class="small text-secondary m-0" style="font-size: 0.72rem;">토벌 일시</label>
         <span class="text-info small" style="font-size: 0.68rem;">(터치하여 변경)</span>
       </div>
@@ -430,8 +447,12 @@
         <input type="datetime-local" id="regRaidTime" class="time-hidden-input" onchange="handleTimeChange(this.value)">
       </div>
     </div>
+
+    <!-- 2. 보스 선택 -->
     <div class="col-6">
-      <label class="small text-secondary mb-1" style="font-size: 0.72rem;">보스 선택</label>
+      <div class="control-label-header">
+        <label class="small text-secondary m-0" style="font-size: 0.72rem;">보스 선택</label>
+      </div>
       <select id="regBossSelect" class="form-select select-custom-reg">
         <option value="">보스를 선택하세요</option>
       </select>
@@ -478,7 +499,6 @@
       <span class="text-secondary" style="font-size: 0.68rem;">입력 후 [추가]</span>
     </div>
     <div class="item-input-wrapper">
-      <!-- 🛡️ 브라우저 자동완성 오인 차단 (autocomplete="off") -->
       <input type="text" id="inputDropItemName" class="form-control input-item-custom" 
              placeholder="아이템명 입력 (예: 영웅 무기, 축순)" 
              autocomplete="off" 
@@ -521,7 +541,6 @@
     <h6 class="fw-bold text-white mb-1">보스 토벌 추가 참여</h6>
     <p class="text-secondary small mb-2" id="modalRaidInfoText" style="font-size: 0.76rem;">-</p>
 
-    <!-- 남은 유효시간 -->
     <div class="p-2 mb-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35);">
       <span class="small text-danger fw-bold" style="font-size: 0.74rem;"><i class="fa-regular fa-clock me-1"></i>남은 유효시간</span>
       <span class="small text-danger fw-bold" id="modalCheckinTimerText" style="font-size: 0.78rem;">03:00</span>
@@ -536,7 +555,6 @@
 
     <div class="mb-3 text-start">
       <label class="form-label small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (PIN)</label>
-      <!-- 🛡️ 브라우저 자동완성 폼 오인 방지 (autocomplete="new-password") -->
       <input type="password" id="modalSelfMemberPw" class="form-control input-self-modal" 
              placeholder="비밀번호 입력" maxlength="12" 
              autocomplete="new-password" 
@@ -584,7 +602,6 @@
     }
   };
 
-  // 🚪 [핵심] 창 안전 닫기 함수
   window.closeSelfCheckinSafeExit = function() {
     if (window.modalCheckinInterval) {
       clearInterval(window.modalCheckinInterval);
@@ -1228,7 +1245,6 @@
       document.getElementById('checkInterWar').checked = false;
       document.getElementById('selectExtraScoreCustom').value = "0";
 
-      // 🛡️ 등록 완료 후 아이템 입력창 강제 비우기
       const dropInput = document.getElementById('inputDropItemName');
       if (dropInput) dropInput.value = '';
 
@@ -1265,7 +1281,6 @@
     }
   }
 
-  // 🚪 [자가 등록(#SelfCheckin) 라우팅 및 검증 엔진]
   window.checkAndOpenSelfCheckinModal = async function() {
     const hash = window.location.hash || "";
     if (hash.indexOf("#SelfCheckin") === -1) return;
@@ -1405,7 +1420,6 @@
     await loadBossOptions();
     await loadGuildMembersForChips();
 
-    // 🛡️ 페이지 로드 직후 아이템 입력창 비우기 (브라우저 자동완성 제거)
     const dropInput = document.getElementById('inputDropItemName');
     if (dropInput) dropInput.value = '';
 
