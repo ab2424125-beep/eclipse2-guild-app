@@ -342,9 +342,52 @@
       <span style="font-size: 1.3rem;">💰</span>
       <h6 class="fw-bold mb-0 text-white">길드 정산 및 자금 배분</h6>
     </div>
-    <button class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.toggleDirectDistForm()">
-      <i class="fa-solid fa-hand-holding-dollar me-1"></i>길드자금 분배
-    </button>
+    <div class="d-flex gap-1 align-items-center">
+      <button class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.toggleDirectDistForm()">
+        <i class="fa-solid fa-hand-holding-dollar me-1"></i>길드자금 분배
+      </button>
+      <!-- 🎯 슈퍼관리자 전용 정산 관리/삭제 토글 버튼 -->
+      <button class="btn btn-outline-danger btn-xs py-1 px-2" id="btnAdminSettleManage" style="font-size: 0.75rem; display: none;" onclick="window.toggleAdminManageBox()">
+        <i class="fa-solid fa-gear me-1"></i>수정/삭제
+      </button>
+    </div>
+  </div>
+
+  <!-- 🎯 슈퍼관리자 전용 정산 기록 수정/삭제 패널 -->
+  <div class="settle-box border-danger border-opacity-50" id="adminManageBox" style="display: none; background: #160d1b;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="small fw-bold text-danger"><i class="fa-solid fa-trash-can me-1"></i> [슈퍼관리자] 길드자금 정산 기록 삭제</span>
+      <button class="btn-close btn-close-white" style="font-size: 0.7rem;" onclick="window.toggleAdminManageBox()"></button>
+    </div>
+
+    <!-- 1. 기간별 일괄 삭제 -->
+    <div class="mb-3 p-2 rounded" style="background: #080d1a; border: 1px solid #331526;">
+      <label class="form-label text-secondary mb-1 fw-bold" style="font-size: 0.72rem;">📅 기간별 주간 분배 기록 일괄 삭제:</label>
+      <div class="d-flex flex-wrap gap-1 mb-1">
+        <button class="quick-filter-btn flex-fill" onclick="window.deleteSettlementByPeriod('thisWeek')">이번 주 삭제</button>
+        <button class="quick-filter-btn flex-fill" onclick="window.deleteSettlementByPeriod('lastWeek')">지난 주 삭제</button>
+        <button class="quick-filter-btn flex-fill" onclick="window.deleteSettlementByPeriod('thisMonth')">이번 달 삭제</button>
+        <button class="quick-filter-btn flex-fill text-danger fw-bold" onclick="window.deleteSettlementByPeriod('all')">전체 정산 삭제</button>
+      </div>
+      <div class="text-secondary" style="font-size: 0.68rem;">* 선택 기간의 주간자금정산 배당 및 금고 출금 로그가 삭제됩니다. (개별 보스 아이템 분배는 보존)</div>
+    </div>
+
+    <!-- 2. 개인별 기록 삭제 -->
+    <div class="p-2 rounded" style="background: #080d1a; border: 1px solid #331526;">
+      <label class="form-label text-secondary mb-1 fw-bold" style="font-size: 0.72rem;">👤 특정 길드원 정산 배당 단독 삭제:</label>
+      <div class="row g-1 align-items-center">
+        <div class="col-8">
+          <select id="selectDeleteMemberTarget" class="form-control input-custom-settle" style="padding: 4px 8px !important; font-size: 0.78rem !important;">
+            <option value="">삭제 대상 길드원 선택...</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <button type="button" class="btn btn-outline-danger btn-sm w-100 py-1" style="font-size: 0.75rem;" onclick="window.deleteSettlementForSingleMember()">
+            기록 삭제
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 길드 자금 분배 폼 -->
@@ -678,6 +721,131 @@
     }
   }
 
+  // 🎯 슈퍼관리자 권한 확인 후 수정/삭제 버튼 노출
+  function checkSuperAdminSettleRole() {
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    const adminBtn = document.getElementById('btnAdminSettleManage');
+    if (adminBtn) {
+      adminBtn.style.display = isSuper ? 'inline-block' : 'none';
+    }
+  }
+
+  window.toggleAdminManageBox = function() {
+    const box = document.getElementById('adminManageBox');
+    if (!box) return;
+    box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
+  };
+
+  // 🎯 슈퍼관리자: 기간별 정산 내역 일괄 삭제 (취소)
+  window.deleteSettlementByPeriod = async function(rangeType) {
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    if (!isSuper) return window.showSettleToast("슈퍼관리자만 삭제할 수 있습니다.", "⚠️");
+
+    const today = new Date();
+    const currentDay = (today.getDay() + 6) % 7;
+    let s = null, e = null, label = "";
+
+    if (rangeType === 'thisWeek') {
+      s = new Date(today.getFullYear(), today.getMonth(), today.getDate() - currentDay);
+      e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6);
+      label = "이번 주";
+    } else if (rangeType === 'lastWeek') {
+      s = new Date(today.getFullYear(), today.getMonth(), today.getDate() - currentDay - 7);
+      e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6);
+      label = "지난 주";
+    } else if (rangeType === 'thisMonth') {
+      s = new Date(today.getFullYear(), today.getMonth(), 1);
+      e = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      label = "이번 달";
+    } else if (rangeType === 'all') {
+      label = "전체 기간";
+    }
+
+    const sStr = s ? window.formatDateToYYYYMMDD(s) : null;
+    const eStr = e ? window.formatDateToYYYYMMDD(e) : null;
+
+    const confirmMsg = `⚠️ [정산 기록 삭제 경고]\n` +
+      `정말로 [${label}]에 집행된 '주간 길드자금 분배' 내역을 삭제하시겠습니까?\n` +
+      `• 해당 기간의 주간 점수차등 정산 및 금고 출금 로그가 삭제됩니다.\n` +
+      `• 개별 보스 아이템 N/1 분배는 보존됩니다.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      window.showSettleToast("정산 기록 삭제 처리 중...", "⏳");
+
+      // 1. item_distributions에서 WEEKLY_ 로 시작하는 항목 조회
+      const dists = await apiRequest("item_distributions?select=id,item_key,created_at");
+      const targetIds = [];
+
+      (dists || []).forEach(r => {
+        const k = String(r.item_key || '');
+        if (!k.startsWith('WEEKLY_')) return;
+
+        const d = (r.created_at || '').slice(0, 10);
+        if (sStr && d < sStr) return;
+        if (eStr && d > eStr) return;
+
+        targetIds.push(r.id);
+      });
+
+      // 2. 삭제 실행
+      for (const id of targetIds) {
+        await apiRequest(`item_distributions?id=eq.${id}`, "DELETE");
+      }
+
+      // 3. guild_finances의 길드자금분배 출금 로그도 동기화 삭제
+      const finLogs = await apiRequest("guild_finances?category=eq.길드자금분배&select=id,created_at");
+      for (const f of (finLogs || [])) {
+        const d = (f.created_at || '').slice(0, 10);
+        if (sStr && d < sStr) continue;
+        if (eStr && d > eStr) continue;
+        await apiRequest(`guild_finances?id=eq.${f.id}`, "DELETE");
+      }
+
+      window.showSettleToast(`✅ [${label}] 주간 분배 기록(${targetIds.length}건)이 삭제되었습니다.`, "🎉");
+      await window.fetchSettlementData();
+    } catch (err) {
+      window.showSettleToast("삭제 실패: " + err.message, "❌");
+    }
+  };
+
+  // 🎯 슈퍼관리자: 개인별 정산 기록 단독 삭제
+  window.deleteSettlementForSingleMember = async function() {
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    if (!isSuper) return window.showSettleToast("슈퍼관리자만 삭제할 수 있습니다.", "⚠️");
+
+    const targetName = document.getElementById('selectDeleteMemberTarget').value;
+    if (!targetName) return window.showSettleToast("삭제할 길드원을 선택해주세요.", "⚠️");
+
+    if (!confirm(`[${targetName}] 길드원의 모든 주간 정산 배당 기록을 삭제하시겠습니까?`)) return;
+
+    try {
+      window.showSettleToast("개인 정산 기록 삭제 중...", "⏳");
+      const dists = await apiRequest("item_distributions?select=id,item_key,winner_name,members");
+      let delCount = 0;
+
+      for (const r of (dists || [])) {
+        const k = String(r.item_key || '');
+        if (!k.startsWith('WEEKLY_')) continue;
+
+        const isWinner = (r.winner_name === targetName);
+        const mems = Array.isArray(r.members) ? r.members : [];
+        const isInMembers = mems.includes(targetName);
+
+        if (isWinner || isInMembers) {
+          await apiRequest(`item_distributions?id=eq.${r.id}`, "DELETE");
+          delCount++;
+        }
+      }
+
+      window.showSettleToast(`✅ [${targetName}] 정산 기록 ${delCount}건이 삭제되었습니다.`, "🎉");
+      await window.fetchSettlementData();
+    } catch (err) {
+      window.showSettleToast("삭제 실패: " + err.message, "❌");
+    }
+  };
+
   window.formatDateToYYYYMMDD = function(d) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -787,6 +955,7 @@
       window.allGuildMembers = names;
       
       populateManagerDropdown();
+      populateDeleteMemberDropdown();
       renderCustomMemberChips();
     } catch (e) {}
   }
@@ -794,6 +963,13 @@
   function populateManagerDropdown() {
     const select = document.getElementById('managerDropdown');
     select.innerHTML = '<option value="">길드원 선택 후 추가...</option>' + 
+      window.allGuildMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+
+  function populateDeleteMemberDropdown() {
+    const select = document.getElementById('selectDeleteMemberTarget');
+    if (!select) return;
+    select.innerHTML = '<option value="">삭제 대상 길드원 선택...</option>' + 
       window.allGuildMembers.map(m => `<option value="${m}">${m}</option>`).join('');
   }
 
@@ -1042,7 +1218,7 @@
     document.getElementById('previewManagerPerShare').innerText = mgrCount > 0 ? `(1인당: ${perManager.toLocaleString()} D • 총 ${mgrCount}명)` : '(지정 없음)';
   };
 
-  // 🎯 [정산 집행] 주간 활동 점수 차등 배당 및 조건 컷(최소 점수, 인터 횟수) 정밀 집행
+  // 🎯 주간 활동 점수 차등 배당 및 조건 컷 정밀 집행
   window.submitWeeklyDistribution = async function() {
     if (window.isDistributingNow) return;
 
@@ -1093,7 +1269,6 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>데이터 집계 및 정산 처리 중...';
 
     try {
-      // 1. 선택 기간의 보스 토벌 데이터 실시간 집계 (인터 참여는 순수 횟수 +1 집계)
       const allRaids = await apiRequest("boss_participations?select=*&order=id.desc");
       const periodMemberStats = {};
 
@@ -1120,7 +1295,6 @@
         });
       });
 
-      // 2. 분배 대상자 추출 및 조건 필터링 검증
       let targetMembers = [];
       if (currentDistMode === 'custom') {
         targetMembers = customMembers.map(m => ({
@@ -1148,7 +1322,6 @@
         return window.showSettleToast("조건을 만족하는 분배 대상 길드원이 없습니다.", "⚠️");
       }
 
-      // 3. 관리비 제외 후 길드원 순수 배당 풀 산출
       let managerShareTotal = 0;
       if (window.isManagerFeeActive && managerNames.length > 0) {
         managerShareTotal = Math.floor(totalVal * (window.currentManagerRate / 100));
@@ -1161,7 +1334,6 @@
       const nowKey = Date.now().toString();
       const distRecords = [];
 
-      // 4. 주간 활동 점수 비례 차등 배당 레코드 생성
       if (currentDistMode === 'score') {
         const totalScoreSum = targetMembers.reduce((sum, m) => sum + m.score, 0);
 
@@ -1194,7 +1366,6 @@
         });
       }
 
-      // 5. 시트 관리원 수고비 레코드 생성
       if (managerShareTotal > 0 && managerNames.length > 0) {
         distRecords.push({
           item_key: `WEEKLY_${nowKey}_MANAGERS`,
@@ -1210,7 +1381,6 @@
 
       await apiRequest("item_distributions", "POST", distRecords);
 
-      // 금고 출금 로그 반영 (tx_type만 전송)
       await apiRequest("guild_finances", "POST", [{
         tx_type: '출금',
         category: '길드자금분배',
@@ -1278,7 +1448,6 @@
     }
 
     try {
-      // 1. 보스 토벌 활동 통계 집계 (인터 순수 횟수 집계 보장)
       const raids = await apiRequest("boss_participations?select=*&order=id.desc");
       window.currentParticipationStats = { memberStats: {} };
 
@@ -1305,7 +1474,6 @@
         });
       });
 
-      // 2. 분배 내역 집계
       const dists = await apiRequest("item_distributions?select=*&order=created_at.desc,id.desc");
       let filteredDists = dists || [];
 
@@ -1331,7 +1499,6 @@
 
         totalPool += (perShare * mems.length);
 
-        // 출처 구분 (주간자금정산 vs 아이템 N/1 분배)
         const itemKey = String(r.item_key || '');
         const bossName = String(r.boss_name || '');
         const isWeekly = itemKey.startsWith('WEEKLY_') || bossName.includes('주간점수정산') || bossName.includes('임의자금정산') || bossName.includes('시트관리비');
@@ -1341,8 +1508,8 @@
             const stats = window.currentParticipationStats.memberStats[m] || { totalScore: 0, interCount: 0 };
             memberPayouts[m] = {
               totalAmount: 0,
-              itemDistAmount: 0,   // 아이템 N/1 분배액
-              weeklyDistAmount: 0, // 길드자금 분배액
+              itemDistAmount: 0,
+              weeklyDistAmount: 0,
               count: 0,
               score: stats.totalScore || 0,
               interCount: stats.interCount || 0,
@@ -1515,7 +1682,7 @@
     `).join('');
   };
 
-  // 🎯 [완전 개선] 요구사항 맞춤형 카카오톡 복사 양식
+  // 🎯 [완전 일치] 요청하신 카카오톡 공유 양식 100% 매칭
   window.copySettlementForKakao = function() {
     const start = document.getElementById('settleStartDate').value || '시작';
     const end = document.getElementById('settleEndDate').value || '현재';
@@ -1529,7 +1696,6 @@
       return window.showSettleToast("공유할 정산 데이터가 없습니다!", "⚠️");
     }
 
-    // 활동 점수 순 정렬
     weeklyPaidMembers.sort((a, b) => {
       const scoreDiff = (payouts[b].score || 0) - (payouts[a].score || 0);
       if (scoreDiff !== 0) return scoreDiff;
@@ -1546,13 +1712,7 @@
       const rankText = `${rankCounter++}위`;
       const totD = (p.totalAmount || 0).toLocaleString();
 
-      // 아이템 N/1 지급 내역이 있는 경우 병기
-      let detailSuffix = "";
-      if ((p.itemDistAmount || 0) > 0) {
-        detailSuffix = ` (아이템 ${(p.itemDistAmount).toLocaleString()}D + 주간 ${(p.weeklyDistAmount).toLocaleString()}D)`;
-      }
-
-      return `${rankText} ${m}${mgrLabel} [활동 ${scoreVal}점 / 인터 ${interCount}회] ${totD} 다이아${detailSuffix}`;
+      return `${rankText} ${m}${mgrLabel} [활동 ${scoreVal}점 / 인터 ${interCount}회] ${totD} 다이아`;
     }).join('\n');
 
     // 2. 주간 길드자금 미수령자 중 -> 아이템 N/1 배당을 받아간 인원 분리
@@ -1575,39 +1735,38 @@
       }
     });
 
-    // 점수순 정렬
     itemOnlyMembers.sort((a, b) => b.score - a.score);
     completeZeroMembers.sort((a, b) => b.score - a.score);
 
     let excludedSection = "";
 
-    // 🎯 [주간 분배 제외 대상자 단 아이템 N/1 지급내역]
+    // 🎯 [🚫 주간 분배 제외 대상자 (단, 아이템 N/1 수령내역)]
     if (itemOnlyMembers.length > 0) {
       const itemLines = itemOnlyMembers.map(m => 
-        `• ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회] ${m.amount.toLocaleString()} 다이아 (아이템 N/1 수령)`
+        `- ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회] ${m.amount.toLocaleString()} 다이아`
       ).join('\n');
 
-      excludedSection += `\n\n[🚫 주간 분배 제외 대상자 (단, 아이템 N/1 수령내역)]\n${itemLines}`;
+      excludedSection += `\n[🚫 주간 분배 제외 대상자 (단, 아이템 N/1 수령내역)]\n${itemLines}`;
     }
 
-    // 🎯 [완전 미수령 제외자]
+    // 🎯 [🚫 분배 제외 대상자 (N명)]
     if (completeZeroMembers.length > 0) {
       const zeroLines = completeZeroMembers.map(m => 
-        `• ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회]`
+        `- ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회]`
       ).join('\n');
 
-      excludedSection += `\n\n[🚫 분배 제외 대상자 (${completeZeroMembers.length}명)]\n${zeroLines}\n※ 분배 참여 자격 조건 미달 또는 미참여자`;
+      excludedSection += `\n[🚫 분배 제외 대상자 (${completeZeroMembers.length}명)]\n${zeroLines}\n※ 분배 참여 자격 조건 미달 또는 미참여자`;
     }
 
     const gName = window.activeGuildName || "길드";
     const shareText = `[💰 ${gName} 길드 정산 결과 보고]\n` +
-      `• 정산 기간: ${start} ~ ${end}\n` +
-      `• 총 분배 금액: ${window.currentSettlementData.totalPool.toLocaleString()} 다이아\n` +
-      `• 주간 정산 수령: ${weeklyPaidMembers.length}명\n\n` +
-      `[길드원별 활동 순위 및 지급액]\n${mainLines || '해당 기간 주간 자금 분배 내역 없음'}` +
-      excludedSection + `\n\n` +
+      `- 정산 기간: ${start} ~ ${end}\n` +
+      `- 총 분배 금액: ${window.currentSettlementData.totalPool.toLocaleString()} 다이아\n` +
+      `- 주간 정산 수령: ${weeklyPaidMembers.length}명\n\n` +
+      `[길드원별 활동 순위 및 지급액]\n${mainLines || '해당 기간 주간 자금 분배 내역 없음'}\n` +
+      `${excludedSection}\n\n` +
       `※ 활동 점수 순위 기준으로 정렬되었습니다.\n` +
-      `※ 수령 확인 후 이상이 있으신 분은 문의 바랍니다. ⚔️`;
+      `- ※ 수령 확인 후 이상이 있으신 분은 문의 바랍니다. ⚔️`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareText);
@@ -1631,6 +1790,7 @@
 
   (async function initSettleModule() {
     await loadConfiguredGuildName();
+    checkSuperAdminSettleRole();
     const box = document.getElementById('directDistBox');
     if (box) box.style.display = 'none';
 
