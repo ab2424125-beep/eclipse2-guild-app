@@ -1,5 +1,5 @@
 <!-- ==========================================
-     [ECLIPSE 길드관리] 길드 정산 자금 배분
+     [ECLIPSE 길드관리] 길드 정산 및 자금 배분
      경로: pages/PageSettle.html
      ========================================== -->
 <style>
@@ -289,32 +289,25 @@
 
   .member-detail-modal-bg {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0; width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(8px);
     z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     padding: 16px;
   }
   .member-detail-modal-box {
     background: #0d1527;
     border: 1px solid #233b66;
     border-radius: 18px;
-    width: 100%;
-    max-width: 440px;
+    width: 100%; max-width: 440px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
     overflow: hidden;
   }
 
   .custom-settle-toast {
     position: fixed;
-    top: 24px;
-    left: 50%;
+    top: 24px; left: 50%;
     transform: translateX(-50%) translateY(-20px);
     background: #0d1830;
     border: 1.5px solid #38bdf8;
@@ -322,14 +315,10 @@
     color: #ffffff;
     padding: 12px 22px;
     border-radius: 30px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 0.88rem; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
     z-index: 99999999;
-    opacity: 0;
-    pointer-events: none;
+    opacity: 0; pointer-events: none;
     transition: all 0.25s;
     white-space: nowrap;
   }
@@ -363,7 +352,7 @@
       </button>
     </div>
 
-    <!-- 분배 폼 전용 날짜 퀵 필터 -->
+    <!-- 분배 폼 날짜 퀵 필터 -->
     <div class="mb-2">
       <div class="d-flex gap-1 mb-1">
         <button class="quick-filter-btn flex-fill" id="dBtnThisWeek" onclick="window.setDistQuickRange('thisWeek')">이번 주</button>
@@ -472,7 +461,7 @@
       </div>
     </div>
 
-    <!-- 5. 임의 분배 대상 선택 (그리드 적용) -->
+    <!-- 5. 임의 분배 대상 선택 -->
     <div id="areaCustomMembers" class="mb-2" style="display: none;">
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="text-secondary small" style="font-size: 0.72rem;">👥 분배 대상 길드원: <strong id="selectedCustomMemberCount" class="text-white">0</strong>명</span>
@@ -547,6 +536,19 @@
     </div>
   </div>
 
+  <!-- 🎯 신설: 정산 항목 구분 탭 (주간자금정산 vs 아이템분배) -->
+  <div class="d-flex gap-1 mb-2">
+    <button class="quick-filter-btn flex-fill active" id="btnFilterAll" onclick="window.setSourceFilter('all')">
+      전체 합산
+    </button>
+    <button class="quick-filter-btn flex-fill" id="btnFilterWeekly" onclick="window.setSourceFilter('weekly')">
+      🏆 주간 자금정산(점수차등)
+    </button>
+    <button class="quick-filter-btn flex-fill" id="btnFilterWish" onclick="window.setSourceFilter('wish')">
+      🎁 아이템 분배(N/1)
+    </button>
+  </div>
+
   <!-- 2. 정산 요약 배너 -->
   <div class="d-flex justify-content-between align-items-center p-3 mb-3 rounded" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(245, 158, 11, 0.1)); border: 1px solid rgba(251, 191, 36, 0.25);">
     <div>
@@ -572,10 +574,10 @@
   <!-- 3. 길드원별 수령액 -->
   <div id="viewPayout">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="text-secondary small fw-bold">길드원별 최종 합산 수령액 <small class="text-info fw-normal">(활동 점수 순위순 / 클릭 시 상세 내역 확인)</small></span>
+      <span class="text-secondary small fw-bold">길드원별 최종 합산 수령액 <small class="text-info fw-normal">(활동 점수 순위순 / 클릭 시 상세 내역)</small></span>
     </div>
 
-    <!-- 검색창 영역 -->
+    <!-- 검색창 -->
     <div class="search-wrapper-settle">
       <i class="fa-solid fa-magnifying-glass"></i>
       <input type="text" id="searchSettleMember" class="search-input-settle" placeholder="길드원 닉네임 검색..." onkeyup="window.filterPayoutMembers()">
@@ -599,7 +601,7 @@
   </div>
 </div>
 
-<!-- 길드원 개인 정산 상세 내역 모달 팝업 -->
+<!-- 상세 내역 모달 팝업 -->
 <div id="memberDetailModal" class="member-detail-modal-bg" style="display: none;">
   <div class="member-detail-modal-box">
     <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center" style="background: #090e1c;">
@@ -617,7 +619,6 @@
       </div>
 
       <div class="small fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> 수령 항목 상세 내역</div>
-      
       <div id="modalBreakdownList" style="max-height: 260px; overflow-y: auto;"></div>
     </div>
 
@@ -634,7 +635,7 @@
 </div>
 
 <script>
-  window.currentSettlementData = { records: [], memberPayouts: {}, totalPool: 0, memberScores: {} };
+  window.currentSettlementData = { rawDists: [], records: [], memberPayouts: {}, totalPool: 0 };
   window.currentParticipationStats = { memberStats: {} };
   window.allGuildMembers = [];
   window.selectedManagers = new Set();
@@ -644,6 +645,7 @@
   window.currentManagerRate = 10;
   window.isManagerFeeActive = true;
   window.isDistributingNow = false;
+  window.currentSourceFilter = "all"; // 'all', 'weekly', 'wish'
   window.activeGuildName = "ECLIPSE";
   window.settleToastTimer = null;
 
@@ -687,11 +689,7 @@
 
   window.formatCommaInput = function(elem) {
     const val = elem.value.replace(/[^0-9]/g, '');
-    if (!val) {
-      elem.value = '';
-      return;
-    }
-    elem.value = Number(val).toLocaleString();
+    elem.value = val ? Number(val).toLocaleString() : '';
   };
 
   function initDropdownOptions() {
@@ -716,7 +714,6 @@
 
   window.toggleDirectDistForm = async function() {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
-    
     if (!isSuper) {
       try {
         const permRow = await apiRequest("guild_settings?key=eq.perm_settle_distribute");
@@ -733,7 +730,6 @@
 
     if (isOpening) {
       window.clearDistFormState();
-
       try {
         const logs = await apiRequest("guild_finances?select=amount,tx_type,type");
         let bal = 0;
@@ -763,7 +759,6 @@
       if (btn) btn.classList.remove('active');
     });
     document.getElementById('lblDistRateStatus').innerText = '비율을 선택하세요';
-
     window.setManagerRate(10);
 
     const scoreSel = document.getElementById('selectMinScoreCut');
@@ -801,7 +796,6 @@
     const select = document.getElementById('managerDropdown');
     const val = select.value.trim();
     if (!val) return;
-
     window.selectedManagers.add(val);
     renderManagerTags();
     select.value = '';
@@ -820,7 +814,6 @@
       container.innerHTML = '<span class="text-secondary" style="font-size: 0.72rem;">지정된 관리원 없음 (미지정 시 0% 처리)</span>';
       return;
     }
-
     container.innerHTML = Array.from(window.selectedManagers).map(m => `
       <span class="manager-tag">
         ${m} <i class="fa-solid fa-xmark ms-1" onclick="window.removeManager('${m}')"></i>
@@ -928,13 +921,9 @@
 
   window.setDistQuickRange = function(type) {
     document.querySelectorAll('#dBtnThisWeek, #dBtnLastWeek, #dBtnThisMonth, #dBtnAll').forEach(b => b.classList.remove('active'));
-
     const today = new Date();
     const currentDay = (today.getDay() + 6) % 7;
-
-    let start = null;
-    let end = null;
-    let label = "선택 기간 순수익";
+    let start = null, end = null, label = "선택 기간 순수익";
 
     if (type === 'thisWeek') {
       document.getElementById('dBtnThisWeek').classList.add('active');
@@ -959,7 +948,6 @@
     document.getElementById('distSourceLabel').innerText = label;
     document.getElementById('distScoreStartDate').value = start ? window.formatDateToYYYYMMDD(start) : '';
     document.getElementById('distScoreEndDate').value = end ? window.formatDateToYYYYMMDD(end) : '';
-
     window.fetchIncomeForDist();
   };
 
@@ -976,7 +964,7 @@
     }
 
     try {
-      const logs = await apiRequest("guild_finances?select=*&order=id.desc");
+      const logs = await apiRequest("guild_finances?select=*&order=created_at.desc,id.desc");
       let pIn = 0, pOut = 0;
       (logs || []).forEach(l => {
         const d = (l.created_at || '').slice(0, 10);
@@ -1008,13 +996,11 @@
     const totalBase = parseInt(String(document.getElementById('weeklyTotalAmount').value).replace(/[^0-9]/g, ''), 10) || 0;
     const distRate = window.currentDistRate;
     const reserveRate = distRate > 0 ? (100 - distRate) : 0;
-
     const totalDistAmount = Math.floor(totalBase * (distRate / 100));
     const reserveAmount = totalBase - totalDistAmount;
 
     let managerShareTotal = 0;
     let memberPool = totalDistAmount;
-
     const mgrCount = window.selectedManagers.size;
     const mgrRate = window.currentManagerRate;
 
@@ -1042,7 +1028,7 @@
     document.getElementById('previewManagerPerShare').innerText = mgrCount > 0 ? `(1인당: ${perManager.toLocaleString()} D • 총 ${mgrCount}명)` : '(지정 없음)';
   };
 
-  // 🎯 [정산내역 전용] 주간 활동 점수 비례 차등 배당 및 조건 컷(최소 점수, 인터 횟수) 정밀 집행 로직
+  // 🎯 [정산내역] 주간 활동 점수 비례 차등 배당 집행 (날짜 지정 반영)
   window.submitWeeklyDistribution = async function() {
     if (window.isDistributingNow) return;
 
@@ -1095,7 +1081,7 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>데이터 집계 및 정산 처리 중...';
 
     try {
-      // 1. 선택 기간의 보스 토벌 데이터 실시간 집계 (정확한 점수 및 인터 참여수 확보)
+      // 1. 선택 기간의 보스 토벌 데이터 실시간 집계
       const allRaids = await apiRequest("boss_participations?select=*&order=id.desc");
       const periodMemberStats = {};
 
@@ -1159,10 +1145,12 @@
       const memberPool = distAmt - managerShareTotal;
       const perMgrShare = managerNames.length > 0 ? Math.floor(managerShareTotal / managerNames.length) : 0;
 
+      // 🎯 선택된 종료일자(또는 오늘)로 created_at 명시적 지정
+      const recordDate = end ? new Date(`${end}T23:59:59`).toISOString() : new Date().toISOString();
       const nowKey = Date.now().toString();
       const distRecords = [];
 
-      // 4. 주간 활동 점수 비례 차등 배당 계산 및 DB 레코드 생성
+      // 4. 주간 활동 점수 비례 차등 배당 레코드 생성
       if (window.currentDistMode === 'score') {
         const totalScoreSum = targetMembers.reduce((sum, m) => sum + m.score, 0);
 
@@ -1176,12 +1164,12 @@
               winner_name: m.name,
               price: memberPayout,
               per_share: memberPayout,
-              members: [m.name]
+              members: [m.name],
+              created_at: recordDate
             });
           }
         });
       } else {
-        // 임의 분배 모드 (지정 인원 균등 N/1)
         const perMemberShare = Math.floor(memberPool / targetMembers.length);
         distRecords.push({
           item_key: `WEEKLY_${nowKey}_MEMBERS`,
@@ -1190,7 +1178,8 @@
           winner_name: '길드원분배',
           price: memberPool,
           per_share: perMemberShare,
-          members: targetMembers.map(m => m.name)
+          members: targetMembers.map(m => m.name),
+          created_at: recordDate
         });
       }
 
@@ -1203,19 +1192,22 @@
           winner_name: '시트관리원',
           price: managerShareTotal,
           per_share: perMgrShare,
-          members: managerNames
+          members: managerNames,
+          created_at: recordDate
         });
       }
 
       // 6. DB 일괄 저장
       await apiRequest("item_distributions", "POST", distRecords);
 
-      // 7. 금고 출금 로그 반영
+      // 7. 금고 출금 로그 반영 (지정 날짜 포함)
       await apiRequest("guild_finances", "POST", [{
         tx_type: '출금',
+        type: '출금',
         category: '길드자금분배',
         amount: distAmt,
-        reason: `[길드자금정산] ${targetMembers.length}명 ${window.currentDistMode === 'score' ? '점수차등' : '균등'}분배 집행 (${window.currentDistRate}%)`
+        reason: `[길드자금정산] ${targetMembers.length}명 ${window.currentDistMode === 'score' ? '점수차등' : '균등'}분배 집행 (${window.currentDistRate}%)`,
+        created_at: recordDate
       }]);
 
       window.isDistributingNow = false;
@@ -1237,12 +1229,9 @@
 
   window.setQuickRange = function(type) {
     document.querySelectorAll('#sBtnThisWeek, #sBtnLastWeek, #sBtnThisMonth, #sBtnAll').forEach(btn => btn.classList.remove('active'));
-
     const today = new Date();
     const currentDay = (today.getDay() + 6) % 7;
-
-    let start = null;
-    let end = null;
+    let start = null, end = null;
 
     if (type === 'thisWeek') {
       document.getElementById('sBtnThisWeek').classList.add('active');
@@ -1262,20 +1251,31 @@
 
     document.getElementById('settleStartDate').value = start ? window.formatDateToYYYYMMDD(start) : '';
     document.getElementById('settleEndDate').value = end ? window.formatDateToYYYYMMDD(end) : '';
-
     window.fetchSettlementData();
   };
 
-  window.fetchSettlementData = async function() {
-    const start = document.getElementById('settleStartDate').value;
-    const end = document.getElementById('settleEndDate').value;
-    const listContainer = document.getElementById('payoutListContainer');
+  // 🎯 출처 필터 변경 (전체 / 주간자금정산 / 아이템분배)
+  window.setSourceFilter = function(filterType) {
+    window.currentSourceFilter = filterType;
+    document.querySelectorAll('#btnFilterAll, #btnFilterWeekly, #btnFilterWish').forEach(b => b.classList.remove('active'));
+    if (filterType === 'all') document.getElementById('btnFilterAll').classList.add('active');
+    else if (filterType === 'weekly') document.getElementById('btnFilterWeekly').classList.add('active');
+    else if (filterType === 'wish') document.getElementById('btnFilterWish').classList.add('active');
 
+    window.processAndRenderSettlement();
+  };
+
+  window.fetchSettlementData = async function() {
+    const listContainer = document.getElementById('payoutListContainer');
     if (listContainer) {
       listContainer.innerHTML = '<div class="text-secondary small text-center py-3"><span class="spinner-border spinner-border-sm text-info me-1"></span>정산 집계 중...</div>';
     }
 
     try {
+      const start = document.getElementById('settleStartDate').value;
+      const end = document.getElementById('settleEndDate').value;
+
+      // 1. 보스 토벌 통계 로드
       const raids = await apiRequest("boss_participations?select=*&order=id.desc");
       window.currentParticipationStats = { memberStats: {} };
 
@@ -1302,72 +1302,97 @@
         });
       });
 
-      const dists = await apiRequest("item_distributions?select=*&order=id.desc");
-      let filteredDists = dists || [];
+      // 2. 분배 내역 로드
+      const dists = await apiRequest("item_distributions?select=*&order=created_at.desc,id.desc");
+      window.currentSettlementData.rawDists = dists || [];
 
-      if (start || end) {
-        filteredDists = filteredDists.filter(r => {
-          const d = (r.created_at || '').slice(0, 10);
-          if (start && d < start) return false;
-          if (end && d > end) return false;
-          return true;
-        });
-      }
-
-      const memberPayouts = {};
-      let totalPool = 0;
-
-      filteredDists.forEach(r => {
-        const perShare = Number(r.per_share) || 0;
-        let mems = [];
-        if (Array.isArray(r.members)) mems = r.members;
-        else if (typeof r.members === 'string') {
-          try { mems = JSON.parse(r.members); } catch (e) { mems = r.members.split(',').map(s=>s.trim()); }
-        }
-
-        totalPool += (perShare * mems.length);
-
-        mems.forEach(m => {
-          if (!memberPayouts[m]) {
-            const stats = window.currentParticipationStats.memberStats[m] || { totalScore: 0 };
-            memberPayouts[m] = {
-              totalAmount: 0,
-              count: 0,
-              score: stats.totalScore || 0,
-              isManager: window.selectedManagers.has(m)
-            };
-          }
-          memberPayouts[m].totalAmount += perShare;
-          memberPayouts[m].count += 1;
-        });
-      });
-
-      const parsedRecords = filteredDists.map(r => ({
-        bossName: r.boss_name || '',
-        itemName: r.item_name || '',
-        totalPrice: Number(r.price) || 0,
-        perShare: Number(r.per_share) || 0,
-        members: Array.isArray(r.members) ? r.members : [],
-        dateTime: (r.created_at || '').slice(0, 10)
-      }));
-
-      window.currentSettlementData = {
-        records: parsedRecords,
-        memberPayouts: memberPayouts,
-        totalPool: totalPool
-      };
-
-      document.getElementById('totalPoolText').innerText = totalPool.toLocaleString();
-      document.getElementById('totalMembersText').innerText = Object.keys(memberPayouts).length;
-
-      window.renderPayoutList(memberPayouts);
-      window.renderSettleLogs(parsedRecords);
-
+      window.processAndRenderSettlement();
     } catch (err) {
       if (listContainer) {
         listContainer.innerHTML = `<div class="text-danger small text-center py-3">조회 실패: ${err.message}</div>`;
       }
     }
+  };
+
+  // 🎯 선택된 출처(주간자금 vs 아이템분배)에 맞춰 정확한 집계 및 렌더링
+  window.processAndRenderSettlement = function() {
+    const start = document.getElementById('settleStartDate').value;
+    const end = document.getElementById('settleEndDate').value;
+    const filter = window.currentSourceFilter;
+
+    let filteredDists = window.currentSettlementData.rawDists || [];
+
+    // 날짜 필터링
+    if (start || end) {
+      filteredDists = filteredDists.filter(r => {
+        const d = (r.created_at || '').slice(0, 10);
+        if (start && d < start) return false;
+        if (end && d > end) return false;
+        return true;
+      });
+    }
+
+    // 🎯 출처 필터링 (주간자금정산 vs 아이템분배 분리)
+    if (filter === 'weekly') {
+      filteredDists = filteredDists.filter(r => {
+        const k = String(r.item_key || '');
+        const b = String(r.boss_name || '');
+        return k.startsWith('WEEKLY_') || b.includes('주간점수정산') || b.includes('임의자금정산') || b.includes('시트관리비');
+      });
+    } else if (filter === 'wish') {
+      filteredDists = filteredDists.filter(r => {
+        const k = String(r.item_key || '');
+        const b = String(r.boss_name || '');
+        return !k.startsWith('WEEKLY_') && !b.includes('주간점수정산') && !b.includes('임의자금정산') && !b.includes('시트관리비');
+      });
+    }
+
+    const memberPayouts = {};
+    let totalPool = 0;
+
+    filteredDists.forEach(r => {
+      const perShare = Number(r.per_share) || 0;
+      let mems = [];
+      if (Array.isArray(r.members)) mems = r.members;
+      else if (typeof r.members === 'string') {
+        try { mems = JSON.parse(r.members); } catch (e) { mems = r.members.split(',').map(s=>s.trim()); }
+      }
+
+      totalPool += (perShare * mems.length);
+
+      mems.forEach(m => {
+        if (!memberPayouts[m]) {
+          const stats = window.currentParticipationStats.memberStats[m] || { totalScore: 0 };
+          memberPayouts[m] = {
+            totalAmount: 0,
+            count: 0,
+            score: stats.totalScore || 0,
+            isManager: window.selectedManagers.has(m)
+          };
+        }
+        memberPayouts[m].totalAmount += perShare;
+        memberPayouts[m].count += 1;
+      });
+    });
+
+    const parsedRecords = filteredDists.map(r => ({
+      bossName: r.boss_name || '',
+      itemName: r.item_name || '',
+      totalPrice: Number(r.price) || 0,
+      perShare: Number(r.per_share) || 0,
+      members: Array.isArray(r.members) ? r.members : [],
+      dateTime: (r.created_at || '').slice(0, 10)
+    }));
+
+    window.currentSettlementData.records = parsedRecords;
+    window.currentSettlementData.memberPayouts = memberPayouts;
+    window.currentSettlementData.totalPool = totalPool;
+
+    document.getElementById('totalPoolText').innerText = totalPool.toLocaleString();
+    document.getElementById('totalMembersText').innerText = Object.keys(memberPayouts).length;
+
+    window.renderPayoutList(memberPayouts);
+    window.renderSettleLogs(parsedRecords);
   };
 
   window.renderPayoutList = function(payouts) {
@@ -1497,6 +1522,7 @@
     `).join('');
   };
 
+  // 🎯 카톡 공유 텍스트: 수령자와 제외자 완벽 동기화
   window.copySettlementForKakao = function() {
     const start = document.getElementById('settleStartDate').value || '시작';
     const end = document.getElementById('settleEndDate').value || '현재';
@@ -1522,7 +1548,7 @@
       const interCount = (partMemberStats[m] && partMemberStats[m].interCount) ? partMemberStats[m].interCount : 0;
       const rankText = `${rankCounter++}위`;
 
-      return `${rankText} ${m}${mgrLabel} [${scoreVal}점],[인터 ${interCount}회] ${p.totalAmount.toLocaleString()} 다이아`;
+      return `${rankText} ${m}${mgrLabel} [${scoreVal}점, 인터 ${interCount}회] ${p.totalAmount.toLocaleString()} 다이아`;
     }).join('\n');
 
     const paidMemberSet = new Set(paidMembers);
@@ -1546,11 +1572,13 @@
     }
 
     const gName = window.activeGuildName || "길드";
-    const shareText = `[💰 ${gName} 길드 정산 결과 보고]\n` +
+    const filterName = window.currentSourceFilter === 'weekly' ? '주간 자금정산' : (window.currentSourceFilter === 'wish' ? '아이템 낙찰분배' : '통합 정산');
+
+    const shareText = `[💰 ${gName} 길드 ${filterName} 보고]\n` +
       `• 정산 기간: ${start} ~ ${end}\n` +
       `• 총 분배 금액: ${window.currentSettlementData.totalPool.toLocaleString()} 다이아\n` +
       `• 정산 수령 인원: ${paidMembers.length}명\n\n` +
-      `[길드원별 활동 순위 및 지급액]\n${memberLines}` +
+      `[길드원별 수령 내역]\n${memberLines}` +
       excludedSection + `\n\n` +
       `※ 활동 점수 순위 기준으로 정렬되었습니다.\n` +
       `※ 수령 확인 후 이상이 있으신 분은 문의 바랍니다. ⚔️`;
