@@ -1,5 +1,5 @@
 <!-- ==========================================
-     [ECLIPSE 길드관리] 길드비용 및 금고 현황
+     [ECLIPSE 길드관리] 길드 비용 및 금고 현황
      경로: pages/PageFinances.html
      ========================================== -->
 <style>
@@ -620,7 +620,6 @@
     window.fetchIncomeForCalc();
   };
 
-  // 🎯 선택 기간의 "순수익(입금 - 지출)"을 산출하여 계산기 원금으로 세팅
   window.fetchIncomeForCalc = function() {
     const s = document.getElementById('calcStartDate').value;
     const e = document.getElementById('calcEndDate').value;
@@ -730,7 +729,7 @@
       `※ 주간 분배 시뮬레이터 산출 내역입니다.`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(shareText);
       window.showFinToast("분배 계산 결과가 클립보드에 복사되었습니다!", "📋");
     }
   };
@@ -760,10 +759,10 @@
     }
 
     try {
-      // 🎯 최신 등록순 및 지정 날짜 순서로 조회
+      // tx_type 컬럼만 기준으로 조회
       const rows = await apiRequest("guild_finances?select=*&order=created_at.desc,id.desc");
       const logs = (rows || []).map(r => {
-        const typeStr = (r.tx_type || r.type || '입금');
+        const typeStr = (r.tx_type || '입금');
         let dStr = '';
         if (r.created_at) {
           const dObj = new Date(r.created_at);
@@ -853,7 +852,7 @@
     }).join('');
   };
 
-  // 🎯 [오류 수정] 선택된 입금 일자(incomeDate)를 created_at 필드로 명시적 저장
+  // 🎯 [수정]: type 컬럼 제외하고 tx_type만 전송, 선택 날짜(created_at) 반영
   window.handleIncomeSubmitClick = async function() {
     const date = document.getElementById('incomeDate').value;
     const reason = document.getElementById('incomeReason').value.trim();
@@ -882,7 +881,7 @@
 
     if (finalDepositAmount <= 0) return window.showFinToast("실제 입금할 금액이 0다이아 이하입니다.", "⚠️");
 
-    // 🎯 선택된 날짜에 정오(12:00:00) 타임스탬프 부여
+    // 선택된 일자의 정오(12:00:00) 타임스탬프 부여
     const customCreatedAt = date ? new Date(`${date}T12:00:00`).toISOString() : new Date().toISOString();
 
     const btn = document.getElementById('btnIncomeSubmit');
@@ -892,9 +891,9 @@
       let fullReason = reason;
       if (finalNote) fullReason += ` - ${finalNote}`;
 
+      // ❌ type 컬럼 제거 -> ✅ tx_type만 전송
       await apiRequest("guild_finances", "POST", [{
         tx_type: '입금',
-        type: '입금',
         category: '수익금입금',
         amount: finalDepositAmount,
         reason: fullReason,
@@ -913,7 +912,7 @@
     }
   };
 
-  // 🎯 [오류 수정] 선택된 지출 일자(expenseDate)를 created_at 필드로 명시적 저장
+  // 🎯 [수정]: type 컬럼 제외하고 tx_type만 전송, 선택 날짜(created_at) 반영
   window.handleExpenseSubmitClick = async function() {
     const date = document.getElementById('expenseDate').value;
     const reason = document.getElementById('expenseReason').value.trim();
@@ -925,16 +924,16 @@
     const amount = parseInt(amountVal, 10);
     if (amount <= 0) return window.showFinToast("지출할 금액을 0다이아 이상 입력해주세요.", "⚠️");
 
-    // 🎯 선택된 날짜에 정오(12:00:00) 타임스탬프 부여
+    // 선택된 일자의 정오(12:00:00) 타임스탬프 부여
     const customCreatedAt = date ? new Date(`${date}T12:00:00`).toISOString() : new Date().toISOString();
 
     try {
       let fullReason = reason;
       if (note) fullReason += ` (${note})`;
 
+      // ❌ type 컬럼 제거 -> ✅ tx_type만 전송
       await apiRequest("guild_finances", "POST", [{
         tx_type: '출금',
-        type: '출금',
         category: '길드지출',
         amount: amount,
         reason: fullReason,
