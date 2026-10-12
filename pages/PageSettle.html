@@ -238,7 +238,6 @@
     color: #ffffff;
   }
 
-  /* 🎯 [개선] 임의 분배 대상 길드원 정렬 그리드 레이아웃 */
   .custom-members-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -479,7 +478,6 @@
         <span class="text-secondary small" style="font-size: 0.72rem;">👥 분배 대상 길드원: <strong id="selectedCustomMemberCount" class="text-white">0</strong>명</span>
         <button class="btn btn-link btn-xs p-0 text-info" style="font-size: 0.72rem; text-decoration: none;" onclick="window.toggleSelectAllCustomMembers()">전체 선택/해제</button>
       </div>
-      <!-- 균일한 4열 그리드 컨테이너 -->
       <div id="customMembersContainer" class="custom-members-grid">
         <span class="text-secondary small w-100 py-2 text-center" style="grid-column: 1 / -1;">길드원 로드 중...</span>
       </div>
@@ -898,7 +896,7 @@
   };
 
   window.switchDistMode = function(mode) {
-    window.currentDistMode = mode;
+    currentDistMode = mode;
     const areaScoreCuts = document.getElementById('areaScoreCutConditions');
 
     if (mode === 'score') {
@@ -1044,7 +1042,7 @@
     document.getElementById('previewManagerPerShare').innerText = mgrCount > 0 ? `(1인당: ${perManager.toLocaleString()} D • 총 ${mgrCount}명)` : '(지정 없음)';
   };
 
-  // 🎯 [완전 개선] 점수 비례 차등 배당, 실시간 조건 컷, 날짜 지정 연동
+  // 🎯 [정산 집행] 주간 활동 점수 차등 배당 및 조건 컷(최소 점수, 인터 횟수) 정밀 집행
   window.submitWeeklyDistribution = async function() {
     if (window.isDistributingNow) return;
 
@@ -1062,7 +1060,7 @@
 
     if (!rawAmount || parseInt(rawAmount, 10) <= 0) return window.showSettleToast("분배할 총 다이아 금액을 입력해주세요!", "⚠️");
 
-    if (window.currentDistMode === "custom" && customMembers.length === 0) {
+    if (currentDistMode === "custom" && customMembers.length === 0) {
       return window.showSettleToast("임의 분배 대상 길드원을 1명 이상 선택해주세요!", "⚠️");
     }
 
@@ -1071,7 +1069,7 @@
     const reserve = totalVal - distAmt;
 
     let condText = "";
-    if (window.currentDistMode === 'score') {
+    if (currentDistMode === 'score') {
       const sDesc = minScore > 0 ? `${minScore}점 이상` : '제한 없음';
       const iDesc = minInterCount > 0 ? `${minInterCount}회 이상` : '제한 없음';
       condText = `• 참여 조건: 활동점수 [${sDesc}] / 인터쟁 [${iDesc}]\n`;
@@ -1083,7 +1081,7 @@
       `• 총 분배율: ${window.currentDistRate}% (${distAmt.toLocaleString()} D)\n` +
       `• 금고 잔여 적립금: ${reserve.toLocaleString()} 다이아\n` +
       `• 시트 관리원: ${managerNames.length > 0 ? managerNames.join(', ') + ' (' + managerNames.length + '명, ' + window.currentManagerRate + '%)' : '없음'}\n` +
-      `• 분배 방식: ${window.currentDistMode === 'score' ? '주간 활동 점수 차등 배당' : '선택 길드원 임의 분배'}\n` +
+      `• 분배 방식: ${currentDistMode === 'score' ? '🏆 주간 활동 점수 비례 차등 배당' : '👥 선택 길드원 임의 분배'}\n` +
       condText +
       `\n해당 내역으로 정산을 집행하시겠습니까?`;
 
@@ -1095,7 +1093,7 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>데이터 집계 및 정산 처리 중...';
 
     try {
-      // 1. 선택 기간의 보스 토벌 데이터 실시간 집계 (점수 및 인터참여수 정확 산출)
+      // 1. 선택 기간의 보스 토벌 데이터 실시간 집계 (인터 참여는 순수 횟수 +1 집계)
       const allRaids = await apiRequest("boss_participations?select=*&order=id.desc");
       const periodMemberStats = {};
 
@@ -1124,7 +1122,7 @@
 
       // 2. 분배 대상자 추출 및 조건 필터링 검증
       let targetMembers = [];
-      if (window.currentDistMode === 'custom') {
+      if (currentDistMode === 'custom') {
         targetMembers = customMembers.map(m => ({
           name: m,
           score: periodMemberStats[m]?.totalScore || 1
@@ -1159,13 +1157,12 @@
       const memberPool = distAmt - managerShareTotal;
       const perMgrShare = managerNames.length > 0 ? Math.floor(managerShareTotal / managerNames.length) : 0;
 
-      // 🎯 선택된 정산 종료일자(또는 오늘) 타임스탬프를 created_at에 적용
       const recordDate = end ? new Date(`${end}T23:59:59`).toISOString() : new Date().toISOString();
       const nowKey = Date.now().toString();
       const distRecords = [];
 
-      // 4. 주간 활동 점수 비례 차등 배당 집행
-      if (window.currentDistMode === 'score') {
+      // 4. 주간 활동 점수 비례 차등 배당 레코드 생성
+      if (currentDistMode === 'score') {
         const totalScoreSum = targetMembers.reduce((sum, m) => sum + m.score, 0);
 
         targetMembers.forEach((m, idx) => {
@@ -1184,7 +1181,6 @@
           }
         });
       } else {
-        // 임의 분배 모드
         const perMemberShare = Math.floor(memberPool / targetMembers.length);
         distRecords.push({
           item_key: `WEEKLY_${nowKey}_MEMBERS`,
@@ -1214,12 +1210,12 @@
 
       await apiRequest("item_distributions", "POST", distRecords);
 
-      // 금고 출금 로그 반영 (type 컬럼 없이 tx_type만 전송, created_at 지정)
+      // 금고 출금 로그 반영 (tx_type만 전송)
       await apiRequest("guild_finances", "POST", [{
         tx_type: '출금',
         category: '길드자금분배',
         amount: distAmt,
-        reason: `[길드자금정산] ${targetMembers.length}명 ${window.currentDistMode === 'score' ? '점수차등' : '균등'}분배 집행 (${window.currentDistRate}%)`,
+        reason: `[길드자금정산] ${targetMembers.length}명 ${currentDistMode === 'score' ? '점수차등' : '균등'}분배 집행 (${window.currentDistRate}%)`,
         created_at: recordDate
       }]);
 
@@ -1271,6 +1267,7 @@
     window.fetchSettlementData();
   };
 
+  // 🎯 [정산 데이터 집계]
   window.fetchSettlementData = async function() {
     const start = document.getElementById('settleStartDate').value;
     const end = document.getElementById('settleEndDate').value;
@@ -1281,6 +1278,7 @@
     }
 
     try {
+      // 1. 보스 토벌 활동 통계 집계 (인터 순수 횟수 집계 보장)
       const raids = await apiRequest("boss_participations?select=*&order=id.desc");
       window.currentParticipationStats = { memberStats: {} };
 
@@ -1307,7 +1305,8 @@
         });
       });
 
-      const dists = await apiRequest("item_distributions?select=*&order=id.desc");
+      // 2. 분배 내역 집계
+      const dists = await apiRequest("item_distributions?select=*&order=created_at.desc,id.desc");
       let filteredDists = dists || [];
 
       if (start || end) {
@@ -1332,17 +1331,30 @@
 
         totalPool += (perShare * mems.length);
 
+        // 출처 구분 (주간자금정산 vs 아이템 N/1 분배)
+        const itemKey = String(r.item_key || '');
+        const bossName = String(r.boss_name || '');
+        const isWeekly = itemKey.startsWith('WEEKLY_') || bossName.includes('주간점수정산') || bossName.includes('임의자금정산') || bossName.includes('시트관리비');
+
         mems.forEach(m => {
           if (!memberPayouts[m]) {
-            const stats = window.currentParticipationStats.memberStats[m] || { totalScore: 0 };
+            const stats = window.currentParticipationStats.memberStats[m] || { totalScore: 0, interCount: 0 };
             memberPayouts[m] = {
               totalAmount: 0,
+              itemDistAmount: 0,   // 아이템 N/1 분배액
+              weeklyDistAmount: 0, // 길드자금 분배액
               count: 0,
               score: stats.totalScore || 0,
+              interCount: stats.interCount || 0,
               isManager: window.selectedManagers.has(m)
             };
           }
           memberPayouts[m].totalAmount += perShare;
+          if (isWeekly) {
+            memberPayouts[m].weeklyDistAmount += perShare;
+          } else {
+            memberPayouts[m].itemDistAmount += perShare;
+          }
           memberPayouts[m].count += 1;
         });
       });
@@ -1397,6 +1409,7 @@
       const rankPct = Math.max(1, Math.round(((idx + 1) / totalCount) * 100));
       const isMgr = p.isManager || window.selectedManagers.has(name);
       const score = p.score || 0;
+      const interCount = p.interCount || 0;
 
       return `
         <div class="payout-item-card" data-name="${name.toLowerCase()}" onclick="window.openMemberDetailModal('${name}', ${rankPct}, ${isMgr})">
@@ -1407,7 +1420,7 @@
               <span class="badge-rank-pct">점수 상위 ${rankPct}%</span>
             </div>
             <div class="text-secondary" style="font-size: 0.72rem;">
-              활동점수: <strong class="text-info">${score}점</strong> • 정산 수령: ${p.count}건
+              활동점수: <strong class="text-info">${score}점</strong> • 인터쟁: <strong class="text-warning">${interCount}회</strong> • 수령: ${p.count}건
             </div>
           </div>
           <div class="text-end">
@@ -1426,7 +1439,7 @@
     document.getElementById('modalMemberBadges').innerHTML = 
       (isMgr ? '<span class="badge-manager me-1">관리자</span>' : '') +
       `<span class="badge-rank-pct">점수 상위 ${rankPct}%</span>` +
-      `<span class="badge bg-secondary ms-1" style="font-size:0.68rem;">활동점수: ${p.score || 0}점</span>`;
+      `<span class="badge bg-secondary ms-1" style="font-size:0.68rem;">활동: ${p.score || 0}점 / 인터: ${p.interCount || 0}회</span>`;
     
     document.getElementById('modalTotalAmount').innerText = (p.totalAmount || 0).toLocaleString() + ' 다이아';
 
@@ -1502,61 +1515,96 @@
     `).join('');
   };
 
-  // 🎯 [완전 개선] 카톡 공유 시 실제 차등 수령자와 조건 미달자를 오차 없이 동기화
+  // 🎯 [완전 개선] 요구사항 맞춤형 카카오톡 복사 양식
   window.copySettlementForKakao = function() {
     const start = document.getElementById('settleStartDate').value || '시작';
     const end = document.getElementById('settleEndDate').value || '현재';
     const payouts = window.currentSettlementData.memberPayouts || {};
-    const paidMembers = Object.keys(payouts).filter(m => (payouts[m].totalAmount || 0) > 0);
-
-    if (paidMembers.length === 0) return window.showSettleToast("공유할 정산 데이터가 없습니다!", "⚠️");
-
     const partMemberStats = window.currentParticipationStats.memberStats || {};
 
-    paidMembers.sort((a, b) => {
+    // 1. 주간 길드자금 분배 수령자 (weeklyDistAmount > 0)
+    const weeklyPaidMembers = Object.keys(payouts).filter(m => (payouts[m].weeklyDistAmount || 0) > 0);
+
+    if (Object.keys(payouts).length === 0 && weeklyPaidMembers.length === 0) {
+      return window.showSettleToast("공유할 정산 데이터가 없습니다!", "⚠️");
+    }
+
+    // 활동 점수 순 정렬
+    weeklyPaidMembers.sort((a, b) => {
       const scoreDiff = (payouts[b].score || 0) - (payouts[a].score || 0);
       if (scoreDiff !== 0) return scoreDiff;
-      return payouts[b].totalAmount - payouts[a].totalAmount;
+      return (payouts[b].totalAmount || 0) - (payouts[a].totalAmount || 0);
     });
 
     let rankCounter = 1;
-    let memberLines = paidMembers.map(m => {
+    let mainLines = weeklyPaidMembers.map(m => {
       const p = payouts[m];
       const isMgr = p.isManager || window.selectedManagers.has(m);
       const mgrLabel = isMgr ? "(관리자)" : "";
       const scoreVal = p.score || 0;
-      const interCount = (partMemberStats[m] && partMemberStats[m].interCount) ? partMemberStats[m].interCount : 0;
+      const interCount = (partMemberStats[m] && partMemberStats[m].interCount !== undefined) ? partMemberStats[m].interCount : (p.interCount || 0);
       const rankText = `${rankCounter++}위`;
+      const totD = (p.totalAmount || 0).toLocaleString();
 
-      return `${rankText} ${m}${mgrLabel} [${scoreVal}점],[인터 ${interCount}회] ${p.totalAmount.toLocaleString()} 다이아`;
+      // 아이템 N/1 지급 내역이 있는 경우 병기
+      let detailSuffix = "";
+      if ((p.itemDistAmount || 0) > 0) {
+        detailSuffix = ` (아이템 ${(p.itemDistAmount).toLocaleString()}D + 주간 ${(p.weeklyDistAmount).toLocaleString()}D)`;
+      }
+
+      return `${rankText} ${m}${mgrLabel} [활동 ${scoreVal}점 / 인터 ${interCount}회] ${totD} 다이아${detailSuffix}`;
     }).join('\n');
 
-    const paidMemberSet = new Set(paidMembers);
-    const excludedMembers = window.allGuildMembers.filter(m => !paidMemberSet.has(m));
+    // 2. 주간 길드자금 미수령자 중 -> 아이템 N/1 배당을 받아간 인원 분리
+    const weeklyPaidSet = new Set(weeklyPaidMembers);
+    const nonWeeklyMembers = window.allGuildMembers.filter(m => !weeklyPaidSet.has(m));
+
+    const itemOnlyMembers = [];
+    const completeZeroMembers = [];
+
+    nonWeeklyMembers.forEach(m => {
+      const p = payouts[m];
+      const s = (partMemberStats[m] && partMemberStats[m].totalScore) || 0;
+      const ic = (partMemberStats[m] && partMemberStats[m].interCount !== undefined) ? partMemberStats[m].interCount : 0;
+      const itemAmt = p ? (p.itemDistAmount || 0) : 0;
+
+      if (itemAmt > 0) {
+        itemOnlyMembers.push({ name: m, score: s, interCount: ic, amount: itemAmt });
+      } else {
+        completeZeroMembers.push({ name: m, score: s, interCount: ic });
+      }
+    });
+
+    // 점수순 정렬
+    itemOnlyMembers.sort((a, b) => b.score - a.score);
+    completeZeroMembers.sort((a, b) => b.score - a.score);
 
     let excludedSection = "";
-    if (excludedMembers.length > 0) {
-      excludedMembers.sort((a, b) => {
-        const sA = (partMemberStats[a] && partMemberStats[a].totalScore) || 0;
-        const sB = (partMemberStats[b] && partMemberStats[b].totalScore) || 0;
-        return sB - sA;
-      });
 
-      let exLines = excludedMembers.map(m => {
-        const s = (partMemberStats[m] && partMemberStats[m].totalScore) || 0;
-        const ic = (partMemberStats[m] && partMemberStats[m].interCount) || 0;
-        return `• ${m} [${s}점, 인터 ${ic}회]`;
-      }).join('\n');
+    // 🎯 [주간 분배 제외 대상자 단 아이템 N/1 지급내역]
+    if (itemOnlyMembers.length > 0) {
+      const itemLines = itemOnlyMembers.map(m => 
+        `• ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회] ${m.amount.toLocaleString()} 다이아 (아이템 N/1 수령)`
+      ).join('\n');
 
-      excludedSection = `\n\n[🚫 분배 제외 대상자 (${excludedMembers.length}명)]\n${exLines}\n※ 분배 참여 자격 조건 미달 또는 미참여자`;
+      excludedSection += `\n\n[🚫 주간 분배 제외 대상자 (단, 아이템 N/1 수령내역)]\n${itemLines}`;
+    }
+
+    // 🎯 [완전 미수령 제외자]
+    if (completeZeroMembers.length > 0) {
+      const zeroLines = completeZeroMembers.map(m => 
+        `• ${m.name} [활동 ${m.score}점 / 인터 ${m.interCount}회]`
+      ).join('\n');
+
+      excludedSection += `\n\n[🚫 분배 제외 대상자 (${completeZeroMembers.length}명)]\n${zeroLines}\n※ 분배 참여 자격 조건 미달 또는 미참여자`;
     }
 
     const gName = window.activeGuildName || "길드";
     const shareText = `[💰 ${gName} 길드 정산 결과 보고]\n` +
       `• 정산 기간: ${start} ~ ${end}\n` +
       `• 총 분배 금액: ${window.currentSettlementData.totalPool.toLocaleString()} 다이아\n` +
-      `• 정산 수령 인원: ${paidMembers.length}명\n\n` +
-      `[길드원별 활동 순위 및 지급액]\n${memberLines}` +
+      `• 주간 정산 수령: ${weeklyPaidMembers.length}명\n\n` +
+      `[길드원별 활동 순위 및 지급액]\n${mainLines || '해당 기간 주간 자금 분배 내역 없음'}` +
       excludedSection + `\n\n` +
       `※ 활동 점수 순위 기준으로 정렬되었습니다.\n` +
       `※ 수령 확인 후 이상이 있으신 분은 문의 바랍니다. ⚔️`;
