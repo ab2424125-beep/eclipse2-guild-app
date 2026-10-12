@@ -1,6 +1,6 @@
 <!-- ==========================================
-     [ECLIPSE 길드관리] 길드 비용 및 금고 현황
-     경로: pages/PageFinances.html
+     [ECLIPSE 길드관리] 길드 비용 및 금고 입출금 관리
+     경로: pages/PageFinance.html
      ========================================== -->
 <style>
   .finance-card {
@@ -25,38 +25,13 @@
     border: 1px solid #233554 !important;
     color: #ffffff !important;
     border-radius: 10px !important;
-    padding: 8px 12px !important;
-    font-size: 0.88rem !important;
+    padding: 8px 10px !important;
+    font-size: 0.85rem !important;
+    color-scheme: dark;
   }
-  .input-custom-finance:focus {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
-  }
-
   .input-custom-finance::-webkit-calendar-picker-indicator {
     filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(175deg);
     cursor: pointer;
-    opacity: 0.9;
-  }
-
-  .input-custom-finance::placeholder {
-    color: #94a3b8 !important;
-    opacity: 0.85 !important;
-  }
-
-  .vault-banner {
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(56, 189, 248, 0.1));
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    border-radius: 16px;
-    padding: 18px;
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .vault-amount {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #fbbf24;
-    text-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
   }
 
   .quick-filter-btn {
@@ -76,481 +51,218 @@
     color: #38bdf8;
   }
 
-  .finance-type-btn {
-    flex: 1;
-    background: #080d1a;
-    border: 1px solid #233554;
-    color: #94a3b8;
-    padding: 8px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    border-radius: 8px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-  .finance-type-btn.active.btn-type-income {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: #10b981;
-    color: #34d399;
-  }
-  .finance-type-btn.active.btn-type-expense {
-    background: rgba(244, 63, 94, 0.2);
-    border-color: #f43f5e;
-    color: #fb7185;
-  }
-
-  /* 입력 방식 선택 서브 토글 */
-  .income-mode-pill {
-    flex: 1;
-    background: #0a1120;
-    border: 1px solid #1e2c47;
-    color: #94a3b8;
-    font-size: 0.74rem;
-    font-weight: 600;
-    padding: 5px 8px;
-    border-radius: 7px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .income-mode-pill.active {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: #38bdf8;
-    color: #38bdf8;
-    font-weight: 700;
-  }
-
-  /* 실시간 차액 계산 인포 박스 */
-  .diff-calc-info {
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px dashed rgba(56, 189, 248, 0.4);
-    border-radius: 10px;
-    padding: 8px 12px;
-  }
-
-  .finance-log-item {
-    background: #090e1c;
-    border: 1px solid #1b263b;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
+  .tx-item-card {
+    background: #0e172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.15s ease;
+  }
+  .tx-item-card:hover {
+    border-color: #38bdf8;
+    background: #14223d;
   }
 
-  /* 입출금 내역 슬림 스크롤바 */
-  #financeLogsList::-webkit-scrollbar { width: 6px; }
-  #financeLogsList::-webkit-scrollbar-track { background: #080d1a; border-radius: 8px; }
-  #financeLogsList::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 8px; }
-  #financeLogsList::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
-  #financeLogsList { scrollbar-width: thin; scrollbar-color: #1e2d4a #080d1a; }
-
-  .custom-fin-toast {
+  .tx-modal-bg {
     position: fixed;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-20px);
-    background: #0d1830;
-    border: 1.5px solid #38bdf8;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
-    color: #ffffff;
-    padding: 12px 22px;
-    border-radius: 30px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 99999999;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.25s;
-    white-space: nowrap;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
   }
-  .custom-fin-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .tx-modal-box {
+    background: #0d1527;
+    border: 1px solid #233b66;
+    border-radius: 18px;
+    width: 100%; max-width: 440px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+  }
 </style>
 
 <div class="finance-card mb-4">
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div class="d-flex align-items-center gap-2">
-      <span style="font-size: 1.3rem;">🏛️</span>
-      <h6 class="fw-bold mb-0 text-white">길드 비용 및 금고 현황</h6>
+      <span style="font-size: 1.3rem;">🏦</span>
+      <h6 class="fw-bold mb-0 text-white">길드 금고 및 비용 현황</h6>
     </div>
     <div class="d-flex gap-1">
-      <button class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.togglePayoutCalcModal()">
-        <i class="fa-solid fa-calculator me-1"></i>지급계산기
+      <button class="btn btn-outline-success btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.openTxModal('입금')">
+        <i class="fa-solid fa-plus me-1"></i>입금 등록
       </button>
-      <button class="btn btn-outline-info btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.copyFinanceReportForKakao()">
-        <i class="fa-solid fa-share-nodes me-1"></i>카톡 복사
+      <button class="btn btn-outline-danger btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="window.openTxModal('출금')">
+        <i class="fa-solid fa-minus me-1"></i>출금 등록
       </button>
     </div>
   </div>
 
-  <!-- 1. 길드 금고 총 잔액 배너 -->
-  <div class="vault-banner">
-    <div class="text-secondary small fw-bold mb-1">현재 길드 금고 보유액</div>
-    <div class="vault-amount"><span id="vaultBalanceText">0</span> <small class="fs-6 text-light">다이아</small></div>
-    <div class="d-flex justify-content-center gap-3 mt-2 text-secondary" style="font-size: 0.75rem;">
-      <span>누적 적립: <strong class="text-success" id="vaultIncomeText">+0</strong></span>
-      <span>누적 지출: <strong class="text-danger" id="vaultExpenseText">-0</strong></span>
+  <!-- 금고 잔액 대시보드 -->
+  <div class="p-3 mb-3 rounded" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(245, 158, 11, 0.15)); border: 1px solid rgba(56, 189, 248, 0.4);">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <div class="text-secondary small" style="font-size: 0.75rem;">현재 길드 금고 잔액</div>
+        <div class="fw-bold text-white fs-4"><span id="finVaultBalance" class="text-warning">0</span> <small class="fs-6">다이아</small></div>
+      </div>
+      <div class="text-end">
+        <div class="text-secondary small" style="font-size: 0.72rem;">총 입금: <strong class="text-success" id="finTotalIn">0</strong> D</div>
+        <div class="text-secondary small" style="font-size: 0.72rem;">총 출금: <strong class="text-danger" id="finTotalOut">0</strong> D</div>
+      </div>
     </div>
   </div>
 
-  <!-- 유동적 지급계산기 (40%~100% 지원) -->
-  <div class="finance-box border-warning border-opacity-50" id="payoutCalcBox" style="display: none; background: #0b1324;">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small fw-bold text-warning"><i class="fa-solid fa-calculator me-1"></i> 길드 자금 분배율 계산기</span>
-      <button class="btn-close btn-close-white" style="font-size: 0.7rem;" onclick="window.togglePayoutCalcModal()"></button>
-    </div>
-
-    <!-- 계산기 전용 날짜 퀵 필터 -->
-    <div class="mb-2">
-      <div class="d-flex gap-1 mb-1">
-        <button class="quick-filter-btn active flex-fill" id="cBtnThisWeek" onclick="window.setCalcQuickRange('thisWeek')">이번 주</button>
-        <button class="quick-filter-btn flex-fill" id="cBtnLastWeek" onclick="window.setCalcQuickRange('lastWeek')">지난 주</button>
-        <button class="quick-filter-btn flex-fill" id="cBtnThisMonth" onclick="window.setCalcQuickRange('thisMonth')">이번 달</button>
-        <button class="quick-filter-btn flex-fill" id="cBtnAll" onclick="window.setCalcQuickRange('all')">전체</button>
-      </div>
-      <div class="row g-1 align-items-center">
-        <div class="col-5">
-          <input type="date" id="calcStartDate" class="form-control input-custom-finance" style="padding: 5px 8px !important; font-size: 0.78rem !important;" onchange="window.fetchIncomeForCalc()">
-        </div>
-        <div class="col-2 text-center text-secondary small">~</div>
-        <div class="col-5">
-          <input type="date" id="calcEndDate" class="form-control input-custom-finance" style="padding: 5px 8px !important; font-size: 0.78rem !important;" onchange="window.fetchIncomeForCalc()">
-        </div>
-      </div>
-    </div>
-
-    <!-- 기준 수익 원금 입력 (실시간 콤마 적용) -->
-    <div class="mb-2">
-      <div class="d-flex justify-content-between text-secondary mb-1" style="font-size: 0.72rem;">
-        <span>선택 기간 총 수익 원금:</span>
-        <span class="text-white" id="calcPeriodText">이번 주 순수익</span>
-      </div>
-      <input type="text" id="calcBaseAmount" class="form-control input-custom-finance" placeholder="수익금 자동 집계 중..." onkeyup="window.formatCommaInput(this); window.runPayoutSimulation();">
-    </div>
-
-    <!-- 40% ~ 100% 분배율 선택 버튼 -->
-    <div class="mb-2">
-      <label class="form-label text-secondary mb-1" style="font-size: 0.72rem;">총 분배 지급 비율 선택:</label>
-      <div class="d-flex flex-wrap gap-1">
-        <button class="quick-filter-btn flex-fill" id="btnRate40" onclick="window.setCalcRate(40)">40%</button>
-        <button class="quick-filter-btn flex-fill" id="btnRate50" onclick="window.setCalcRate(50)">50%</button>
-        <button class="quick-filter-btn flex-fill" id="btnRate60" onclick="window.setCalcRate(60)">60%</button>
-        <button class="quick-filter-btn active flex-fill" id="btnRate70" onclick="window.setCalcRate(70)">70%</button>
-        <button class="quick-filter-btn flex-fill" id="btnRate80" onclick="window.setCalcRate(80)">80%</button>
-        <button class="quick-filter-btn flex-fill" id="btnRate90" onclick="window.setCalcRate(90)">90%</button>
-        <button class="quick-filter-btn flex-fill" id="btnRate100" onclick="window.setCalcRate(100)">100%</button>
-      </div>
-    </div>
-
-    <!-- 시트 관리비(10%) 추가/제외 토글 버튼 -->
-    <div class="mb-2">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <label class="form-label text-secondary mb-0" style="font-size: 0.72rem;">시트 관리비 수고비 (분배금의 10%):</label>
-      </div>
-      <div class="d-flex gap-1">
-        <button class="quick-filter-btn active flex-fill" id="btnManagerInclude" onclick="window.setManagerFeeMode(true)">
-          <i class="fa-solid fa-check me-1"></i>관리비 포함 (10%)
-        </button>
-        <button class="quick-filter-btn flex-fill" id="btnManagerExclude" onclick="window.setManagerFeeMode(false)">
-          <i class="fa-solid fa-xmark me-1"></i>관리비 제외 (0%)
-        </button>
-      </div>
-    </div>
-
-    <!-- 시뮬레이션 결과 표 -->
-    <div class="p-2 rounded mb-2" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(251, 191, 36, 0.25);">
-      <div class="d-flex justify-content-between text-secondary mb-1" style="font-size: 0.72rem;">
-        <span>💰 총 분배 집행액 (<strong id="calcTotalDistRateText" class="text-warning">70%</strong>):</span>
-        <strong id="calcTotalDistAmountText" class="text-warning fs-6">0 D</strong>
-      </div>
-      <div class="d-flex justify-content-between text-secondary mb-1 ps-2" style="font-size: 0.72rem;">
-        <span>└ 👥 참여 길드원 배당 (<strong id="calcMemberRateText" class="text-white">60%</strong>):</span>
-        <strong id="calcMemberPoolText" class="text-success">0 D</strong>
-      </div>
-      <div class="d-flex justify-content-between text-secondary mb-1 ps-2" style="font-size: 0.72rem;">
-        <span>└ 📋 시트 관리원 (<strong id="calcManagerRateText" class="text-white">10%</strong>):</span>
-        <strong id="calcManagerShareText" class="text-info">0 D</strong>
-      </div>
-      <div class="d-flex justify-content-between text-secondary pt-1 border-top border-secondary border-opacity-25" style="font-size: 0.72rem;">
-        <span>🏛️ 금고 잔여 적립금 (<strong id="calcReserveRateText" class="text-white">30%</strong>):</span>
-        <strong id="calcReserveText" class="text-light fs-6">0 D</strong>
-      </div>
-    </div>
-
-    <!-- 계산기 결과 카톡 공유 버튼 -->
-    <button type="button" class="btn btn-outline-warning btn-sm w-100 fw-bold py-1" onclick="window.copyCalcResultForKakao()">
-      <i class="fa-solid fa-share-nodes me-1"></i> 분배 계산 결과 카톡 복사
-    </button>
-  </div>
-
-  <!-- 2. 길드비용 메인 날짜 필터 -->
-  <div class="finance-box mb-3">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small fw-bold text-info"><i class="fa-solid fa-filter me-1"></i> 주간 수익금 필터</span>
-      <span class="text-secondary small" style="font-size: 0.72rem;">기간 수익: <strong id="filteredIncomeText" class="text-warning">0</strong> 다이아</span>
-    </div>
-
+  <!-- 날짜 필터 -->
+  <div class="finance-box">
     <div class="d-flex gap-1 mb-2">
-      <button class="quick-filter-btn active" id="fBtnThisWeek" onclick="window.setFinanceQuickRange('thisWeek')">이번 주</button>
-      <button class="quick-filter-btn" id="fBtnLastWeek" onclick="window.setFinanceQuickRange('lastWeek')">지난 주</button>
-      <button class="quick-filter-btn" id="fBtnThisMonth" onclick="window.setFinanceQuickRange('thisMonth')">이번 달</button>
-      <button class="quick-filter-btn" id="fBtnAll" onclick="window.setFinanceQuickRange('all')">전체</button>
+      <button class="quick-filter-btn" id="fBtnThisWeek" onclick="window.setFinQuickRange('thisWeek')">이번 주</button>
+      <button class="quick-filter-btn" id="fBtnLastWeek" onclick="window.setFinQuickRange('lastWeek')">지난 주</button>
+      <button class="quick-filter-btn" id="fBtnThisMonth" onclick="window.setFinQuickRange('thisMonth')">이번 달</button>
+      <button class="quick-filter-btn active" id="fBtnAll" onclick="window.setFinQuickRange('all')">전체</button>
     </div>
-
     <div class="row g-2 align-items-center">
       <div class="col-5">
-        <input type="date" id="financeStartDate" class="form-control input-custom-finance">
+        <input type="date" id="finStartDate" class="form-control input-custom-finance" onchange="window.fetchFinanceLogs()">
       </div>
       <div class="col-2 text-center text-secondary small">~</div>
       <div class="col-5">
-        <input type="date" id="financeEndDate" class="form-control input-custom-finance">
-      </div>
-      <div class="col-12 mt-1">
-        <button class="btn btn-outline-info btn-sm w-100 fw-bold py-1" onclick="window.loadFinanceData()">
-          <i class="fa-solid fa-magnifying-glass me-1"></i> 지정 기간 수익금 조회
-        </button>
+        <input type="date" id="finEndDate" class="form-control input-custom-finance" onchange="window.fetchFinanceLogs()">
       </div>
     </div>
   </div>
 
-  <!-- 3. 금고 입출금 등록 -->
-  <div class="finance-box">
-    <div class="d-flex gap-2 mb-3">
-      <button type="button" class="finance-type-btn btn-type-income active" id="btnModeIncome" onclick="window.switchFinanceMode('income')">
-        <i class="fa-solid fa-circle-plus me-1"></i> 수익금 입금 등록
-      </button>
-      <button type="button" class="finance-type-btn btn-type-expense" id="btnModeExpense" onclick="window.switchFinanceMode('expense')">
-        <i class="fa-solid fa-circle-minus me-1"></i> 길드 지출 등록
-      </button>
-    </div>
-
-    <!-- 기타 수입(입금) -->
-    <div id="formIncomeArea">
-      <div class="d-flex gap-1 mb-3">
-        <div class="income-mode-pill active" id="pillModeTotal" onclick="window.setIncomeCalcMode('total')">
-          <i class="fa-solid fa-calculator me-1"></i>게임 금고 총액 입력
-        </div>
-        <div class="income-mode-pill" id="pillModeDirect" onclick="window.setIncomeCalcMode('direct')">
-          <i class="fa-solid fa-pen-to-square me-1"></i>추가 입금액 직접 입력
-        </div>
-      </div>
-
-      <div class="row g-2 mb-2">
-        <div class="col-6">
-          <label class="form-label small text-secondary mb-1">입금 일자</label>
-          <input type="date" id="incomeDate" class="form-control input-custom-finance">
-        </div>
-        <div class="col-6">
-          <label class="form-label small text-secondary mb-1" id="labelIncomeAmount">인게임 금고 총 보유액 (다이아)</label>
-          <input type="text" id="incomeAmount" class="form-control input-custom-finance" placeholder="예: 150,000" onkeyup="window.formatCommaInput(this); window.calculateIncomeDiff();">
-        </div>
-
-        <div class="col-12" id="boxIncomeDiffCalc">
-          <div class="diff-calc-info">
-            <div class="d-flex justify-content-between align-items-center small text-secondary">
-              <span>직전 시트 잔액: <strong class="text-light" id="diffPrevBalanceText">0 D</strong></span>
-              <span>입력 총액: <strong class="text-info" id="diffInputTotalText">0 D</strong></span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top border-secondary border-opacity-25">
-              <span class="text-secondary small fw-bold">👉 실제 이번 입금액 (차액):</span>
-              <span class="fs-6 fw-bold text-success" id="diffCalculatedAmountText">+0 다이아</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <label class="form-label small text-secondary mb-1">수익 내역 / 원천</label>
-          <input type="text" id="incomeReason" class="form-control input-custom-finance" placeholder="예: 보스 토벌 누적 수익금, 길드 후원 등">
-        </div>
-        <div class="col-12">
-          <label class="form-label small text-secondary mb-1">비고 / 전달자 닉네임 (선택)</label>
-          <input type="text" id="incomeNote" class="form-control input-custom-finance" placeholder="비고 / 전달자 닉네임 (선택)">
-        </div>
-        <div class="col-12 mt-1">
-          <button class="btn btn-outline-success btn-sm w-100 fw-bold py-2" id="btnIncomeSubmit" onclick="window.handleIncomeSubmitClick()">
-            <i class="fa-solid fa-plus me-1"></i> 금고에 수익 입금 처리
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 길드 지출(출금) -->
-    <div id="formExpenseArea" style="display: none;">
-      <div class="row g-2 mb-2">
-        <div class="col-6">
-          <label class="form-label small text-secondary mb-1">지출 일자</label>
-          <input type="date" id="expenseDate" class="form-control input-custom-finance">
-        </div>
-        <div class="col-6">
-          <label class="form-label small text-secondary mb-1">금액 (다이아)</label>
-          <input type="text" id="expenseAmount" class="form-control input-custom-finance" placeholder="예: 3,000" onkeyup="window.formatCommaInput(this)">
-        </div>
-        <div class="col-12">
-          <label class="form-label small text-secondary mb-1">지출 사유</label>
-          <input type="text" id="expenseReason" class="form-control input-custom-finance" placeholder="예: 쟁 포션비 지원, 공용 경비 등">
-        </div>
-        <div class="col-12">
-          <label class="form-label small text-secondary mb-1">지급 대상 / 비고 (선택)</label>
-          <input type="text" id="expenseNote" class="form-control input-custom-finance" placeholder="지급 대상 / 비고 (선택)">
-        </div>
-        <div class="col-12 mt-1">
-          <button class="btn btn-outline-danger btn-sm w-100 fw-bold py-2" onclick="window.handleExpenseSubmitClick()">
-            <i class="fa-solid fa-minus me-1"></i> 금고에서 지출(출금) 처리
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- 입출금 내역 목록 -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-secondary small fw-bold">금고 입출금 상세 내역</span>
+    <span class="text-secondary" style="font-size: 0.72rem;">총 <strong id="finTxCount" class="text-info">0</strong>건</span>
   </div>
-
-  <!-- 4. 금고 입출금 전체 히스토리 -->
-  <div class="finance-box mb-0">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small fw-bold text-secondary">📜 금고 입출금 내역</span>
-      <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.72rem;" onclick="window.loadFinanceData()">
-        <i class="fa-solid fa-arrows-rotate me-1"></i>새로고침
-      </button>
-    </div>
-    <div id="financeLogsList" style="max-height: 280px; overflow-y: auto;">
-      <div class="text-secondary small text-center py-3">데이터를 불러오는 중...</div>
-    </div>
+  <div id="finTxListContainer" style="max-height: 380px; overflow-y: auto;">
+    <div class="text-secondary small text-center py-3">내역을 조회 중...</div>
   </div>
 </div>
 
-<div id="finToastBox" class="custom-fin-toast">
-  <span id="finToastIcon">✅</span>
-  <span id="finToastMsg">알림</span>
+<!-- 입출금 등록 모달 -->
+<div id="financeTxModal" class="tx-modal-bg" style="display: none;">
+  <div class="tx-modal-box">
+    <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center" style="background: #090e1c;">
+      <h6 class="fw-bold mb-0 text-white" id="modalTxTitle">금고 입출금 등록</h6>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.8rem;" onclick="window.closeTxModal()"></button>
+    </div>
+    <div class="p-3">
+      <!-- 🎯 지정 날짜 입력 -->
+      <div class="mb-2">
+        <label class="form-label text-secondary mb-1" style="font-size: 0.75rem;">기준 일자 (과거 날짜 선택 가능):</label>
+        <input type="date" id="modalTxDate" class="form-control input-custom-finance">
+      </div>
+      <div class="mb-2">
+        <label class="form-label text-secondary mb-1" style="font-size: 0.75rem;">금액 (다이아):</label>
+        <input type="text" id="modalTxAmount" class="form-control input-custom-finance" placeholder="숫자만 입력" onkeyup="window.formatCommaTx(this)">
+      </div>
+      <div class="mb-2">
+        <label class="form-label text-secondary mb-1" style="font-size: 0.75rem;">구분 / 카테고리:</label>
+        <select id="modalTxCategory" class="form-control input-custom-finance">
+          <option value="길드수익">길드수익 (보스/아이템 판매)</option>
+          <option value="길드자금분배">길드자금분배</option>
+          <option value="운영비">운영비 (용병/이벤트 지원)</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label text-secondary mb-1" style="font-size: 0.75rem;">상세 내용 / 사유:</label>
+        <input type="text" id="modalTxReason" class="form-control input-custom-finance" placeholder="예: 10/11 주간 보스 판매금 입금">
+      </div>
+      <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" id="btnSubmitTx" onclick="window.submitTxRecord()">
+        등록 완료
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
-  window.lastFinanceData = { logs: [], currentBalance: 0, filteredIncome: 0, totalIncome: 0, totalExpense: 0 };
-  window.selectedDistRate = 70;
-  window.isManagerFeeIncluded = true;
-  window.currentIncomeMode = 'total';
-  window.calculatedNetIncome = 0;
-  window.activeGuildName = "ECLIPSE";
-  window.finToastTimer = null;
+  window.currentTxType = '입금';
 
-  window.showFinToast = function(msg, icon = "✅") {
-    const toast = document.getElementById("finToastBox");
-    const m = document.getElementById("finToastMsg");
-    const ic = document.getElementById("finToastIcon");
-    if (!toast) return;
-
-    m.innerText = msg;
-    ic.innerText = icon;
-    toast.classList.add("show");
-
-    if (window.finToastTimer) clearTimeout(window.finToastTimer);
-    window.finToastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
-  };
-
-  async function loadConfiguredGuildName() {
-    try {
-      const cached = sessionStorage.getItem("guild_name");
-      if (cached) {
-        window.activeGuildName = cached;
-        return;
-      }
-      const res = await apiRequest("guild_settings?key=eq.guild_name");
-      if (res && res.length > 0 && res[0].value) {
-        window.activeGuildName = res[0].value;
-        sessionStorage.setItem("guild_name", res[0].value);
-      }
-    } catch (e) {
-      window.activeGuildName = "ECLIPSE";
-    }
-  }
-
-  // 로컬 타임존 기준 YYYY-MM-DD 변환
-  window.formatDateToYYYYMMDD = function(d) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  window.formatCommaInput = function(elem) {
+  window.formatCommaTx = function(elem) {
     const val = elem.value.replace(/[^0-9]/g, '');
-    if (!val) {
-      elem.value = '';
-      return;
-    }
-    elem.value = Number(val).toLocaleString();
+    elem.value = val ? Number(val).toLocaleString() : '';
   };
 
-  window.setIncomeCalcMode = function(mode) {
-    window.currentIncomeMode = mode;
-    const pillTotal = document.getElementById('pillModeTotal');
-    const pillDirect = document.getElementById('pillModeDirect');
-    const label = document.getElementById('labelIncomeAmount');
-    const diffBox = document.getElementById('boxIncomeDiffCalc');
-    const input = document.getElementById('incomeAmount');
-
-    if (mode === 'total') {
-      pillTotal.classList.add('active');
-      pillDirect.classList.remove('active');
-      label.innerText = "금고 총 보유액(다이아)";
-      input.placeholder = "금고 총액 입력";
-      diffBox.style.display = 'block';
-    } else {
-      pillTotal.classList.remove('active');
-      pillDirect.classList.add('active');
-      label.innerText = "추가 입금액 (다이아)";
-      input.placeholder = "예: 10,000";
-      diffBox.style.display = 'none';
-    }
-    window.calculateIncomeDiff();
-  };
-
-  window.calculateIncomeDiff = function() {
-    const prevBalance = window.lastFinanceData.currentBalance || 0;
-    document.getElementById('diffPrevBalanceText').innerText = prevBalance.toLocaleString() + ' D';
-
-    const rawVal = String(document.getElementById('incomeAmount').value).replace(/[^0-9]/g, '');
-    const inputVal = parseInt(rawVal, 10) || 0;
-    document.getElementById('diffInputTotalText').innerText = inputVal.toLocaleString() + ' D';
-
-    const btnSubmit = document.getElementById('btnIncomeSubmit');
-
-    if (window.currentIncomeMode === 'total') {
-      window.calculatedNetIncome = inputVal - prevBalance;
-      const diffTextElem = document.getElementById('diffCalculatedAmountText');
-
-      if (!rawVal || inputVal === 0) {
-        diffTextElem.innerText = "+0 다이아";
-        diffTextElem.className = "fs-6 fw-bold text-secondary";
-        btnSubmit.innerHTML = `<i class="fa-solid fa-plus me-1"></i> 금고에 수익 입금 처리`;
-      } else if (window.calculatedNetIncome > 0) {
-        diffTextElem.innerText = `+${window.calculatedNetIncome.toLocaleString()} 다이아`;
-        diffTextElem.className = "fs-6 fw-bold text-success";
-        btnSubmit.innerHTML = `<i class="fa-solid fa-plus me-1"></i> 순수익 +${window.calculatedNetIncome.toLocaleString()}D 입금 처리`;
-      } else if (window.calculatedNetIncome === 0) {
-        diffTextElem.innerText = `변동 없음 (0 다이아)`;
-        diffTextElem.className = "fs-6 fw-bold text-warning";
-        btnSubmit.innerHTML = `<i class="fa-solid fa-plus me-1"></i> 변동 없음 (0D)`;
-      } else {
-        diffTextElem.innerText = `+0 다이아 (${window.calculatedNetIncome.toLocaleString()}D 감소됨)`;
-        diffTextElem.className = "fs-6 fw-bold text-danger";
-        btnSubmit.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> 금고 감소 (총액 재확인 필요)`;
-      }
-    } else {
-      window.calculatedNetIncome = inputVal;
-      btnSubmit.innerHTML = `<i class="fa-solid fa-plus me-1"></i> ${inputVal > 0 ? '+' + inputVal.toLocaleString() + 'D' : ''} 입금 처리`;
-    }
-  };
-
-  window.setFinanceQuickRange = function(type) {
-    document.querySelectorAll('#fBtnThisWeek, #fBtnLastWeek, #fBtnThisMonth, #fBtnAll').forEach(b => b.classList.remove('active'));
-
+  window.openTxModal = function(type) {
+    window.currentTxType = type;
+    document.getElementById('modalTxTitle').innerText = `금고 [${type}] 등록`;
+    document.getElementById('modalTxAmount').value = '';
+    document.getElementById('modalTxReason').value = '';
+    
+    // 오늘 날짜를 기본값으로 세팅 (과거 날짜 변경 가능)
     const today = new Date();
-    const currentDay = (today.getDay() + 6) % 7; // 월요일 시작
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('modalTxDate').value = `${yyyy}-${mm}-${dd}`;
 
-    let start = null;
-    let end = null;
+    const catSelect = document.getElementById('modalTxCategory');
+    if (type === '입금') {
+      catSelect.value = '길드수익';
+    } else {
+      catSelect.value = '운영비';
+    }
+
+    document.getElementById('financeTxModal').style.display = 'flex';
+  };
+
+  window.closeTxModal = function() {
+    document.getElementById('financeTxModal').style.display = 'none';
+  };
+
+  // 🎯 날짜를 지정하여 DB에 기록
+  window.submitTxRecord = async function() {
+    const rawAmt = document.getElementById('modalTxAmount').value.replace(/[^0-9]/g, '');
+    const reason = document.getElementById('modalTxReason').value.trim();
+    const category = document.getElementById('modalTxCategory').value;
+    const selectedDate = document.getElementById('modalTxDate').value;
+
+    if (!rawAmt || parseInt(rawAmt, 10) <= 0) {
+      return alert("금액을 1 다이아 이상 입력해주세요.");
+    }
+    if (!selectedDate) {
+      return alert("기준 일자를 선택해주세요.");
+    }
+
+    // 선택된 날짜에 정오(12:00:00) 타임스탬프를 부여하여 created_at에 명시적 저장
+    const customCreatedAt = new Date(`${selectedDate}T12:00:00`).toISOString();
+
+    const btn = document.getElementById('btnSubmitTx');
+    btn.disabled = true;
+    btn.innerText = '저장 중...';
+
+    try {
+      await apiRequest("guild_finances", "POST", [{
+        tx_type: window.currentTxType,
+        type: window.currentTxType,
+        category: category,
+        amount: parseInt(rawAmt, 10),
+        reason: reason || `${selectedDate} ${window.currentTxType}`,
+        created_at: customCreatedAt
+      }]);
+
+      window.closeTxModal();
+      await window.fetchFinanceLogs();
+    } catch (err) {
+      alert("등록 실패: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = '등록 완료';
+    }
+  };
+
+  window.setFinQuickRange = function(type) {
+    document.querySelectorAll('#fBtnThisWeek, #fBtnLastWeek, #fBtnThisMonth, #fBtnAll').forEach(b => b.classList.remove('active'));
+    const today = new Date();
+    const currentDay = (today.getDay() + 6) % 7;
+    let start = null, end = null;
 
     if (type === 'thisWeek') {
       document.getElementById('fBtnThisWeek').classList.add('active');
@@ -568,414 +280,76 @@
       document.getElementById('fBtnAll').classList.add('active');
     }
 
-    document.getElementById('financeStartDate').value = start ? window.formatDateToYYYYMMDD(start) : '';
-    document.getElementById('financeEndDate').value = end ? window.formatDateToYYYYMMDD(end) : '';
-
-    window.loadFinanceData();
+    const fmt = d => d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
+    document.getElementById('finStartDate').value = fmt(start);
+    document.getElementById('finEndDate').value = fmt(end);
+    window.fetchFinanceLogs();
   };
 
-  window.togglePayoutCalcModal = function() {
-    const box = document.getElementById('payoutCalcBox');
-    const isOpening = (box.style.display === 'none' || !box.style.display);
-    box.style.display = isOpening ? 'block' : 'none';
-    if (isOpening) {
-      window.setCalcQuickRange('thisWeek');
-    }
-  };
-
-  window.setCalcQuickRange = function(type) {
-    document.querySelectorAll('#cBtnThisWeek, #cBtnLastWeek, #cBtnThisMonth, #cBtnAll').forEach(b => b.classList.remove('active'));
-
-    const today = new Date();
-    const currentDay = (today.getDay() + 6) % 7;
-
-    let start = null;
-    let end = null;
-    let label = "이번 주 순수익";
-
-    if (type === 'thisWeek') {
-      document.getElementById('cBtnThisWeek').classList.add('active');
-      start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - currentDay);
-      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
-      label = "이번 주 순수익";
-    } else if (type === 'lastWeek') {
-      document.getElementById('cBtnLastWeek').classList.add('active');
-      start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - currentDay - 7);
-      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
-      label = "지난 주 순수익";
-    } else if (type === 'thisMonth') {
-      document.getElementById('cBtnThisMonth').classList.add('active');
-      start = new Date(today.getFullYear(), today.getMonth(), 1);
-      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      label = "이번 달 순수익";
-    } else if (type === 'all') {
-      document.getElementById('cBtnAll').classList.add('active');
-      label = "전체 누적 순수익";
-    }
-
-    document.getElementById('calcPeriodText').innerText = label;
-    document.getElementById('calcStartDate').value = start ? window.formatDateToYYYYMMDD(start) : '';
-    document.getElementById('calcEndDate').value = end ? window.formatDateToYYYYMMDD(end) : '';
-
-    window.fetchIncomeForCalc();
-  };
-
-  // 🎯 [핵심 개선]: 선택 기간의 "순수익(입금 - 지출)"을 정확히 산출하여 계산기 원금으로 세팅
-  window.fetchIncomeForCalc = function() {
-    const s = document.getElementById('calcStartDate').value;
-    const e = document.getElementById('calcEndDate').value;
-
-    let periodIncome = 0;
-    let periodExpense = 0;
-
-    (window.lastFinanceData.logs || []).forEach(l => {
-      const d = (l.dateTime || '').slice(0, 10);
-      if (s && d < s) return;
-      if (e && d > e) return;
-
-      if (l.type === '입금') {
-        periodIncome += (Number(l.amount) || 0);
-      } else if (l.type === '출금') {
-        periodExpense += (Number(l.amount) || 0);
-      }
-    });
-
-    // 선택 기간에 실제로 벌어들인 순수익 (입금 - 지출)
-    let netPeriodProfit = periodIncome - periodExpense;
-    if (netPeriodProfit < 0) netPeriodProfit = 0;
-
-    document.getElementById('calcBaseAmount').value = Number(netPeriodProfit).toLocaleString();
-    window.runPayoutSimulation();
-  };
-
-  window.setCalcRate = function(rate) {
-    window.selectedDistRate = rate;
-    [40, 50, 60, 70, 80, 90, 100].forEach(r => {
-      const btn = document.getElementById('btnRate' + r);
-      if (btn) {
-        if (r === rate) btn.classList.add('active');
-        else btn.classList.remove('active');
-      }
-    });
-    window.runPayoutSimulation();
-  };
-
-  window.setManagerFeeMode = function(isIncluded) {
-    window.isManagerFeeIncluded = isIncluded;
-    const btnInc = document.getElementById('btnManagerInclude');
-    const btnExc = document.getElementById('btnManagerExclude');
-
-    if (isIncluded) {
-      btnInc.classList.add('active');
-      btnExc.classList.remove('active');
-    } else {
-      btnInc.classList.remove('active');
-      btnExc.classList.add('active');
-    }
-
-    window.runPayoutSimulation();
-  };
-
-  // 🎯 지급 비율 선택에 따른 실시간 정확한 계산 로직
-  window.runPayoutSimulation = function() {
-    const totalBase = parseInt(String(document.getElementById('calcBaseAmount').value).replace(/[^0-9]/g, ''), 10) || 0;
-    const distRate = window.selectedDistRate;       // 선택한 총 분배율 (예: 70%)
-    const reserveRate = 100 - distRate;             // 금고 잔여율 (예: 30%)
-
-    // 총 분배 집행액 = 기준 원금 * 분배율
-    const totalDistAmount = Math.floor(totalBase * (distRate / 100));
-    // 금고 잔여 적립금 = 기준 원금 - 총 분배 집행액
-    const reserveAmount = totalBase - totalDistAmount;
-
-    let managerShare = 0;
-    let memberPool = totalDistAmount;
-
-    if (window.isManagerFeeIncluded) {
-      // 관리비 포함 시: 기준 원금의 10%
-      managerShare = Math.floor(totalBase * 0.10);
-      if (managerShare > totalDistAmount) managerShare = totalDistAmount;
-      memberPool = totalDistAmount - managerShare;
-    }
-
-    // 실제 비율 표시 계산
-    const memberRateCalc = totalBase > 0 ? Math.round((memberPool / totalBase) * 100) : (window.isManagerFeeIncluded ? distRate - 10 : distRate);
-    const managerRateCalc = totalBase > 0 ? Math.round((managerShare / totalBase) * 100) : (window.isManagerFeeIncluded ? 10 : 0);
-
-    document.getElementById('calcTotalDistRateText').innerText = distRate + '%';
-    document.getElementById('calcTotalDistAmountText').innerText = totalDistAmount.toLocaleString() + ' D';
-
-    document.getElementById('calcMemberRateText').innerText = memberRateCalc + '%';
-    document.getElementById('calcMemberPoolText').innerText = memberPool.toLocaleString() + ' D';
-
-    document.getElementById('calcManagerRateText').innerText = managerRateCalc + '%';
-    document.getElementById('calcManagerShareText').innerText = managerShare.toLocaleString() + ' D';
-
-    document.getElementById('calcReserveRateText').innerText = reserveRate + '%';
-    document.getElementById('calcReserveText').innerText = reserveAmount.toLocaleString() + ' D';
-  };
-
-  window.copyCalcResultForKakao = function() {
-    const totalBase = document.getElementById('calcBaseAmount').value || '0';
-    const distRate = document.getElementById('calcTotalDistRateText').innerText;
-    const totalDist = document.getElementById('calcTotalDistAmountText').innerText;
-    const memberPool = document.getElementById('calcMemberPoolText').innerText;
-    const memberRate = document.getElementById('calcMemberRateText').innerText;
-    const managerShare = document.getElementById('calcManagerShareText').innerText;
-    const managerRate = document.getElementById('calcManagerRateText').innerText;
-    const reserve = document.getElementById('calcReserveText').innerText;
-    const reserveRate = document.getElementById('calcReserveRateText').innerText;
-    const gName = window.activeGuildName || "길드";
-
-    const text = `[🧮 ${gName} 자금 분배율 계산 보고]\n` +
-      `• 기준 총 수익금: ${totalBase} 다이아\n` +
-      `• 총 분배 집행액 (${distRate}): ${totalDist}\n` +
-      `  └ 길드원 배당 (${memberRate}): ${memberPool}\n` +
-      `  └ 시트 관리원 (${managerRate}): ${managerShare}\n` +
-      `• 금고 잔여 적립금 (${reserveRate}): ${reserve}\n` +
-      `────────────────\n` +
-      `※ 주간 분배 시뮬레이터 산출 내역입니다.`;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-      window.showFinToast("분배 계산 결과가 클립보드에 복사되었습니다!", "📋");
-    }
-  };
-
-  window.switchFinanceMode = function(mode) {
-    if (mode === 'income') {
-      document.getElementById('formIncomeArea').style.display = 'block';
-      document.getElementById('formExpenseArea').style.display = 'none';
-      document.getElementById('btnModeIncome').classList.add('active');
-      document.getElementById('btnModeExpense').classList.remove('active');
-      window.calculateIncomeDiff();
-    } else {
-      document.getElementById('formIncomeArea').style.display = 'none';
-      document.getElementById('formExpenseArea').style.display = 'block';
-      document.getElementById('btnModeIncome').classList.remove('active');
-      document.getElementById('btnModeExpense').classList.add('active');
-    }
-  };
-
-  window.loadFinanceData = async function() {
-    const start = document.getElementById('financeStartDate').value;
-    const end = document.getElementById('financeEndDate').value;
-    const list = document.getElementById('financeLogsList');
-
-    if (list) {
-      list.innerHTML = `<div class="text-secondary small text-center py-3"><i class="fa-solid fa-spinner fa-spin me-1"></i>데이터를 불러오는 중...</div>`;
-    }
+  window.fetchFinanceLogs = async function() {
+    const s = document.getElementById('finStartDate').value;
+    const e = document.getElementById('finEndDate').value;
+    const container = document.getElementById('finTxListContainer');
+    container.innerHTML = '<div class="text-secondary small text-center py-3"><span class="spinner-border spinner-border-sm text-info me-1"></span>조회 중...</div>';
 
     try {
-      const rows = await apiRequest("guild_finances?select=*&order=id.desc");
-      const logs = (rows || []).map(r => {
-        const typeStr = (r.tx_type || r.type || '입금');
-        // KST 기준 날짜 안전 파싱
-        let dStr = '';
-        if (r.created_at) {
-          const dObj = new Date(r.created_at);
-          dStr = window.formatDateToYYYYMMDD(dObj);
-        }
-        const inFilter = (!start || dStr >= start) && (!end || dStr <= end);
-        return {
-          id: r.id,
-          type: typeStr,
-          category: r.category || '',
-          amount: Number(r.amount) || 0,
-          reason: r.reason || r.memo || r.description || '적요 없음',
-          note: r.category || '',
-          dateTime: dStr,
-          inFilter: inFilter
-        };
+      const logs = await apiRequest("guild_finances?select=*&order=created_at.desc,id.desc");
+      let totalBal = 0, totalIn = 0, totalOut = 0;
+      let filtered = [];
+
+      (logs || []).forEach(l => {
+        const t = (l.tx_type || l.type || '');
+        const amt = Number(l.amount) || 0;
+        if (t === '입금') totalBal += amt;
+        else if (t === '출금') totalBal -= amt;
+
+        const d = (l.created_at || '').slice(0, 10);
+        if (s && d < s) return;
+        if (e && d > e) return;
+
+        if (t === '입금') totalIn += amt;
+        else if (t === '출금') totalOut += amt;
+        filtered.push(l);
       });
 
-      let totalIncome = 0;
-      let totalExpense = 0;
-      let filteredIncome = 0;
+      document.getElementById('finVaultBalance').innerText = totalBal.toLocaleString();
+      document.getElementById('finTotalIn').innerText = totalIn.toLocaleString();
+      document.getElementById('finTotalOut').innerText = totalOut.toLocaleString();
+      document.getElementById('finTxCount').innerText = filtered.length;
 
-      logs.forEach(l => {
-        if (l.type === '입금') {
-          totalIncome += l.amount;
-          if (l.inFilter) filteredIncome += l.amount;
-        } else if (l.type === '출금') {
-          totalExpense += l.amount;
-          if (l.inFilter) filteredIncome -= l.amount;
-        }
-      });
-
-      const currentBalance = totalIncome - totalExpense;
-      window.lastFinanceData = {
-        logs: logs,
-        currentBalance: currentBalance,
-        totalIncome: totalIncome,
-        totalExpense: totalExpense,
-        filteredIncome: filteredIncome
-      };
-
-      document.getElementById('vaultBalanceText').innerText = currentBalance.toLocaleString();
-      document.getElementById('vaultIncomeText').innerText = '+' + totalIncome.toLocaleString();
-      document.getElementById('vaultExpenseText').innerText = '-' + totalExpense.toLocaleString();
-      document.getElementById('filteredIncomeText').innerText = filteredIncome.toLocaleString();
-
-      window.renderFinanceLogs(logs);
-      window.calculateIncomeDiff();
-
-      // 만약 계산기 창이 열려있다면 계산기도 최신 데이터로 동기화
-      const calcBox = document.getElementById('payoutCalcBox');
-      if (calcBox && calcBox.style.display !== 'none') {
-        window.fetchIncomeForCalc();
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-secondary small text-center py-3">내역이 없습니다.</div>';
+        return;
       }
-    } catch (err) {
-      if (list) {
-        list.innerHTML = `<div class="text-danger small text-center py-2">조회 실패: ${err.message}</div>`;
-      }
-    }
-  };
 
-  window.renderFinanceLogs = function(logs) {
-    const container = document.getElementById('financeLogsList');
-    if (!container) return;
+      container.innerHTML = filtered.map(l => {
+        const isDeposit = (l.tx_type || l.type) === '입금';
+        const dateStr = (l.created_at || '').slice(0, 10);
+        const amtStr = Number(l.amount || 0).toLocaleString();
 
-    if (!logs || logs.length === 0) {
-      container.innerHTML = '<div class="text-secondary small text-center py-3">입출금 기록이 없습니다.</div>';
-      return;
-    }
-
-    container.innerHTML = logs.map(l => {
-      const isIncome = (l.type === '입금');
-      const badgeClass = isIncome ? 'text-success' : 'text-danger';
-      const sign = isIncome ? '+' : '-';
-      const bgStyle = l.inFilter ? 'background: #0d1a33;' : 'background: #090e1c; opacity: 0.8;';
-
-      return `
-        <div class="finance-log-item" style="${bgStyle}">
-          <div>
-            <div class="fw-bold text-white small">${l.reason}</div>
-            <div class="text-secondary" style="font-size: 0.72rem;">${l.dateTime} • ${l.note ? l.note + ' • ' : ''}${l.type}</div>
+        return `
+          <div class="tx-item-card">
+            <div>
+              <div class="d-flex align-items-center gap-1 mb-1">
+                <span class="badge ${isDeposit ? 'bg-success' : 'bg-danger'}" style="font-size:0.68rem;">${isDeposit ? '입금' : '출금'}</span>
+                <span class="fw-bold text-white small ms-1">${l.reason || l.category || '금고 입출금'}</span>
+              </div>
+              <div class="text-secondary" style="font-size: 0.72rem;">
+                카테고리: ${l.category || '-'} • 일시: ${dateStr}
+              </div>
+            </div>
+            <div class="text-end">
+              <strong class="${isDeposit ? 'text-success' : 'text-danger'} fs-6">${isDeposit ? '+' : '-'}${amtStr} D</strong>
+            </div>
           </div>
-          <div class="text-end">
-            <span class="fw-bold fs-6 ${badgeClass}">${sign}${Number(l.amount).toLocaleString()} <small style="font-size: 0.7rem;">다이아</small></span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  };
-
-  window.handleIncomeSubmitClick = async function() {
-    const date = document.getElementById('incomeDate').value;
-    const reason = document.getElementById('incomeReason').value.trim();
-    const rawInputVal = document.getElementById('incomeAmount').value.replace(/[^0-9]/g, '');
-    const note = document.getElementById('incomeNote').value.trim();
-
-    if (!reason || !rawInputVal) return window.showFinToast("수익 내역과 금액을 모두 입력해주세요!", "⚠️");
-
-    let finalDepositAmount = 0;
-    let finalNote = note;
-
-    if (window.currentIncomeMode === 'total') {
-      const inputTotal = parseInt(rawInputVal, 10);
-      const prevBal = window.lastFinanceData.currentBalance || 0;
-      finalDepositAmount = inputTotal - prevBal;
-
-      if (finalDepositAmount <= 0) {
-        return window.showFinToast(`입력 총액이 직전 금고 잔액(${prevBal.toLocaleString()}D)보다 커야 입금할 차액이 발생합니다.`, "⚠️");
-      }
-
-      const autoNote = `[인게임 총액 ${inputTotal.toLocaleString()}D 기준 차액 입금]`;
-      finalNote = finalNote ? `${finalNote} (${autoNote})` : autoNote;
-    } else {
-      finalDepositAmount = parseInt(rawInputVal, 10);
-    }
-
-    if (finalDepositAmount <= 0) return window.showFinToast("실제 입금할 금액이 0다이아 이하입니다.", "⚠️");
-
-    const btn = document.getElementById('btnIncomeSubmit');
-    btn.disabled = true;
-
-    try {
-      let fullReason = reason;
-      if (finalNote) fullReason += ` - ${finalNote}`;
-
-      await apiRequest("guild_finances", "POST", [{
-        tx_type: '입금',
-        category: '수익금입금',
-        amount: finalDepositAmount,
-        reason: fullReason
-      }]);
-
-      window.showFinToast(`✅ ${finalDepositAmount.toLocaleString()} 다이아가 금고에 입금 처리되었습니다.`, "🎉");
-      document.getElementById('incomeReason').value = '';
-      document.getElementById('incomeAmount').value = '';
-      document.getElementById('incomeNote').value = '';
-      btn.disabled = false;
-      await window.loadFinanceData();
+        `;
+      }).join('');
     } catch (err) {
-      btn.disabled = false;
-      window.showFinToast("입금 처리 실패: " + err.message, "❌");
+      container.innerHTML = `<div class="text-danger small text-center py-3">조회 실패: ${err.message}</div>`;
     }
   };
 
-  window.handleExpenseSubmitClick = async function() {
-    const date = document.getElementById('expenseDate').value;
-    const reason = document.getElementById('expenseReason').value.trim();
-    const amountVal = document.getElementById('expenseAmount').value.replace(/[^0-9]/g, '');
-    const note = document.getElementById('expenseNote').value.trim();
-
-    if (!reason || !amountVal) return window.showFinToast("지출 사유와 금액을 모두 입력해주세요!", "⚠️");
-
-    const amount = parseInt(amountVal, 10);
-    if (amount <= 0) return window.showFinToast("지출할 금액을 0다이아 이상 입력해주세요.", "⚠️");
-
-    try {
-      let fullReason = reason;
-      if (note) fullReason += ` (${note})`;
-
-      await apiRequest("guild_finances", "POST", [{
-        tx_type: '출금',
-        category: '길드지출',
-        amount: amount,
-        reason: fullReason
-      }]);
-
-      window.showFinToast("✅ 지출 등록이 완료되었습니다.", "🎉");
-      document.getElementById('expenseReason').value = '';
-      document.getElementById('expenseAmount').value = '';
-      document.getElementById('expenseNote').value = '';
-      await window.loadFinanceData();
-    } catch (err) {
-      window.showFinToast("지출 처리 실패: " + err.message, "❌");
-    }
-  };
-
-  window.copyFinanceReportForKakao = function() {
-    const start = document.getElementById('financeStartDate').value || '시작';
-    const end = document.getElementById('financeEndDate').value || '현재';
-    const incomeLogs = (window.lastFinanceData.logs || []).filter(l => l.inFilter && l.type === '입금');
-
-    if (incomeLogs.length === 0) return window.showFinToast("선택된 기간에 공유할 순수익 내역이 없습니다.", "⚠️");
-
-    let logLines = incomeLogs.map(l => `• [${l.dateTime}] ${l.reason}: +${Number(l.amount).toLocaleString()} 다이아`).join('\n');
-    const gName = window.activeGuildName || "길드";
-
-    const shareText = `[🏛️ ${gName} 길드 주간 순수익 보고]\n` +
-      `• 집계 기간: ${start} ~ ${end}\n` +
-      `• 주간 누적 순수익: ${(window.lastFinanceData.filteredIncome || 0).toLocaleString()} 다이아\n` +
-      `• 현재 금고 잔액: ${(window.lastFinanceData.currentBalance || 0).toLocaleString()} 다이아\n\n` +
-      `[순수익 입금 상세]\n${logLines}\n\n` +
-      `※ 해당 순수익금은 주간 정산 규정에 따라 분배됩니다.`;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(shareText);
-      window.showFinToast("주간 수익 보고 내역이 복사되었습니다!", "📋");
-    }
-  };
-
-  (async function initFinanceModule() {
-    await loadConfiguredGuildName();
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('incomeDate').value = today;
-    document.getElementById('expenseDate').value = today;
-
-    window.setFinanceQuickRange('thisWeek');
-    window.setIncomeCalcMode('total');
+  (function initFin() {
+    window.setFinQuickRange('all');
   })();
 </script>
