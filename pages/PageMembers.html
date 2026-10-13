@@ -235,11 +235,13 @@
     </div>
 
     <input type="hidden" id="editMemberId">
+    <input type="hidden" id="editMemberOldName">
     <input type="hidden" id="editMemberSelectedRole" value="일반">
     
     <div class="mb-3">
       <label class="small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
       <input type="text" id="editMemberName" class="form-control input-custom-mem" placeholder="닉네임 입력">
+      <div class="text-secondary mt-1" style="font-size: 0.68rem;">* 닉네임 변경 시 기존 모든 보스 토벌 및 분배 이력이 함께 동기화됩니다.</div>
     </div>
 
     <div class="mb-3">
@@ -254,7 +256,7 @@
 
     <div class="d-flex gap-2 pt-2">
       <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.8rem;" onclick="closeMemberEditModal()">취소</button>
-      <button type="button" class="btn btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.8rem;" onclick="submitMemberEdit()">저장 완료</button>
+      <button type="button" class="btn btn-sm flex-fill fw-bold py-2" id="btnSubmitMemberEdit" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.8rem;" onclick="submitMemberEdit()">저장 완료</button>
     </div>
   </div>
 </div>
@@ -360,7 +362,7 @@
         const pA = getRolePriority(a.role);
         const pB = getRolePriority(b.role);
         if (pA !== pB) return pA - pB;
-        return a.name.localeCompare(b.name, 'ko');
+        return a.name.localeCompare(b.name, 'ko', { numeric: true, sensitivity: 'base' });
       });
 
       document.getElementById("memCountBadge").innerText = `총 ${allMembersData.length}명`;
@@ -447,7 +449,6 @@
     }
   }
 
-  // 모달 직급 탭 선택
   function selectRoleTab(role) {
     document.getElementById("editMemberSelectedRole").value = role;
     document.querySelectorAll(".btn-role-tab").forEach(tab => {
@@ -460,6 +461,7 @@
     if (!isAdmin) return alert("관리자만 수정할 수 있습니다.");
 
     document.getElementById("editMemberId").value = id;
+    document.getElementById("editMemberOldName").value = name;
     document.getElementById("editMemberName").value = name;
     
     let normalizedRole = role;
@@ -474,20 +476,39 @@
     document.getElementById("modalMemberEdit").style.display = "none";
   }
 
+  // 🎯 [핵심 수정]: 닉네임 변경 시 Supabase RPC(update_member_nickname)를 통한 전체 이력 자동 동기화
   async function submitMemberEdit() {
     const id = document.getElementById("editMemberId").value;
-    const name = document.getElementById("editMemberName").value.trim();
+    const oldName = document.getElementById("editMemberOldName").value.trim();
+    const newName = document.getElementById("editMemberName").value.trim();
     const role = document.getElementById("editMemberSelectedRole").value;
 
-    if (!name) return alert("닉네임을 입력하세요!");
+    if (!newName) return alert("닉네임을 입력하세요!");
+
+    const btn = document.getElementById("btnSubmitMemberEdit");
+    btn.disabled = true;
+    btn.innerText = "저장 중...";
 
     try {
-      await apiRequest(`guild_members?id=eq.${id}`, "PATCH", { name, role });
-      alert("✅ 수정이 완료되었습니다.");
+      // 1. 닉네임이 변경된 경우: 모든 과거 기록(보스 참여, 분배, 희망신청)을 RPC로 일괄 갱신
+      if (oldName !== newName) {
+        await apiRequest("rpc/update_member_nickname", "POST", {
+          old_name: oldName,
+          new_name: newName
+        });
+      }
+
+      // 2. 직급(role) 변경 반영
+      await apiRequest(`guild_members?id=eq.${id}`, "PATCH", { role });
+
+      alert(`✅ [${newName}] 길드원 정보가 수정되었습니다.\n(과거 토벌 참여 및 분배 기록 동기화 완료)`);
       closeMemberEditModal();
       await loadGuildMembers();
     } catch (err) {
       alert("수정 실패: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "저장 완료";
     }
   }
 
@@ -558,22 +579,18 @@
       return "비밀번호는 숫자 6자리 이상이어야 합니다.";
     }
 
-    // 동일 숫자 3회 이상 연속 체크 (예: 000, 111)
     if (/(\d)\1\1/.test(pin)) {
       return "동일한 숫자를 3회 이상 연속으로 사용할 수 없습니다 (예: 000, 111).";
     }
 
-    // 연속된 숫자 3자리 이상 (오름차순 및 내림차순) 체크
     for (let i = 0; i < pin.length - 2; i++) {
       const c1 = parseInt(pin[i], 10);
       const c2 = parseInt(pin[i + 1], 10);
       const c3 = parseInt(pin[i + 2], 10);
 
-      // 오름차순 연속 (예: 1-2-3, 4-5-6)
       if (c2 === c1 + 1 && c3 === c2 + 1) {
         return "연속된 숫자를 3회 이상 사용할 수 없습니다 (예: 123, 456).";
       }
-      // 내림차순 연속 (예: 3-2-1, 6-5-4)
       if (c2 === c1 - 1 && c3 === c2 - 1) {
         return "연속된 숫자를 3회 이상 사용할 수 없습니다 (예: 321, 654).";
       }
@@ -590,14 +607,12 @@
     let currentMemberPin = (targetMemberForPin.pin || "").trim();
     if (!currentMemberPin) currentMemberPin = "0000";
 
-    // 1. 기존 비밀번호 확인
     if (oldPinInput !== currentMemberPin) {
       alert("❌ 기존 비밀번호가 일치하지 않습니다. (초기 비밀번호는 0000 입니다)");
       document.getElementById("inputOldMemberPin").focus();
       return;
     }
 
-    // 2. 새 비밀번호 규칙 검증
     const validationError = validateNewPinRules(newPinInput);
     if (validationError) {
       alert("⚠️ " + validationError);
@@ -605,14 +620,12 @@
       return;
     }
 
-    // 3. 기존 비밀번호와 동일 여부 체크
     if (oldPinInput === newPinInput) {
       alert("⚠️ 새 비밀번호는 기존 비밀번호와 달라야 합니다.");
       document.getElementById("inputNewMemberPin").focus();
       return;
     }
 
-    // 4. 데이터베이스 저장
     try {
       await apiRequest(`guild_members?id=eq.${targetMemberForPin.id}`, "PATCH", {
         pin: newPinInput
