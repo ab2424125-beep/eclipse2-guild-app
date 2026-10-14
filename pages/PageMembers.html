@@ -25,7 +25,7 @@
     border: 1px solid #233554 !important;
     color: #ffffff !important;
     border-radius: 10px !important;
-    padding: 8px 12px !important;
+    padding: 9px 12px !important;
     font-size: 0.85rem !important;
     color-scheme: dark;
   }
@@ -38,6 +38,10 @@
     color: #64748b !important;
     border-color: #172235 !important;
   }
+  .input-custom-mem::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
 
   .member-item-row {
     background: #090e1c;
@@ -48,6 +52,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     transition: all 0.15s;
   }
   .member-item-row:hover {
@@ -65,6 +70,7 @@
     padding: 3px 0;
     border-radius: 6px;
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .role-badge-master {
@@ -100,6 +106,10 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .member-clickable-name:hover {
     color: #38bdf8;
@@ -150,6 +160,7 @@
     text-align: center;
     transition: all 0.15s;
     user-select: none;
+    white-space: nowrap;
   }
   .btn-role-tab:hover {
     border-color: #38bdf8;
@@ -175,51 +186,79 @@
     border-color: #facc15;
     color: #facc15;
   }
+
+  /* 📱 휴대용 기기별 반응형 미디어 쿼리 */
+  @media (max-width: 480px) {
+    .members-card {
+      padding: 14px 12px;
+    }
+    .member-item-row {
+      padding: 9px 10px;
+    }
+  }
 </style>
 
 <div class="members-card mb-4">
   <!-- 상단 헤더 -->
-  <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
     <div class="d-flex align-items-center gap-2">
       <span style="font-size: 1.3rem;">👥</span>
       <h6 class="fw-bold mb-0 text-white">길드원 관리</h6>
     </div>
-    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem;" id="memCountBadge">
-      총 0명
-    </span>
-  </div>
-
-  <!-- 1. 신규 길드원 등록 폼 -->
-  <div class="member-box-custom" id="memberFormBox">
-    <div class="fw-bold text-info small mb-2">
-      <i class="fa-solid fa-user-plus me-1"></i>신규 길드원 등록
+    <div class="d-flex gap-1 align-items-center flex-shrink-0">
+      <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 fw-bold" id="btnOpenAddModal" style="font-size: 0.75rem; white-space: nowrap;" onclick="openAddMemberModal()">
+        <i class="fa-solid fa-user-plus me-1"></i>길드원 등록
+      </button>
+      <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem; white-space: nowrap;" id="memCountBadge">
+        총 0명
+      </span>
     </div>
-    <div class="row g-2 mb-2">
-      <div class="col-7">
-        <input type="text" id="newMemberName" class="form-control input-custom-mem" placeholder="길드원 닉네임 입력">
-      </div>
-      <div class="col-5">
-        <select id="newMemberRole" class="form-select input-custom-mem">
-          <option value="일반" selected>일반</option>
-          <option value="정예">정예</option>
-          <option value="부길드장">부길드장</option>
-          <option value="길드장">길드장</option>
-        </select>
-      </div>
+  </div>
+
+  <!-- 2. 길드원 검색 (목록 우선 노출을 위해 상단 배치) -->
+  <div class="mb-3">
+    <div class="position-relative">
+      <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
+      <input type="text" id="searchMemberInput" class="form-control input-custom-mem" style="padding-left: 32px;" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberList()">
     </div>
-    <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" id="btnAddMemberBtn" onclick="handleAddMemberClick()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none;">
-      <i class="fa-solid fa-plus me-1"></i> 길드원 등록하기
-    </button>
   </div>
 
-  <!-- 2. 길드원 검색 -->
-  <div class="mb-2">
-    <input type="text" id="searchMemberInput" class="form-control input-custom-mem" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberList()">
-  </div>
-
-  <!-- 3. 길드원 목록 -->
-  <div id="memberListContainer" style="max-height: 480px; overflow-y: auto;">
+  <!-- 3. 길드원 목록 (최우선 노출) -->
+  <div id="memberListContainer" style="max-height: 520px; overflow-y: auto;">
     <div class="text-secondary small text-center py-4">길드원 목록을 불러오는 중...</div>
+  </div>
+</div>
+
+<!-- 🎯 [신규] 길드원 등록 모달 창 -->
+<div id="modalMemberAdd" class="modal-custom-backdrop" style="display: none;">
+  <div class="modal-custom-box">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+      <div class="d-flex align-items-center gap-2">
+        <span style="font-size: 1.1rem;">👤</span>
+        <h6 class="fw-bold text-white m-0">신규 길드원 등록</h6>
+      </div>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="closeAddMemberModal()"></button>
+    </div>
+
+    <div class="mb-3">
+      <label class="small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
+      <input type="text" id="newMemberName" class="form-control input-custom-mem" placeholder="길드원 닉네임 입력" autocomplete="off">
+    </div>
+
+    <div class="mb-3">
+      <label class="small text-secondary mb-1" style="font-size: 0.74rem;">직급 선택</label>
+      <select id="newMemberRole" class="form-select input-custom-mem">
+        <option value="일반" selected>일반</option>
+        <option value="정예">정예</option>
+        <option value="부길드장">부길드장</option>
+        <option value="길드장">길드장</option>
+      </select>
+    </div>
+
+    <div class="d-flex gap-2 pt-2">
+      <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.8rem;" onclick="closeAddMemberModal()">취소</button>
+      <button type="button" class="btn btn-primary btn-sm flex-fill fw-bold py-2" id="btnAddMemberBtn" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none; font-size: 0.8rem;" onclick="handleAddMemberClick()">등록하기</button>
+    </div>
   </div>
 </div>
 
@@ -241,7 +280,7 @@
     <div class="mb-3">
       <label class="small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
       <input type="text" id="editMemberName" class="form-control input-custom-mem" placeholder="닉네임 입력">
-      <div class="text-secondary mt-1" style="font-size: 0.68rem;">* 닉네임 변경 시 기존 모든 보스 토벌 및 분배 이력이 함께 동기화됩니다.</div>
+      <div class="text-secondary mt-1" style="font-size: 0.68rem; word-break: keep-all;">* 닉네임 변경 시 기존 모든 보스 토벌 및 분배 이력이 함께 동기화됩니다.</div>
     </div>
 
     <div class="mb-3">
@@ -324,9 +363,11 @@
     const addBtn = document.getElementById("btnAddMemberBtn");
     const nameInput = document.getElementById("newMemberName");
     const roleSelect = document.getElementById("newMemberRole");
+    const openAddBtn = document.getElementById("btnOpenAddModal");
 
     if (isAdmin) {
       if (addBtn) addBtn.disabled = false;
+      if (openAddBtn) openAddBtn.style.display = "inline-block";
       if (nameInput) {
         nameInput.disabled = false;
         nameInput.placeholder = "길드원 닉네임 입력";
@@ -334,6 +375,7 @@
       if (roleSelect) roleSelect.disabled = false;
     } else {
       if (addBtn) addBtn.disabled = true;
+      if (openAddBtn) openAddBtn.style.display = "none";
       if (nameInput) {
         nameInput.disabled = true;
         nameInput.placeholder = "관리자 로그인 후 등록할 수 있습니다.";
@@ -394,7 +436,7 @@
       }
 
       const actionButtons = isAdmin ? `
-        <div class="d-flex align-items-center gap-1">
+        <div class="d-flex align-items-center gap-1 flex-shrink-0">
           <button type="button" class="btn btn-outline-info btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="event.stopPropagation(); openMemberEditModal(${m.id}, '${m.name}', '${roleStr}')">수정</button>
           <button type="button" class="btn btn-outline-danger btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="event.stopPropagation(); deleteMemberItem(${m.id}, '${m.name}')">삭제</button>
         </div>
@@ -402,11 +444,11 @@
 
       return `
         <div class="member-item-row">
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
             <span class="role-badge-base ${badgeClass}">${roleStr}</span>
             <span class="member-clickable-name" title="클릭하여 비밀번호 변경" onclick="openPinConfirmModal(${m.id})">
               ${m.name}
-              <i class="fa-solid fa-key text-secondary" style="font-size: 0.68rem; opacity: 0.6;"></i>
+              <i class="fa-solid fa-key text-secondary" style="font-size: 0.68rem; opacity: 0.6; flex-shrink: 0;"></i>
             </span>
           </div>
           ${actionButtons}
@@ -421,11 +463,28 @@
     renderMemberList(filtered);
   }
 
-  async function handleAddMemberClick() {
+  // 🎯 길드원 등록 모달 열기/닫기
+  function openAddMemberModal() {
     const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAdmin) {
       alert("⚠️ 관리자 권한이 필요합니다. 먼저 우측 상단의 [관리자 로그인]을 진행해주세요.");
       if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+      return;
+    }
+    document.getElementById("newMemberName").value = "";
+    document.getElementById("newMemberRole").value = "일반";
+    document.getElementById("modalMemberAdd").style.display = "flex";
+    setTimeout(() => document.getElementById("newMemberName").focus(), 100);
+  }
+
+  function closeAddMemberModal() {
+    document.getElementById("modalMemberAdd").style.display = "none";
+  }
+
+  async function handleAddMemberClick() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) {
+      alert("⚠️ 관리자 권한이 필요합니다.");
       return;
     }
 
@@ -442,7 +501,7 @@
     try {
       await apiRequest("guild_members", "POST", [{ name, role, pin: "0000" }]);
       alert(`✅ [${name}] 길드원이 등록되었습니다. (초기 비밀번호: 0000)`);
-      nameInput.value = "";
+      closeAddMemberModal();
       await loadGuildMembers();
     } catch (err) {
       alert("등록 실패: " + err.message);
@@ -476,7 +535,6 @@
     document.getElementById("modalMemberEdit").style.display = "none";
   }
 
-  // 🎯 [핵심 수정]: 닉네임 변경 시 Supabase RPC(update_member_nickname)를 통한 전체 이력 자동 동기화
   async function submitMemberEdit() {
     const id = document.getElementById("editMemberId").value;
     const oldName = document.getElementById("editMemberOldName").value.trim();
@@ -490,7 +548,6 @@
     btn.innerText = "저장 중...";
 
     try {
-      // 1. 닉네임이 변경된 경우: 모든 과거 기록(보스 참여, 분배, 희망신청)을 RPC로 일괄 갱신
       if (oldName !== newName) {
         await apiRequest("rpc/update_member_nickname", "POST", {
           old_name: oldName,
@@ -498,7 +555,6 @@
         });
       }
 
-      // 2. 직급(role) 변경 반영
       await apiRequest(`guild_members?id=eq.${id}`, "PATCH", { role });
 
       alert(`✅ [${newName}] 길드원 정보가 수정되었습니다.\n(과거 토벌 참여 및 분배 기록 동기화 완료)`);
@@ -526,10 +582,6 @@
       alert("삭제 실패: " + err.message);
     }
   }
-
-  // ========================================================
-  // 🔐 길드원 개인 비밀번호 변경 로직 및 유효성 검사
-  // ========================================================
 
   function openPinConfirmModal(memberId) {
     const target = allMembersData.find(m => m.id === memberId);
