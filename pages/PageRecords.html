@@ -39,6 +39,7 @@
     transition: all 0.15s;
     text-align: center;
     cursor: pointer;
+    white-space: nowrap;
   }
   .btn-quick-stat:hover {
     background: rgba(56, 189, 248, 0.15);
@@ -74,6 +75,8 @@
     gap: 5px;
     cursor: pointer;
     transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-kakao-copy:hover {
     background: #fdd835;
@@ -107,6 +110,7 @@
     transition: all 0.15s;
     text-align: center;
     cursor: pointer;
+    white-space: nowrap;
   }
   .btn-best-tab.active {
     background: rgba(251, 191, 36, 0.2);
@@ -119,9 +123,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
-  .top5-title { color: #fbbf24; font-size: 0.82rem; font-weight: 700; }
-  .top5-sub { color: #64748b; font-size: 0.68rem; }
+  .top5-title { color: #fbbf24; font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
+  .top5-sub { color: #64748b; font-size: 0.68rem; white-space: nowrap; }
   .top5-list { display: flex; flex-direction: column; gap: 5px; }
   .top5-item {
     background: #090e1c;
@@ -131,6 +137,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
   }
   .top-rank-badge {
     width: 22px;
@@ -141,13 +148,14 @@
     justify-content: center;
     font-weight: 800;
     font-size: 0.75rem;
+    flex-shrink: 0;
   }
   .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
   .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
   .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fff; }
   .rank-normal { background: #162036; color: #94a3b8; border: 1px solid #233554; }
 
-  .top5-name { font-size: 0.84rem; font-weight: 600; color: #f1f5f9; }
+  .top5-name { font-size: 0.84rem; font-weight: 600; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top5-score {
     font-size: 0.72rem;
     font-weight: 700;
@@ -157,6 +165,7 @@
     padding: 3px 9px;
     border-radius: 12px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .search-wrapper-stat { position: relative; margin-bottom: 12px; }
@@ -191,6 +200,7 @@
     transition: all 0.15s;
     text-align: center;
     cursor: pointer;
+    white-space: nowrap;
   }
   .tab-btn-3.active {
     background: #0284c7;
@@ -283,6 +293,7 @@
     padding: 3px 8px;
     border-radius: 8px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .history-item {
@@ -299,20 +310,22 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 4px;
+    flex-wrap: wrap;
   }
   .history-title-area {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 5px;
     min-width: 0;
     flex: 1;
-    overflow: hidden;
   }
   .history-tools-area {
     display: flex;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
+    margin-left: auto;
   }
 
   .btn-record-action {
@@ -390,6 +403,9 @@
     pointer-events: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+    max-width: 92vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .custom-records-toast.show {
     opacity: 1;
@@ -461,6 +477,63 @@
   }
   .btn-confirm-ok-custom:hover {
     background: #f43f5e;
+  }
+
+  /* 📱 휴대용 기기별 반응형 미디어 쿼리 (스타일/기능 유지, 크기 및 그리드 최적화) */
+  @media (max-width: 480px) {
+    .records-card {
+      padding: 14px 12px;
+    }
+    .stat-filter-box {
+      padding: 10px;
+    }
+    .input-custom-stat {
+      padding: 6px 8px !important;
+      font-size: 0.76rem !important;
+    }
+    .top5-container {
+      padding: 10px 12px;
+    }
+    .btn-best-tab {
+      font-size: 0.7rem;
+      padding: 6px 2px;
+    }
+    .top5-name {
+      font-size: 0.8rem;
+    }
+    .top5-score {
+      font-size: 0.68rem;
+      padding: 2px 7px;
+    }
+    .tab-btn-3 {
+      font-size: 0.74rem;
+      padding: 8px 2px;
+    }
+    .member-card-header {
+      padding: 10px 12px;
+    }
+    .member-detail-accordion {
+      padding: 10px 12px;
+    }
+    .modal-members-grid-4col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .modal-members-grid-4col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .btn-best-tab {
+      font-size: 0.66rem;
+    }
+    .top5-sub {
+      display: none;
+    }
+    .tab-btn-3 i {
+      display: none;
+    }
   }
 </style>
 
@@ -1010,7 +1083,7 @@
 
       return `
         <div class="top5-item">
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
             <span class="top-rank-badge ${rankClass}">${rankIcon}</span>
             <span class="top5-name">${name}</span>
           </div>
@@ -1052,13 +1125,13 @@
       if (memberRecords.length > 0) {
         historyRows = memberRecords.map(r => {
           return `
-            <div class="history-item d-flex justify-content-between align-items-center">
-              <div>
+            <div class="history-item d-flex justify-content-between align-items-center gap-2">
+              <div style="min-width: 0; flex: 1;">
                 <span class="fw-bold text-info" style="font-size: 0.8rem;">${r.bossName}</span>
                 <span class="badge-score-custom badge-score-normal ms-1" style="font-size: 0.65rem;">${r.warType}</span>
                 <div class="text-secondary" style="font-size: 0.7rem;">${r.dateTime} (${r.count}명)</div>
               </div>
-              <div>
+              <div style="flex-shrink: 0;">
                 <button type="button" class="btn btn-record-action btn-record-del" onclick="event.stopPropagation(); removeSingleMember('${safeName}', ${r.id}, '${r.bossName}')">제외</button>
               </div>
             </div>
@@ -1069,11 +1142,11 @@
       return `
         <div class="member-stat-card" id="card_m_${idx}">
           <div class="member-card-header" onclick="toggleMemberDetailCard('card_m_${idx}')">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-bold text-white" style="font-size: 0.94rem;">
+            <div class="d-flex justify-content-between align-items-center mb-1 gap-2 flex-wrap">
+              <span class="fw-bold text-white" style="font-size: 0.94rem; white-space: nowrap;">
                 ${name} <i class="fa-solid fa-chevron-down ms-1 text-secondary" style="font-size: 0.72rem;"></i>
               </span>
-              <span class="badge px-3 py-2 rounded-pill" style="background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.78rem; font-weight: 700;">
+              <span class="badge px-3 py-2 rounded-pill" style="background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.74rem; font-weight: 700; white-space: nowrap;">
                 ${fullScoreDisplay}
               </span>
             </div>
@@ -1081,13 +1154,13 @@
           </div>
 
           <div class="member-detail-accordion">
-            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary gap-1">
-              <span class="text-info fw-bold small"><i class="fa-solid fa-clock-rotate-left me-1"></i>참여 토벌 (${memberRecords.length}건)</span>
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary gap-1 flex-wrap">
+              <span class="text-info fw-bold small" style="white-space: nowrap;"><i class="fa-solid fa-clock-rotate-left me-1"></i>참여 토벌 (${memberRecords.length}건)</span>
               <div class="d-flex gap-1">
-                <button type="button" class="btn btn-primary btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem;" onclick="event.stopPropagation(); openMemberBossManagerModal('${safeName}')">
+                <button type="button" class="btn btn-primary btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem; white-space: nowrap;" onclick="event.stopPropagation(); openMemberBossManagerModal('${safeName}')">
                   <i class="fa-solid fa-list-check me-1"></i>참여 보스 수정
                 </button>
-                <button type="button" class="btn btn-danger btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem;" onclick="event.stopPropagation(); removeMemberAll('${safeName}')">
+                <button type="button" class="btn btn-danger btn-sm py-0 px-2 fw-bold" style="font-size: 0.7rem; white-space: nowrap;" onclick="event.stopPropagation(); removeMemberAll('${safeName}')">
                   <i class="fa-solid fa-user-xmark me-1"></i>일괄제외
                 </button>
               </div>
@@ -1130,12 +1203,12 @@
       return `
         <div class="d-flex align-items-center gap-2 p-2 mb-1 rounded" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
           <input class="form-check-input mgr-boss-chk m-0" type="checkbox" id="mchk_${i}" value="${r.id}" ${isChecked} onchange="updateMgrSelectionCount()" style="width: 1.15rem; height: 1.15rem; flex-shrink: 0; cursor: pointer;">
-          <label class="d-flex justify-content-between align-items-center w-100 m-0 ps-1" for="mchk_${i}" style="cursor: pointer; user-select: none;">
+          <label class="d-flex justify-content-between align-items-center w-100 m-0 ps-1 gap-1 flex-wrap" for="mchk_${i}" style="cursor: pointer; user-select: none;">
             <div>
               <strong class="text-info" style="font-size: 0.84rem;">${r.bossName}</strong>
               <span class="text-secondary small ms-1" style="font-size: 0.72rem;">(${r.warType})</span>
             </div>
-            <span class="text-secondary" style="font-size: 0.72rem;">${r.dateTime}</span>
+            <span class="text-secondary" style="font-size: 0.72rem; white-space: nowrap;">${r.dateTime}</span>
           </label>
         </div>
       `;
@@ -1269,7 +1342,7 @@
 
       return `
         <div class="history-item" style="border-left: 4px solid ${r.isInter ? '#ef4444' : '#f97316'};">
-          <div class="d-flex justify-content-between align-items-center mb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1 gap-2 flex-wrap">
             <div class="d-flex align-items-center flex-wrap gap-1">
               <span class="fw-bold text-white fs-6">${r.bossName}</span>
               ${badgeParts.join(' ')}
@@ -1281,7 +1354,7 @@
           <div class="text-secondary mb-1" style="font-size: 0.74rem;">
             <i class="fa-regular fa-clock me-1"></i>${r.dateTime}
           </div>
-          <div class="text-light" style="font-size: 0.78rem;">
+          <div class="text-light" style="font-size: 0.78rem; word-break: keep-all; line-height: 1.4;">
             <strong class="text-secondary">전쟁참여(${r.count}명):</strong> ${r.members.join(', ')}
           </div>
         </div>
@@ -1317,13 +1390,13 @@
               ${badgeHtml}
             </div>
             <div class="history-tools-area">
-              <span class="text-secondary me-1" style="font-size: 0.7rem;">${r.dateTime}</span>
+              <span class="text-secondary me-1" style="font-size: 0.7rem; white-space: nowrap;">${r.dateTime}</span>
               <button type="button" class="btn btn-record-action btn-record-edit" onclick="triggerEditRecordModal(${idx})">수정</button>
               <button type="button" class="btn btn-record-action btn-record-del" onclick="triggerDeleteRecord(${r.id}, '${r.bossName}')">삭제</button>
             </div>
           </div>
           <div class="text-secondary mb-1" style="font-size: 0.76rem;">획득 아이템: <span class="text-light">${r.dropItem || '없음'}</span></div>
-          <div class="text-light" style="font-size: 0.76rem; line-height: 1.4;">
+          <div class="text-light" style="font-size: 0.76rem; line-height: 1.4; word-break: keep-all;">
             <strong class="text-secondary">참여(${r.count}명 / 총배점 ${r.totalScore}점):</strong> ${r.members.join(', ')}
           </div>
         </div>
