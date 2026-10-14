@@ -67,6 +67,9 @@
   .ocr-preview-sub {
     font-size: 0.68rem;
     color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .ocr-action-btn-group {
@@ -117,6 +120,7 @@
     justify-content: space-between;
     margin-bottom: 5px;
     box-sizing: border-box;
+    white-space: nowrap;
   }
 
   .time-touch-box {
@@ -132,6 +136,7 @@
     position: relative;
     user-select: none;
     box-sizing: border-box;
+    overflow: hidden;
   }
   .time-touch-box:hover {
     border-color: #38bdf8;
@@ -143,6 +148,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .time-hidden-input {
     position: absolute;
@@ -187,8 +195,9 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
-    height: 44px;
+    min-height: 44px;
     box-sizing: border-box;
+    gap: 8px;
   }
 
   .custom-checkbox-label {
@@ -201,6 +210,7 @@
     cursor: pointer;
     user-select: none;
     margin: 0;
+    white-space: nowrap;
   }
   .custom-checkbox-square {
     width: 17px;
@@ -216,6 +226,7 @@
     -webkit-appearance: none;
     cursor: pointer;
     margin: 0;
+    flex-shrink: 0;
   }
   .custom-checkbox-square:checked {
     background-color: #38bdf8;
@@ -241,6 +252,7 @@
     background-position: right 6px center !important;
     background-size: 14px 14px !important;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .item-input-wrapper {
@@ -271,6 +283,7 @@
     padding: 5px 12px;
     border-radius: 8px;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .members-grid-fixed {
@@ -357,6 +370,9 @@
     pointer-events: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+    max-width: 92vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .custom-reg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -387,6 +403,74 @@
     padding: 9px 12px !important;
     font-size: 0.88rem !important;
     color-scheme: dark;
+  }
+
+  /* 📱 휴대용 기기별 반응형 미디어 쿼리 (스타일/기능 유지, 크기 및 그리드 최적화) */
+  @media (max-width: 480px) {
+    .register-card-main {
+      padding: 14px 12px;
+    }
+    .members-grid-fixed {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+    }
+    .member-grid-cell-btn {
+      font-size: 0.72rem;
+      padding: 6px 3px;
+    }
+    .time-touch-box {
+      padding: 8px 8px;
+    }
+    .time-touch-text {
+      font-size: 0.75rem;
+      gap: 4px;
+    }
+    .select-custom-reg {
+      padding: 0 26px 0 9px !important;
+      font-size: 0.76rem !important;
+      background-position: right 7px center !important;
+    }
+    .war-badge-check-custom {
+      padding: 8px 10px;
+    }
+    .war-badge-check-custom > div:first-child {
+      gap: 10px !important;
+    }
+    .ocr-preview-wrapper {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ocr-action-btn-group {
+      width: 100%;
+      justify-content: flex-end;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .btn-ocr-analyze, .btn-ocr-reset {
+      flex: 1;
+      text-align: center;
+      padding: 6px 8px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .members-grid-fixed {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .war-badge-check-custom {
+      flex-wrap: wrap;
+      height: auto;
+      gap: 8px;
+    }
+    .war-badge-check-custom > div:last-child {
+      width: 100%;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .control-label-header span {
+      display: none;
+    }
   }
 </style>
 
@@ -461,7 +545,7 @@
 
   <div class="war-badge-check-custom">
     <div class="d-flex align-items-center gap-3">
-      <span class="small fw-bold text-warning" style="font-size: 0.76rem;">
+      <span class="small fw-bold text-warning" style="font-size: 0.76rem; white-space: nowrap;">
         <i class="fa-solid fa-shield-halved me-1"></i>전쟁구분
       </span>
       <label class="custom-checkbox-label">
@@ -474,7 +558,7 @@
       </label>
     </div>
     <div class="d-flex align-items-center gap-1">
-      <span class="text-info small fw-bold" style="font-size: 0.75rem;">
+      <span class="text-info small fw-bold" style="font-size: 0.75rem; white-space: nowrap;">
         <i class="fa-solid fa-star me-1 text-info"></i>추가점수
       </span>
       <select id="selectExtraScoreCustom" class="select-extra-score">
