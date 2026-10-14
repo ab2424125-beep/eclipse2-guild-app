@@ -215,11 +215,11 @@
     </div>
   </div>
 
-  <!-- 2. 길드원 검색 (목록 우선 노출을 위해 상단 배치) -->
+  <!-- 2. 길드원 검색 (🎯 돋보기 아이콘과 텍스트가 겹치지 않도록 padding-left와 위치 완벽 정렬) -->
   <div class="mb-3">
     <div class="position-relative">
-      <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
-      <input type="text" id="searchMemberInput" class="form-control input-custom-mem" style="padding-left: 32px;" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberList()">
+      <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); color: #38bdf8; font-size: 0.85rem; pointer-events: none;"></i>
+      <input type="text" id="searchMemberInput" class="form-control input-custom-mem" style="padding-left: 36px !important;" placeholder="길드원 닉네임 검색..." onkeyup="filterMemberList()">
     </div>
   </div>
 
@@ -229,7 +229,7 @@
   </div>
 </div>
 
-<!-- 🎯 [신규] 길드원 등록 모달 창 -->
+<!-- 길드원 등록 모달 창 -->
 <div id="modalMemberAdd" class="modal-custom-backdrop" style="display: none;">
   <div class="modal-custom-box">
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
@@ -262,7 +262,7 @@
   </div>
 </div>
 
-<!-- 4. 길드원 정보 [수정] 모달 창 (관리자 전용) -->
+<!-- 길드원 정보 [수정] 모달 창 (관리자 전용) -->
 <div id="modalMemberEdit" class="modal-custom-backdrop" style="display: none;">
   <div class="modal-custom-box">
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
@@ -300,10 +300,9 @@
   </div>
 </div>
 
-<!-- 5. 개인 비밀번호 변경 확인 및 입력 모달 창 -->
+<!-- 개인 비밀번호 변경 확인 및 입력 모달 창 -->
 <div id="modalMemberPinChange" class="modal-custom-backdrop" style="display: none;">
   <div class="modal-custom-box text-center">
-    <!-- 단계 1: 변경 확인 화면 (예 / 아니오) -->
     <div id="pinStepConfirm">
       <div style="font-size: 2.2rem; margin-bottom: 10px;">🔐</div>
       <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;" id="pinTargetMemberName">길드원</h6>
@@ -316,7 +315,6 @@
       </div>
     </div>
 
-    <!-- 단계 2: 기존 및 새 비밀번호 입력 화면 -->
     <div id="pinStepInput" style="display: none;" class="text-start">
       <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
         <div class="d-flex align-items-center gap-2">
@@ -463,7 +461,6 @@
     renderMemberList(filtered);
   }
 
-  // 🎯 길드원 등록 모달 열기/닫기
   function openAddMemberModal() {
     const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAdmin) {
