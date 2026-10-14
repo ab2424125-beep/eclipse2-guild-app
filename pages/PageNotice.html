@@ -194,15 +194,17 @@
       <button type="button" class="btn-close btn-close-white" style="font-size: 0.72rem;" onclick="window.closeNoticeForm()"></button>
     </div>
 
-    <!-- 수정 대상 ID 보관 (신규 등록 시 비어있음) -->
+    <!-- 수정 대상 ID 보관 -->
     <input type="hidden" id="editingNoticeId" value="">
 
     <div class="row g-2 mb-2">
       <div class="col-4">
         <label class="form-label small text-secondary mb-1">구분</label>
+        <!-- 🎯 구분 옵션: 일반, 중요, 필독, 이벤트로 개별 분리 -->
         <select id="noticeTypeSelect" class="form-select input-custom-notice">
           <option value="일반">📢 일반</option>
-          <option value="중요">🚨 중요/필독</option>
+          <option value="중요">🚨 중요</option>
+          <option value="필독">📌 필독</option>
           <option value="이벤트">🎁 이벤트</option>
         </select>
       </div>
@@ -346,18 +348,19 @@
     let rawTitle = item.title || '';
     let detectedType = '일반';
 
+    // 🎯 개별 분리된 구분 값에 맞춰 타이틀 파싱
     if (rawTitle.startsWith('[중요]')) {
       detectedType = '중요';
-      rawTitle = rawTitle.replace('[중요]', '').trim();
+      rawTitle = rawTitle.substring(6).trim();
     } else if (rawTitle.startsWith('[필독]')) {
-      detectedType = '중요';
-      rawTitle = rawTitle.replace('[필독]', '').trim();
+      detectedType = '필독';
+      rawTitle = rawTitle.substring(6).trim();
     } else if (rawTitle.startsWith('[이벤트]')) {
       detectedType = '이벤트';
-      rawTitle = rawTitle.replace('[이벤트]', '').trim();
+      rawTitle = rawTitle.substring(6).trim();
     } else if (rawTitle.startsWith('[일반]')) {
       detectedType = '일반';
-      rawTitle = rawTitle.replace('[일반]', '').trim();
+      rawTitle = rawTitle.substring(6).trim();
     }
 
     document.getElementById('editingNoticeId').value = String(item.id);
@@ -379,7 +382,6 @@
     document.getElementById('noticeTitleInput').focus();
   };
 
-  // 🎯 [버그 완벽 수정]: 대괄호 [] 전체가 지워지지 않고 제목만 깔끔하게 파싱되도록 개선
   window.loadNoticeList = async function() {
     const container = document.getElementById('noticeListContainer');
     if (container) {
@@ -406,27 +408,27 @@
         let rawTitle = item.title || '제목 없음';
         let detectedType = '일반';
 
-        // 🎯 정규식 대신 정확한 접두사 판독 및 제거 처리
+        // 🎯 개별 구분에 맞게 접두사 판독 및 제거 처리
         if (rawTitle.startsWith('[중요]')) {
           detectedType = '중요';
-          rawTitle = rawTitle.substring(6).trim(); // '[중요]'.length === 6
+          rawTitle = rawTitle.substring(6).trim();
         } else if (rawTitle.startsWith('[필독]')) {
-          detectedType = '중요';
+          detectedType = '필독';
           rawTitle = rawTitle.substring(6).trim();
         } else if (rawTitle.startsWith('[이벤트]')) {
           detectedType = '이벤트';
-          rawTitle = rawTitle.substring(6).trim(); // '[이벤트]'.length === 6
+          rawTitle = rawTitle.substring(6).trim();
         } else if (rawTitle.startsWith('[일반]')) {
           detectedType = '일반';
-          rawTitle = rawTitle.substring(6).trim(); // '[일반]'.length === 6
+          rawTitle = rawTitle.substring(6).trim();
         }
 
         let badgeClass = 'badge-type-normal';
         let isImp = false;
 
-        if (detectedType === '중요') {
+        if (detectedType === '중요' || detectedType === '필독') {
           badgeClass = 'badge-type-urgent';
-          isImp = true;
+          isImp = (detectedType === '중요');
         } else if (detectedType === '이벤트') {
           badgeClass = 'badge-type-event';
         }
