@@ -23,6 +23,7 @@
       min-height: 100vh;
       margin: 0;
       padding: 0;
+      overflow-x: hidden;
     }
 
     ::-webkit-scrollbar { width: 7px; height: 7px; }
@@ -37,13 +38,16 @@
       align-items: center;
       padding: 12px 18px;
       width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
       box-sizing: border-box;
+      gap: 8px;
     }
-    .brand-logo-area { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
-    .badge-brand-eclipse { background: #7c3aed; color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; }
-    .brand-title-text { color: #ffffff; font-size: 0.95rem; font-weight: 700; letter-spacing: -0.3px; }
+    .brand-logo-area { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; min-width: 0; flex: 1; }
+    .badge-brand-eclipse { background: #7c3aed; color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0; }
+    .brand-title-text { color: #ffffff; font-size: 0.95rem; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .header-right-tools { display: flex; align-items: center; gap: 8px; }
+    .header-right-tools { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .btn-header-back {
       background: rgba(56, 189, 248, 0.12);
       border: 1px solid rgba(56, 189, 248, 0.35);
@@ -57,6 +61,7 @@
       align-items: center;
       gap: 5px;
       transition: all 0.15s;
+      white-space: nowrap;
     }
     .btn-header-back:hover { background: rgba(56, 189, 248, 0.25); color: #ffffff; }
 
@@ -73,12 +78,13 @@
       align-items: center;
       gap: 5px;
       transition: all 0.15s;
+      white-space: nowrap;
     }
     .btn-admin-pill:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: #38bdf8; }
     .btn-admin-pill.logged-in-admin { background: rgba(160, 185, 129, 0.18); border-color: #10b981; color: #34d399; font-weight: 700; }
     .btn-admin-pill.logged-in-super { background: rgba(168, 85, 247, 0.22); border-color: #a855f7; color: #facc15; font-weight: 800; box-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
 
-    .app-container { max-width: 520px; margin: 0 auto; padding: 6px 14px 20px 14px; }
+    .app-container { width: 100%; max-width: 520px; margin: 0 auto; padding: 6px 14px 24px 14px; box-sizing: border-box; }
 
     .visit-counter-banner {
       background: #0b1324;
@@ -90,8 +96,8 @@
       justify-content: space-between;
       align-items: center;
     }
-    .visit-label { color: #38bdf8; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .visit-value { color: #cbd5e1; font-size: 0.8rem; }
+    .visit-label { color: #38bdf8; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .visit-value { color: #cbd5e1; font-size: 0.8rem; white-space: nowrap; }
     .visit-value strong { color: #38bdf8; font-size: 0.95rem; font-weight: 800; }
 
     .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -113,8 +119,8 @@
     .dash-menu-card:active { transform: scale(0.98); }
 
     .menu-icon-box { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 10px; }
-    .dash-menu-title { color: #ffffff; font-weight: 800; font-size: 0.92rem; margin-bottom: 3px; letter-spacing: -0.3px; }
-    .dash-menu-sub { color: #64748b; font-size: 0.72rem; letter-spacing: -0.2px; }
+    .dash-menu-title { color: #ffffff; font-weight: 800; font-size: 0.92rem; margin-bottom: 3px; letter-spacing: -0.3px; white-space: nowrap; }
+    .dash-menu-sub { color: #64748b; font-size: 0.72rem; letter-spacing: -0.2px; white-space: nowrap; }
 
     .bottom-utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
     .bottom-utility-card {
@@ -129,6 +135,7 @@
       cursor: pointer;
       transition: all 0.15s ease-in-out;
       user-select: none;
+      white-space: nowrap;
     }
     .bottom-utility-card:hover { transform: translateY(-2px); }
     .bottom-utility-card.enemy:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
@@ -226,8 +233,66 @@
       pointer-events: none;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
+      max-width: 92vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .custom-global-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 📱 휴대용 기기별 반응형 레이아웃 미디어 쿼리 */
+    @media (max-width: 480px) {
+      .global-nav-bar {
+        padding: 10px 12px;
+      }
+      .brand-title-text {
+        font-size: 0.88rem;
+      }
+      .btn-header-back, .btn-admin-pill {
+        font-size: 0.72rem;
+        padding: 4px 8px;
+      }
+      .app-container {
+        padding: 4px 10px 20px 10px;
+      }
+      .dash-menu-card {
+        padding: 16px 8px;
+        border-radius: 14px;
+      }
+      .menu-icon-box {
+        width: 40px;
+        height: 40px;
+        font-size: 1.15rem;
+        margin-bottom: 8px;
+      }
+      .dash-menu-title {
+        font-size: 0.86rem;
+      }
+      .dash-menu-sub {
+        font-size: 0.68rem;
+      }
+      .bottom-utility-card {
+        padding: 10px 10px;
+      }
+      .bottom-utility-title {
+        font-size: 0.82rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .badge-brand-eclipse {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+      }
+      .brand-title-text {
+        font-size: 0.8rem;
+      }
+      .dashboard-grid, .bottom-utility-grid {
+        gap: 8px;
+      }
+      .dash-menu-card {
+        padding: 14px 6px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -432,7 +497,7 @@
     </div>
 
     <!-- 등록 완료 확인 팝업 -->
-    <div class="self-checkin-box" id="selfCheckinSuccessCard" style="display: none;">
+    <div id="selfCheckinSuccessCard" style="display: none;">
       <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); border: 2px solid #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 14px;">
         🎉
       </div>
@@ -623,7 +688,15 @@
       }
     }
 
-    // 🎯 [핵심 개선] DB의 실제 오늘 방문자 수(today_visits)와 100% 실시간 동기화
+    // 🎯 [버그 완벽 수정] guild_settings에 키가 없으면 생성(POST), 있으면 갱신(PATCH) + 새로고침 시 정상 카운트
+    async function saveOrUpdateSettingKey(keyName, valStr, existsInDb) {
+      if (existsInDb) {
+        await apiRequest(`guild_settings?key=eq.${keyName}`, "PATCH", { value: String(valStr) });
+      } else {
+        await apiRequest(`guild_settings`, "POST", [{ key: keyName, value: String(valStr) }]);
+      }
+    }
+
     async function initSystemSettings() {
       // 1. 한국 시간(KST) 오늘 날짜 구하기 (YYYY-MM-DD)
       const now = new Date();
@@ -633,14 +706,22 @@
 
       let currentDbVisits = 0;
       let lastRecordedDate = "";
+      let hasVisitsKey = false;
+      let hasDateKey = false;
 
       try {
         const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
           settings.forEach(s => {
             cachedGuildSettingsMap[s.key] = s.value;
-            if (s.key === "today_visits") currentDbVisits = parseInt(s.value, 10) || 0;
-            if (s.key === "today_visits_date") lastRecordedDate = String(s.value).trim();
+            if (s.key === "today_visits") {
+              currentDbVisits = parseInt(s.value, 10) || 0;
+              hasVisitsKey = true;
+            }
+            if (s.key === "today_visits_date") {
+              lastRecordedDate = String(s.value).trim();
+              hasDateKey = true;
+            }
           });
 
           if (cachedGuildSettingsMap['guild_name']) {
@@ -650,29 +731,23 @@
           }
         }
 
-        // 2. 날짜가 바뀌었으면(새로운 날) DB 카운트를 1로 리셋
+        // 2. 날짜가 바뀌었으면 1로 초기화, 같은 날이면 방문할 때마다 +1 증가
         if (lastRecordedDate !== todayKst) {
           currentDbVisits = 1;
-          await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: "1" });
-          await apiRequest("guild_settings?key=eq.today_visits_date", "PATCH", { value: todayKst });
-          sessionStorage.setItem("visited_date_" + todayKst, "1");
+          await saveOrUpdateSettingKey("today_visits", "1", hasVisitsKey);
+          await saveOrUpdateSettingKey("today_visits_date", todayKst, hasDateKey);
         } else {
-          // 3. 같은 날인데 이 세션(탭)에서 첫 방문인 경우에만 DB 카운트 +1 증가
-          const sessionKey = "visited_date_" + todayKst;
-          if (!sessionStorage.getItem(sessionKey)) {
-            sessionStorage.setItem(sessionKey, "1");
-            currentDbVisits += 1;
-            await apiRequest("guild_settings?key=eq.today_visits", "PATCH", { value: String(currentDbVisits) });
-          }
+          currentDbVisits += 1;
+          await saveOrUpdateSettingKey("today_visits", String(currentDbVisits), hasVisitsKey);
         }
       } catch (e) {
         console.warn("방문자수 동기화 중 오류:", e);
       }
 
-      // 4. 화면에는 항상 최신 DB 기준 방문자 수를 정확하게 반영
+      // 3. 화면에 최신 방문 횟수 표시
       const displayElem = document.getElementById("todayVisitCount");
       if (displayElem) {
-        displayElem.innerText = currentDbVisits > 0 ? currentDbVisits : 1;
+        displayElem.innerText = currentDbVisits > 0 ? currentDbVisits.toLocaleString() : 1;
       }
     }
 
