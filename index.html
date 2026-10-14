@@ -688,40 +688,21 @@
       }
     }
 
-    // 🎯 [버그 완벽 수정] guild_settings에 키가 없으면 생성(POST), 있으면 갱신(PATCH) + 새로고침 시 정상 카운트
-    async function saveOrUpdateSettingKey(keyName, valStr, existsInDb) {
-      if (existsInDb) {
-        await apiRequest(`guild_settings?key=eq.${keyName}`, "PATCH", { value: String(valStr) });
-      } else {
-        await apiRequest(`guild_settings`, "POST", [{ key: keyName, value: String(valStr) }]);
-      }
-    }
-
+    // 🎯 [완벽 해결]: RLS에 막히지 않는 RPC(increment_today_visits) 호출로 새로고침 시마다 정상 누적
     async function initSystemSettings() {
-      // 1. 한국 시간(KST) 오늘 날짜 구하기 (YYYY-MM-DD)
       const now = new Date();
       const kstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
       const pad = n => (n < 10 ? '0' + n : n);
       const todayKst = `${kstTime.getFullYear()}-${pad(kstTime.getMonth() + 1)}-${pad(kstTime.getDate())}`;
 
-      let currentDbVisits = 0;
-      let lastRecordedDate = "";
-      let hasVisitsKey = false;
-      let hasDateKey = false;
+      let finalVisitCount = 1;
 
       try {
+        // 1. 길드 설정 조회
         const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
           settings.forEach(s => {
             cachedGuildSettingsMap[s.key] = s.value;
-            if (s.key === "today_visits") {
-              currentDbVisits = parseInt(s.value, 10) || 0;
-              hasVisitsKey = true;
-            }
-            if (s.key === "today_visits_date") {
-              lastRecordedDate = String(s.value).trim();
-              hasDateKey = true;
-            }
           });
 
           if (cachedGuildSettingsMap['guild_name']) {
@@ -731,23 +712,23 @@
           }
         }
 
-        // 2. 날짜가 바뀌었으면 1로 초기화, 같은 날이면 방문할 때마다 +1 증가
-        if (lastRecordedDate !== todayKst) {
-          currentDbVisits = 1;
-          await saveOrUpdateSettingKey("today_visits", "1", hasVisitsKey);
-          await saveOrUpdateSettingKey("today_visits_date", todayKst, hasDateKey);
-        } else {
-          currentDbVisits += 1;
-          await saveOrUpdateSettingKey("today_visits", String(currentDbVisits), hasVisitsKey);
+        // 2. RLS 우회 RPC 함수를 호출해 방문자수 +1 증가 및 결과값 수신
+        const rpcCount = await apiRequest("rpc/increment_today_visits", "POST", {
+          p_today_kst: todayKst
+        });
+
+        if (typeof rpcCount === "number" && rpcCount > 0) {
+          finalVisitCount = rpcCount;
+        } else if (cachedGuildSettingsMap["today_visits"]) {
+          finalVisitCount = parseInt(cachedGuildSettingsMap["today_visits"], 10) || 1;
         }
       } catch (e) {
-        console.warn("방문자수 동기화 중 오류:", e);
+        console.warn("방문자수 카운트 오류:", e);
       }
 
-      // 3. 화면에 최신 방문 횟수 표시
       const displayElem = document.getElementById("todayVisitCount");
       if (displayElem) {
-        displayElem.innerText = currentDbVisits > 0 ? currentDbVisits.toLocaleString() : 1;
+        displayElem.innerText = finalVisitCount.toLocaleString();
       }
     }
 
