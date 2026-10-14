@@ -668,7 +668,7 @@
         if (res && res.success) {
           sessionStorage.setItem("admin_auth", "true");
           sessionStorage.setItem("admin_role", res.role);
-          sessionStorage.setItem("admin_auth_expire", Date.now() + (60 * 60 * 1000));
+          sessionStorage.setItem("admin_auth_expire", Date.now() + (120 * 60 * 1000));
           closeGlobalAuthModal();
           updateAdminAuthUI();
 
