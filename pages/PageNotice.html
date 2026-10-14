@@ -106,7 +106,7 @@
   .badge-notice-type {
     font-size: 0.7rem;
     font-weight: 700;
-    padding: 2px 7px;
+    padding: 3px 8px;
     border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -200,7 +200,6 @@
     <div class="row g-2 mb-2">
       <div class="col-4">
         <label class="form-label small text-secondary mb-1">구분</label>
-        <!-- 🎯 구분 옵션: 일반, 중요, 필독, 이벤트로 개별 분리 -->
         <select id="noticeTypeSelect" class="form-select input-custom-notice">
           <option value="일반">📢 일반</option>
           <option value="중요">🚨 중요</option>
@@ -348,7 +347,6 @@
     let rawTitle = item.title || '';
     let detectedType = '일반';
 
-    // 🎯 개별 분리된 구분 값에 맞춰 타이틀 파싱
     if (rawTitle.startsWith('[중요]')) {
       detectedType = '중요';
       rawTitle = rawTitle.substring(6).trim();
@@ -408,7 +406,6 @@
         let rawTitle = item.title || '제목 없음';
         let detectedType = '일반';
 
-        // 🎯 개별 구분에 맞게 접두사 판독 및 제거 처리
         if (rawTitle.startsWith('[중요]')) {
           detectedType = '중요';
           rawTitle = rawTitle.substring(6).trim();
@@ -450,10 +447,11 @@
 
         return `
           <div class="notice-item-card ${isImp ? 'is-important' : ''}">
+            <!-- 🎯 뱃지와 제목 영역에 여유 공간(gap-2, min-width: 0)을 주어 뱃지가 제목을 침범하지 않도록 완벽 정렬 -->
             <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
-              <div class="d-flex align-items-center gap-2" style="min-width:0; flex:1;">
+              <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
                 <span class="badge-notice-type ${badgeClass}">${detectedType}</span>
-                <span class="fw-bold text-white small text-truncate" style="word-break: break-all;">${rawTitle}</span>
+                <span class="fw-bold text-white small" style="word-break: break-all; line-height: 1.4;">${rawTitle}</span>
               </div>
               <span class="text-secondary flex-shrink-0" style="font-size: 0.72rem;">${dateStr}</span>
             </div>
