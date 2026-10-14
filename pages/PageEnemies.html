@@ -54,6 +54,8 @@
     gap: 5px;
     cursor: pointer;
     transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-kakao-copy-enemy:hover {
     background: #fdd835;
@@ -79,6 +81,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
+    flex-shrink: 0;
   }
   .filter-chip.active {
     background: #ef4444;
@@ -178,6 +181,9 @@
     pointer-events: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+    max-width: 92vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .custom-enemy-toast.show {
     opacity: 1;
@@ -208,19 +214,29 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
     overflow: hidden;
   }
+
+  /* 📱 휴대용 기기별 반응형 미디어 쿼리 */
+  @media (max-width: 480px) {
+    .enemy-card-main {
+      padding: 14px 12px;
+    }
+    .enemy-form-box {
+      padding: 10px 12px;
+    }
+  }
 </style>
 
 <div class="enemy-card-main mb-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
     <div class="d-flex align-items-center gap-2">
       <span style="font-size: 1.25rem;">💀</span>
       <h6 class="fw-bold mb-0 text-danger fs-6">길드 원수 목록 및 등록</h6>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
       <button type="button" class="btn-kakao-copy-enemy" onclick="copyEnemyListToKakao()">
         <i class="fa-solid fa-comment"></i> 카톡 복사
       </button>
-      <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-2 py-1" id="enemyTotalCount" style="font-size: 0.72rem;">
+      <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-2 py-1" id="enemyTotalCount" style="font-size: 0.72rem; white-space: nowrap;">
         총 0명
       </span>
     </div>
@@ -228,11 +244,11 @@
 
   <!-- 1. 원수 등록 폼 -->
   <div class="enemy-form-box">
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
       <span class="text-light small fw-bold" style="font-size: 0.76rem;">
         <i class="fa-solid fa-circle-plus text-danger me-1"></i> 원수 등록 / 사냥터 추가
       </span>
-      <span class="text-secondary small" style="font-size: 0.68rem;">동일 원수는 자동 병합 갱신</span>
+      <span class="text-secondary small flex-shrink-0" style="font-size: 0.68rem;">동일 원수는 자동 병합 갱신</span>
     </div>
     <div class="row g-2">
       <div class="col-6">
@@ -283,20 +299,20 @@
 </div>
 
 <!-- 원수 상세 보기 모달 -->
-<div id="modalEnemyDetail" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center;">
+<div id="modalEnemyDetail" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 16px;">
   <div style="background: #0d1527; border: 1px solid #ef4444; color: #fff; border-radius: 16px; width: 92%; max-width: 420px; padding: 18px; margin: auto;">
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-50">
-      <div class="d-flex align-items-center gap-2">
-        <i class="fa-solid fa-crosshairs text-danger"></i>
-        <h6 class="modal-title fw-bold text-danger m-0" id="mDetailName">원수 상세</h6>
-        <span class="grid-guild-tag" id="mDetailGuild" style="display: none;"></span>
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-50 gap-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
+        <i class="fa-solid fa-crosshairs text-danger flex-shrink-0"></i>
+        <h6 class="modal-title fw-bold text-danger m-0 text-truncate" id="mDetailName">원수 상세</h6>
+        <span class="grid-guild-tag flex-shrink-0" id="mDetailGuild" style="display: none;"></span>
       </div>
-      <button type="button" class="btn-close btn-close-white" onclick="closeEnemyDetailModal()"></button>
+      <button type="button" class="btn-close btn-close-white flex-shrink-0" onclick="closeEnemyDetailModal()"></button>
     </div>
 
     <div class="mb-3">
       <div class="text-secondary small mb-1" style="font-size: 0.72rem;">주요 출몰 사냥터:</div>
-      <div id="mDetailLocations" class="p-2 rounded border border-secondary border-opacity-25" style="background: #080d1a; min-height: 50px;"></div>
+      <div id="mDetailLocations" class="p-2 rounded border border-secondary border-opacity-25" style="background: #080d1a; min-height: 50px; max-height: 120px; overflow-y: auto;"></div>
     </div>
 
     <div class="mb-3 text-secondary" style="font-size: 0.72rem;">
@@ -304,7 +320,7 @@
       <div class="mt-1">최근 등록/갱신: <span id="mDetailDate"></span></div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-50">
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-50 gap-2 flex-wrap">
       <button type="button" class="btn btn-outline-danger btn-sm" id="btnModalDelete">
         <i class="fa-solid fa-trash-can me-1"></i>삭제
       </button>
@@ -326,7 +342,7 @@
       <button type="button" class="btn-close btn-close-white" onclick="closeConfirmModal()"></button>
     </div>
     <div class="p-3 text-center">
-      <div class="text-white mb-2 fs-6" id="confirmDeleteTargetName">원수명을 삭제하시겠습니까?</div>
+      <div class="text-white mb-2 fs-6" id="confirmDeleteTargetName" style="word-break: break-all;">원수명을 삭제하시겠습니까?</div>
       <div class="text-secondary small">삭제된 원수 정보는 복구할 수 없습니다.</div>
     </div>
     <div class="p-2 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-2 bg-dark bg-opacity-25">
@@ -344,8 +360,8 @@
       <button type="button" class="btn-close btn-close-white" onclick="closeEditModal()"></button>
     </div>
     <div class="p-3">
-      <div class="small text-secondary mb-2" id="editModalTargetName">주요 사냥터 (쉼표로 구분하여 입력)</div>
-      <textarea id="editLocationsInput" class="form-control enemy-input" rows="3" placeholder="예: [바리탄] 평야, [성소] 1층"></textarea>
+      <div class="small text-secondary mb-2" id="editModalTargetName" style="word-break: break-all;">주요 사냥터 (쉼표로 구분하여 입력)</div>
+      <textarea id="editLocationsInput" class="form-control enemy-input" rows="3" placeholder="예: [바리탄] 평야, [성소] 1층" style="resize: vertical;"></textarea>
     </div>
     <div class="p-2 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-2 bg-dark bg-opacity-25">
       <button type="button" class="btn btn-secondary btn-sm px-3" onclick="closeEditModal()">취소</button>
@@ -367,7 +383,6 @@
   var activeGuildName = "ECLIPSE";
   var enemyToastTimer = null;
 
-  // 🎯 커스텀 토스트 알림창
   function showEnemyToast(msg, icon = "✅") {
     const toast = document.getElementById("enemyToastBox");
     const m = document.getElementById("enemyToastMsg");
@@ -668,7 +683,6 @@
     }
   }
 
-  // 🎯 커스텀 사냥터 수정 모달 컨트롤
   function openEditModal(id, enemyName, oldLocs) {
     document.getElementById("editModalTargetName").innerText = `[${enemyName}] 사냥터 목록 (쉼표로 구분)`;
     document.getElementById("editLocationsInput").value = oldLocs;
@@ -698,7 +712,6 @@
     document.getElementById("modalEnemyEditLocations").style.display = "none";
   }
 
-  // 🎯 커스텀 삭제 확인 모달 컨트롤
   function openConfirmDeleteModal(id, enemyName) {
     document.getElementById("confirmDeleteTargetName").innerText = `[${enemyName}] 원수를 삭제하시겠습니까?`;
 
@@ -720,7 +733,6 @@
     document.getElementById("modalEnemyConfirmDelete").style.display = "none";
   }
 
-  // 카카오톡 공유 텍스트 양식 복사
   function copyEnemyListToKakao() {
     const listToCopy = currentFilteredList.length > 0 ? currentFilteredList : rawEnemyList;
 
