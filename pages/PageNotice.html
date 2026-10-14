@@ -335,6 +335,7 @@
     document.getElementById('editingNoticeId').value = "";
   };
 
+  // 🎯 [완벽 수정]: 대괄호 접두사([중요], [필독] 등)를 안전하게 정밀 파싱하여 첫 글자 유실 원천 차단
   window.editNoticeItem = async function(id) {
     const hasPerm = await checkNoticeWritePermission();
     if (!hasPerm) {
@@ -349,16 +350,26 @@
 
     if (rawTitle.startsWith('[중요]')) {
       detectedType = '중요';
-      rawTitle = rawTitle.substring(6).trim();
+      rawTitle = rawTitle.replace('[중요]', '').trim();
     } else if (rawTitle.startsWith('[필독]')) {
       detectedType = '필독';
-      rawTitle = rawTitle.substring(6).trim();
+      rawTitle = rawTitle.replace('[필독]', '').trim();
     } else if (rawTitle.startsWith('[이벤트]')) {
       detectedType = '이벤트';
-      rawTitle = rawTitle.substring(6).trim();
+      rawTitle = rawTitle.replace('[이벤트]', '').trim();
     } else if (rawTitle.startsWith('[일반]')) {
       detectedType = '일반';
-      rawTitle = rawTitle.substring(6).trim();
+      rawTitle = rawTitle.replace('[일반]', '').trim();
+    } else if (rawTitle.startsWith('[')) {
+      // 기타 대괄호 형식이 있는 경우 첫 번째 닫는 대괄호 뒤의 텍스트 추출
+      const closeIdx = rawTitle.indexOf(']');
+      if (closeIdx !== -1) {
+        const prefix = rawTitle.substring(1, closeIdx).trim();
+        if (['중요', '필독', '이벤트', '일반'].includes(prefix)) {
+          detectedType = prefix;
+        }
+        rawTitle = rawTitle.substring(closeIdx + 1).trim();
+      }
     }
 
     document.getElementById('editingNoticeId').value = String(item.id);
@@ -408,16 +419,25 @@
 
         if (rawTitle.startsWith('[중요]')) {
           detectedType = '중요';
-          rawTitle = rawTitle.substring(6).trim();
+          rawTitle = rawTitle.replace('[중요]', '').trim();
         } else if (rawTitle.startsWith('[필독]')) {
           detectedType = '필독';
-          rawTitle = rawTitle.substring(6).trim();
+          rawTitle = rawTitle.replace('[필독]', '').trim();
         } else if (rawTitle.startsWith('[이벤트]')) {
           detectedType = '이벤트';
-          rawTitle = rawTitle.substring(6).trim();
+          rawTitle = rawTitle.replace('[이벤트]', '').trim();
         } else if (rawTitle.startsWith('[일반]')) {
           detectedType = '일반';
-          rawTitle = rawTitle.substring(6).trim();
+          rawTitle = rawTitle.replace('[일반]', '').trim();
+        } else if (rawTitle.startsWith('[')) {
+          const closeIdx = rawTitle.indexOf(']');
+          if (closeIdx !== -1) {
+            const prefix = rawTitle.substring(1, closeIdx).trim();
+            if (['중요', '필독', '이벤트', '일반'].includes(prefix)) {
+              detectedType = prefix;
+            }
+            rawTitle = rawTitle.substring(closeIdx + 1).trim();
+          }
         }
 
         let badgeClass = 'badge-type-normal';
@@ -447,7 +467,6 @@
 
         return `
           <div class="notice-item-card ${isImp ? 'is-important' : ''}">
-            <!-- 🎯 뱃지와 제목 영역에 여유 공간(gap-2, min-width: 0)을 주어 뱃지가 제목을 침범하지 않도록 완벽 정렬 -->
             <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
               <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
                 <span class="badge-notice-type ${badgeClass}">${detectedType}</span>
