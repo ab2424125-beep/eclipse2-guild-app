@@ -375,7 +375,7 @@
         <div class="col-12" id="boxIncomeDiffCalc">
           <div class="diff-calc-info">
             <div class="d-flex justify-content-between align-items-center small text-secondary">
-              <span>직전 시트 잔액: <strong class="text-light" id="diffPrevBalanceText">0 D</strong></span>
+              <span>인게임 비교 기준 잔액: <strong class="text-light" id="diffPrevBalanceText">0 D</strong></span>
               <span>입력 총액: <strong class="text-info" id="diffInputTotalText">0 D</strong></span>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top border-secondary border-opacity-25">
@@ -443,7 +443,7 @@
   </div>
 </div>
 
-<!-- 🎯 입출금 내역 수정/삭제 전용 모달 팝업 -->
+<!-- 입출금 내역 수정/삭제 전용 모달 팝업 -->
 <div id="financeEditModal" class="fin-modal-bg" style="display: none;">
   <div class="fin-modal-box">
     <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center" style="background: #090e1c;">
@@ -503,7 +503,15 @@
 </div>
 
 <script>
-  window.lastFinanceData = { logs: [], currentBalance: 0, filteredIncome: 0, totalIncome: 0, totalExpense: 0 };
+  window.lastFinanceData = { 
+    logs: [], 
+    currentBalance: 0, 
+    inGameBaseBalance: 0, 
+    filteredIncome: 0, 
+    totalIncome: 0, 
+    totalExpense: 0, 
+    totalItemDistExpense: 0 
+  };
   window.selectedDistRate = 70;
   window.isManagerFeeIncluded = true;
   window.currentIncomeMode = 'total';
@@ -582,9 +590,11 @@
     window.calculateIncomeDiff();
   };
 
+  // 🎯 [핵심 수정]: 인게임 실물 금고 기준 잔액(inGameBaseBalance)을 산출하여 N/1 분배금 이중 차감 왜곡 원천 차단
   window.calculateIncomeDiff = function() {
-    const prevBalance = window.lastFinanceData.currentBalance || 0;
-    document.getElementById('diffPrevBalanceText').innerText = prevBalance.toLocaleString() + ' D';
+    // 인게임 금고와 비교해야 할 기준 잔액 (장부상 N/1 분배 출금액을 보정한 실물 기준 금액)
+    const baseCompareBalance = window.lastFinanceData.inGameBaseBalance || window.lastFinanceData.currentBalance || 0;
+    document.getElementById('diffPrevBalanceText').innerText = baseCompareBalance.toLocaleString() + ' D';
 
     const rawVal = String(document.getElementById('incomeAmount').value).replace(/[^0-9]/g, '');
     const inputVal = parseInt(rawVal, 10) || 0;
@@ -593,7 +603,8 @@
     const btnSubmit = document.getElementById('btnIncomeSubmit');
 
     if (window.currentIncomeMode === 'total') {
-      window.calculatedNetIncome = inputVal - prevBalance;
+      // 실제 이번 추가 순수익 = 인게임 총액 - (인게임 실물 기준 잔액)
+      window.calculatedNetIncome = inputVal - baseCompareBalance;
       const diffTextElem = document.getElementById('diffCalculatedAmountText');
 
       if (!rawVal || inputVal === 0) {
@@ -859,6 +870,7 @@
       let totalIncome = 0;
       let totalExpense = 0;
       let filteredIncome = 0;
+      let totalItemDistExpense = 0; // 🎯 토벌 N/1 분배 출금액 누적
 
       logs.forEach(l => {
         if (l.type === '입금') {
@@ -867,15 +879,27 @@
         } else if (l.type === '출금') {
           totalExpense += l.amount;
           if (l.inFilter) filteredIncome -= l.amount;
+          
+          // 장부상 N/1 분배 출금액(인게임 금고에 실물로 남아있는 금액) 집계
+          const cat = String(l.category || '');
+          const rsn = String(l.reason || '');
+          if (cat.includes('N/1') || cat.includes('토벌N/1분배') || rsn.includes('토벌 배당') || rsn.includes('N/1분배')) {
+            totalItemDistExpense += l.amount;
+          }
         }
       });
 
       const currentBalance = totalIncome - totalExpense;
+      // 인게임 실물 금고 비교 기준 잔액 = 장부 잔액 + 장부상 선출금된 N/1 분배금
+      const inGameBaseBalance = currentBalance + totalItemDistExpense;
+
       window.lastFinanceData = {
         logs: logs,
         currentBalance: currentBalance,
+        inGameBaseBalance: inGameBaseBalance,
         totalIncome: totalIncome,
         totalExpense: totalExpense,
+        totalItemDistExpense: totalItemDistExpense,
         filteredIncome: filteredIncome
       };
 
@@ -898,7 +922,6 @@
     }
   };
 
-  // 🎯 [줄바꿈 깨짐 완전 해결]: flex, white-space: nowrap 처리 및 클릭 이벤트 연결
   window.renderFinanceLogs = function(logs) {
     const container = document.getElementById('financeLogsList');
     if (!container) return;
@@ -928,7 +951,6 @@
     }).join('');
   };
 
-  // 🎯 [내역 클릭 시 수정 모달 열기]
   window.openEditFinanceModal = function(id) {
     const item = (window.lastFinanceData.logs || []).find(l => l.id === id);
     if (!item) return;
@@ -947,7 +969,6 @@
     document.getElementById('financeEditModal').style.display = 'none';
   };
 
-  // 🎯 [내역 수정 저장]
   window.updateFinanceRecord = async function() {
     const id = document.getElementById('modalEditId').value;
     const date = document.getElementById('modalEditDate').value;
@@ -982,7 +1003,6 @@
     }
   };
 
-  // 🎯 [내역 삭제]
   window.deleteFinanceRecord = async function() {
     const id = document.getElementById('modalEditId').value;
     if (!confirm("정말로 이 입출금 내역을 삭제하시겠습니까?\n삭제 시 금고 잔액이 즉시 재계산됩니다.")) return;
@@ -1002,6 +1022,7 @@
     }
   };
 
+  // 🎯 [핵심 수정]: 인게임 총액 등록 시에도 보정된 인게임 실물 기준 잔액(inGameBaseBalance)과의 차액만 안전하게 입금
   window.handleIncomeSubmitClick = async function() {
     const date = document.getElementById('incomeDate').value;
     const reason = document.getElementById('incomeReason').value.trim();
@@ -1015,11 +1036,11 @@
 
     if (window.currentIncomeMode === 'total') {
       const inputTotal = parseInt(rawInputVal, 10);
-      const prevBal = window.lastFinanceData.currentBalance || 0;
-      finalDepositAmount = inputTotal - prevBal;
+      const baseCompareBalance = window.lastFinanceData.inGameBaseBalance || window.lastFinanceData.currentBalance || 0;
+      finalDepositAmount = inputTotal - baseCompareBalance;
 
       if (finalDepositAmount <= 0) {
-        return window.showFinToast(`입력 총액이 직전 금고 잔액(${prevBal.toLocaleString()}D)보다 커야 입금할 차액이 발생합니다.`, "⚠️");
+        return window.showFinToast(`입력 총액이 인게임 기준 잔액(${baseCompareBalance.toLocaleString()}D)보다 커야 입금할 차액이 발생합니다.`, "⚠️");
       }
 
       const autoNote = `[인게임 총액 ${inputTotal.toLocaleString()}D 기준 차액 입금]`;
