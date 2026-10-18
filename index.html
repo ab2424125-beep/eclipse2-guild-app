@@ -688,7 +688,6 @@
       }
     }
 
-    // 🎯 [완벽 해결]: RLS에 막히지 않는 RPC(increment_today_visits) 호출로 새로고침 시마다 정상 누적
     async function initSystemSettings() {
       const now = new Date();
       const kstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
@@ -698,7 +697,6 @@
       let finalVisitCount = 1;
 
       try {
-        // 1. 길드 설정 조회
         const settings = await apiRequest("guild_settings?select=key,value");
         if (settings && settings.length > 0) {
           settings.forEach(s => {
@@ -712,7 +710,6 @@
           }
         }
 
-        // 2. RLS 우회 RPC 함수를 호출해 방문자수 +1 증가 및 결과값 수신
         const rpcCount = await apiRequest("rpc/increment_today_visits", "POST", {
           p_today_kst: todayKst
         });
@@ -732,8 +729,12 @@
       }
     }
 
+    // 🎯 [핵심 개선]: PageSettle(정산내역)은 일반 길드원/비로그인 누구나 열람 가능하도록 진입 검사 완전 제외
     async function checkPermissionBeforeOpen(pageName) {
       if (isSuperAdminLoggedIn()) return true;
+
+      // 정산내역은 일반 길드원도 열람해야 하므로 화면 진입 단계에서 절대 차단하지 않음
+      if (pageName === "PageSettle") return true;
 
       try {
         const settings = await apiRequest("guild_settings?select=key,value");
@@ -745,14 +746,14 @@
       const permMap = {
         "PageRegister": { key: "perm_boss_register", name: "보스참여등록" },
         "PageWish": { key: "perm_wish_distribute", name: "분배희망신청" },
-        "PageSettle": { key: "perm_settle_fund_dist", name: "정산내역" },
         "PageFinance": { key: "perm_finance_input", name: "길드비용현황" }
       };
 
       if (permMap[pageName]) {
         const cfg = permMap[pageName];
         if (cachedGuildSettingsMap[cfg.key] === "false") {
-          alert(`⚠️ [${cfg.name}] 기능은 일반 관리자 권한이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.`);
+          // 브라우저 기본 alert 대신 커스텀 토스트로 안내
+          showGlobalToast(`⚠️ [${cfg.name}] 기능은 일반 관리자 권한이 비활성화되어 있습니다.`, "⚠️");
           return false;
         }
       }
