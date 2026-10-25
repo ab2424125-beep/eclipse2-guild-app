@@ -868,13 +868,19 @@
 
       logs.forEach(l => {
         const t = String(l.type || '').trim();
-        // 🎯 [수정]: '입금' 또는 '수입'이 아닌 모든 내역은 무조건 지출(출금)로 안전하게 합산
+        const cat = String(l.category || '');
+        const rsn = String(l.reason || '');
+        
         if (t === '입금' || t === '수입') {
           totalIncome += l.amount;
           if (l.inFilter) filteredIncome += l.amount;
         } else {
-          totalExpense += l.amount;
-          if (l.inFilter) filteredIncome -= l.amount;
+          // 🎯 [핵심 수정]: 토벌 N/1 분배 출금 내역은 금고 잔액 차감에서 제외 (경매 입금분만 누적 유지)
+          const isDistribution = cat.includes('N/1') || cat.includes('분배') || cat.includes('토벌') || rsn.includes('토벌 배당') || rsn.includes('N/1분배') || rsn.includes('배당');
+          if (!isDistribution) {
+            totalExpense += l.amount;
+            if (l.inFilter) filteredIncome -= l.amount;
+          }
         }
       });
 
@@ -1128,6 +1134,6 @@
     document.getElementById('expenseDate').value = today;
 
     window.setFinanceQuickRange('thisWeek');
-    window.setIncomeMode('total');
+    window.setIncomeCalcMode('total');
   })();
 </script>
