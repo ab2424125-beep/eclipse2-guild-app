@@ -40,6 +40,11 @@
     color: #475569 !important;
     opacity: 1 !important;
   }
+  .input-custom-wish::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(175deg);
+    cursor: pointer;
+    opacity: 0.9;
+  }
 
   .tax-toggle-btn {
     background: #111a2e;
@@ -240,6 +245,12 @@
       <div class="text-secondary small">선택된 아이템이 없습니다. 위 목록에서 선택하세요.</div>
     </div>
 
+    <!-- 🎯 [추가]: 정산 일자 선택 필터 -->
+    <div class="mb-3">
+      <label class="form-label small text-secondary mb-1">📅 정산 일자 (기본: 오늘)</label>
+      <input type="date" id="wishDistDate" class="form-control input-custom-wish">
+    </div>
+
     <!-- 게임 경매 수수료 토글 -->
     <div class="mb-3 p-2 rounded" style="background: #080d1a; border: 1px solid #1e2c47;">
       <div class="d-flex justify-content-between align-items-center mb-1">
@@ -284,7 +295,6 @@
       </div>
       <div class="col-6">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <!-- 🎯 요청하신 대로 "추가 지원금"으로 문구 단독 지정 -->
           <label class="form-label small text-secondary mb-0">➕ 추가 지원금</label>
         </div>
         <input type="number" id="wishExtraFund" class="form-control input-custom-wish" placeholder="0 (다이아 입력)" onkeyup="calculateNShare()">
@@ -650,9 +660,11 @@
     const price = parseInt(document.getElementById('wishPrice').value) || 0;
     const feeRate = parseInt(document.getElementById('guildFeeSelect').value) || 0;
     const extraFund = parseInt(document.getElementById('wishExtraFund').value) || 0;
+    const customDistDate = document.getElementById('wishDistDate').value; // 🎯 사용자가 지정한 정산 일자
 
     if (!memberName) return window.showWishToast("낙찰받은 길드원을 선택해주세요!", "⚠️");
     if (!price || price <= 0) return window.showWishToast("낙찰 금액을 정확히 입력해주세요!", "⚠️");
+    if (!customDistDate) return window.showWishToast("정산 일자를 선택해주세요!", "⚠️");
 
     const btn = document.getElementById('btnDistSubmitAction');
     if (btn) {
@@ -666,6 +678,9 @@
     const distributionPool = (netAuctionPrice - guildFeeAmount) + extraFund;
     const perShare = window.currentSelectedItem.memberCount > 0 ? Math.floor(distributionPool / window.currentSelectedItem.memberCount) : 0;
 
+    // 🎯 선택한 날짜에 정오(12시)를 결합하여 타임스탬프 생성 (시간대 오차 방지)
+    const customCreatedAt = new Date(`${customDistDate}T12:00:00`).toISOString();
+
     try {
       const res = await apiRequest("rpc/process_wish_distribution_transaction", "POST", {
         p_item_key: window.currentSelectedItem.itemKey,
@@ -677,7 +692,8 @@
         p_members: window.currentSelectedItem.members,
         p_net_auction_price: netAuctionPrice,
         p_distribution_pool: distributionPool,
-        p_member_count: window.currentSelectedItem.memberCount
+        p_member_count: window.currentSelectedItem.memberCount,
+        p_created_at: customCreatedAt // 🎯 백엔드 함수에 커스텀 정산일 전달
       });
 
       if (!res || !res.success) {
@@ -687,6 +703,7 @@
       const detailHtml = `
         <div>• <strong>아이템:</strong> [${window.currentSelectedItem.bossName}] ${window.currentSelectedItem.itemName}</div>
         <div>• <strong>낙찰자:</strong> ${memberName}</div>
+        <div>• <strong>정산 일자:</strong> ${customDistDate}</div>
         <div>• <strong>금고 실입금(세후):</strong> +${netAuctionPrice.toLocaleString()} 다이아</div>
         <div>• <strong>참여자 총분배:</strong> -${distributionPool.toLocaleString()} 다이아</div>
         ${guildFeeAmount > 0 ? `<div>• <strong>길드금고 순적립:</strong> +${guildFeeAmount.toLocaleString()} 다이아</div>` : ''}
@@ -772,6 +789,11 @@
   };
 
   window.initWishPage = async function() {
+    // 🎯 기본 정산 일자를 오늘(2026-10-26)로 자동 세팅
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('wishDistDate');
+    if (dateInput) dateInput.value = todayStr;
+
     await window.loadStockItems();
     await window.loadMemberListForWish();
     await window.loadDistHistory();
