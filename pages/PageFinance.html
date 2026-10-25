@@ -875,7 +875,7 @@
           totalIncome += l.amount;
           if (l.inFilter) filteredIncome += l.amount;
         } else {
-          // 🎯 [핵심 수정]: 토벌 N/1 분배 출금 내역은 금고 잔액 차감에서 제외 (경매 입금분만 누적 유지)
+          // 🎯 [사용자 요청 반영]: 토벌 N/1 분배 출금 내역은 금고 잔액 차감에서 제외 (입금분만 누적 유지)
           const isDistribution = cat.includes('N/1') || cat.includes('분배') || cat.includes('토벌') || rsn.includes('토벌 배당') || rsn.includes('N/1분배') || rsn.includes('배당');
           if (!isDistribution) {
             totalExpense += l.amount;
