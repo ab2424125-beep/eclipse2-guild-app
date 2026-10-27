@@ -569,6 +569,29 @@
       }
     }
 
+    // 🎯 120분 만료 실시간 감지 타이머 함수: 시간이 초과되면 즉시 아이콘을 초기화하고 권한 회수
+    function checkAdminSessionExpiry() {
+      const expire = sessionStorage.getItem("admin_auth_expire");
+      if (expire) {
+        if (Date.now() > parseInt(expire, 10)) {
+          sessionStorage.removeItem("admin_auth");
+          sessionStorage.removeItem("admin_role");
+          sessionStorage.removeItem("admin_auth_expire");
+          updateAdminAuthUI();
+          showGlobalToast("관리자 세션이 만료되어 자동 로그아웃되었습니다.", "🔒");
+          if (currentActiveModule === "PageSettings") {
+            goHome();
+          } else if (currentActiveModule) {
+            openModule(currentActiveModule, false);
+          }
+        } else {
+          updateAdminAuthUI();
+        }
+      } else {
+        updateAdminAuthUI();
+      }
+    }
+
     function handleAdminAuthToggle() {
       if (isAdminLoggedIn()) {
         const currentRole = isSuperAdminLoggedIn() ? "슈퍼관리자" : "일반 관리자";
@@ -908,7 +931,6 @@
       }
 
       try {
-        // 동시성 방어: 등록 직전 DB에서 최신 토벌 명단을 실시간으로 가져와 병합
         const latestRaid = await apiRequest(`boss_participations?id=eq.${targetSelfRaidData.id}&select=id,members,raid_time,boss_name`);
         if (!latestRaid || latestRaid.length === 0) {
           throw new Error("토벌 기록을 찾을 수 없습니다.");
@@ -1000,6 +1022,9 @@
     window.addEventListener("DOMContentLoaded", () => {
       initSystemSettings();
       updateAdminAuthUI();
+
+      // 🎯 120분 만료 여부를 10초 주기로 실시간 감시하여 UI 즉시 원복
+      setInterval(checkAdminSessionExpiry, 10000);
 
       if (window.location.hash.includes("SelfCheckin")) {
         checkSelfCheckinUrlHash();
