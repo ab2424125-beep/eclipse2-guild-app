@@ -239,59 +239,24 @@
     }
     .custom-global-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* 📱 휴대용 기기별 반응형 레이아웃 미디어 쿼리 */
     @media (max-width: 480px) {
-      .global-nav-bar {
-        padding: 10px 12px;
-      }
-      .brand-title-text {
-        font-size: 0.88rem;
-      }
-      .btn-header-back, .btn-admin-pill {
-        font-size: 0.72rem;
-        padding: 4px 8px;
-      }
-      .app-container {
-        padding: 4px 10px 20px 10px;
-      }
-      .dash-menu-card {
-        padding: 16px 8px;
-        border-radius: 14px;
-      }
-      .menu-icon-box {
-        width: 40px;
-        height: 40px;
-        font-size: 1.15rem;
-        margin-bottom: 8px;
-      }
-      .dash-menu-title {
-        font-size: 0.86rem;
-      }
-      .dash-menu-sub {
-        font-size: 0.68rem;
-      }
-      .bottom-utility-card {
-        padding: 10px 10px;
-      }
-      .bottom-utility-title {
-        font-size: 0.82rem;
-      }
+      .global-nav-bar { padding: 10px 12px; }
+      .brand-title-text { font-size: 0.88rem; }
+      .btn-header-back, .btn-admin-pill { font-size: 0.72rem; padding: 4px 8px; }
+      .app-container { padding: 4px 10px 20px 10px; }
+      .dash-menu-card { padding: 16px 8px; border-radius: 14px; }
+      .menu-icon-box { width: 40px; height: 40px; font-size: 1.15rem; margin-bottom: 8px; }
+      .dash-menu-title { font-size: 0.86rem; }
+      .dash-menu-sub { font-size: 0.68rem; }
+      .bottom-utility-card { padding: 10px 10px; }
+      .bottom-utility-title { font-size: 0.82rem; }
     }
 
     @media (max-width: 360px) {
-      .badge-brand-eclipse {
-        font-size: 0.65rem;
-        padding: 2px 6px;
-      }
-      .brand-title-text {
-        font-size: 0.8rem;
-      }
-      .dashboard-grid, .bottom-utility-grid {
-        gap: 8px;
-      }
-      .dash-menu-card {
-        padding: 14px 6px;
-      }
+      .badge-brand-eclipse { font-size: 0.65rem; padding: 2px 6px; }
+      .brand-title-text { font-size: 0.8rem; }
+      .dashboard-grid, .bottom-utility-grid { gap: 8px; }
+      .dash-menu-card { padding: 14px 6px; }
     }
   </style>
 </head>
@@ -466,7 +431,7 @@
     </div>
   </div>
 
-  <!-- 자가 등록 입력 모달 -->
+  <!-- 자가 등록 입력 모달 (닉네임 선택 + PIN 입력으로 동시성 및 중복 오류 해결) -->
   <div id="selfCheckinModal" class="admin-auth-backdrop" style="display: none;">
     <div class="self-checkin-box" id="selfCheckinInputCard">
       <div class="self-timer-badge">
@@ -481,18 +446,24 @@
 
       <div class="p-2 mb-3 rounded" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.78rem;">
         <div class="text-info fw-bold mb-1" id="selfRaidInfoText">보스 정보 로드 중...</div>
-        <div class="text-secondary" style="font-size: 0.7rem;">OCR 누락 인원만 본인 인증 후 등록 가능합니다.</div>
+        <div class="text-secondary" style="font-size: 0.7rem;">누락 인원만 본인 확인 후 등록 가능합니다.</div>
+      </div>
+
+      <div class="mb-2 text-start">
+        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
+        <select id="selfMemberSelect" class="form-select" style="background:#080d1a; border:1px solid #233554; color:#ffffff; font-size:0.85rem; border-radius:10px; height:40px;">
+          <option value="">본인 닉네임을 선택하세요</option>
+        </select>
       </div>
 
       <div class="mb-3 text-start">
-        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (숫자 6자리 이상)</label>
+        <label class="small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (PIN)</label>
         <input type="password" id="selfMemberPin" class="form-control text-center" placeholder="개인 비밀번호 입력" maxlength="12" inputmode="numeric" style="background:#080d1a; border:1px solid #38bdf8; color:#38bdf8; font-size:1.1rem; letter-spacing:4px; height:44px;" onkeypress="if(event.keyCode==13){ submitSelfCheckin(); }">
-        <div class="text-secondary mt-1 text-center" style="font-size: 0.68rem;">* 본인 비밀번호와 일치하는 길드원으로 자동 식별됩니다.</div>
       </div>
 
       <div class="d-flex gap-2">
         <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" style="background: #1e293b; border-color: #334155; font-size: 0.82rem;" onclick="closeSelfCheckinModal()">닫기</button>
-        <button type="button" class="btn btn-sm flex-fill fw-bold py-2" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.82rem;" onclick="submitSelfCheckin()">추가하기</button>
+        <button type="button" class="btn btn-sm flex-fill fw-bold py-2" id="btnSubmitSelfCheckinAction" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border: none; font-size: 0.82rem;" onclick="submitSelfCheckin()">추가하기</button>
       </div>
     </div>
 
@@ -729,11 +700,8 @@
       }
     }
 
-    // 🎯 [핵심 개선]: PageSettle(정산내역)은 일반 길드원/비로그인 누구나 열람 가능하도록 진입 검사 완전 제외
     async function checkPermissionBeforeOpen(pageName) {
       if (isSuperAdminLoggedIn()) return true;
-
-      // 정산내역은 일반 길드원도 열람해야 하므로 화면 진입 단계에서 절대 차단하지 않음
       if (pageName === "PageSettle") return true;
 
       try {
@@ -752,7 +720,6 @@
       if (permMap[pageName]) {
         const cfg = permMap[pageName];
         if (cachedGuildSettingsMap[cfg.key] === "false") {
-          // 브라우저 기본 alert 대신 커스텀 토스트로 안내
           showGlobalToast(`⚠️ [${cfg.name}] 기능은 일반 관리자 권한이 비활성화되어 있습니다.`, "⚠️");
           return false;
         }
@@ -851,7 +818,7 @@
       try {
         const [raidData, members] = await Promise.all([
           apiRequest(`boss_participations?id=eq.${raidId}`),
-          apiRequest(`guild_members?select=name,pin&order=name.asc`)
+          apiRequest(`guild_members?select=id,name,pin&order=name.asc`)
         ]);
 
         if (!raidData || raidData.length === 0) {
@@ -866,13 +833,18 @@
         const raidTimeStr = (targetSelfRaidData.raid_time || "").replace("T", " ").slice(0, 16);
         document.getElementById("selfRaidInfoText").innerText = `[${raidTimeStr}] ${targetSelfRaidData.boss_name} (${targetSelfRaidData.war_type || '일반'})`;
 
+        const selectElem = document.getElementById("selfMemberSelect");
+        if (selectElem) {
+          selectElem.innerHTML = '<option value="">본인 닉네임을 선택하세요</option>' +
+            (window.cachedSelfMembers || []).map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+        }
+
         document.getElementById("selfCheckinInputCard").style.display = "block";
         document.getElementById("selfCheckinSuccessCard").style.display = "none";
 
         const pinInput = document.getElementById("selfMemberPin");
         pinInput.value = "";
         document.getElementById("selfCheckinModal").style.display = "flex";
-        setTimeout(() => pinInput.focus(), 100);
 
         startSelfTimerCountdown(createdTime + expireLimitMs);
 
@@ -911,41 +883,60 @@
     }
 
     async function submitSelfCheckin() {
+      const selectedName = document.getElementById("selfMemberSelect").value;
       const inputPin = document.getElementById("selfMemberPin").value.trim();
 
-      if (!inputPin) return alert("개인 비밀번호를 입력해주세요.");
-      if (inputPin.length < 4) return alert("비밀번호는 숫자 4자리 이상이어야 합니다.");
+      if (!selectedName) return alert("본인 닉네임을 선택해주세요.");
+      if (!inputPin) return alert("개인 비밀번호(PIN)를 입력해주세요.");
 
-      const matchedMembers = (window.cachedSelfMembers || []).filter(m => (m.pin || "").trim() === inputPin);
-
-      if (matchedMembers.length === 0) {
-        return alert("❌ 등록된 비밀번호와 일치하는 길드원을 찾을 수 없습니다.\n비밀번호를 다시 확인해주세요.");
+      const identifiedMember = (window.cachedSelfMembers || []).find(m => m.name === selectedName);
+      if (!identifiedMember) {
+        return alert("❌ 선택한 길드원 정보를 확인할 수 없습니다.");
       }
 
-      if (matchedMembers.length > 1) {
-        return alert("⚠️ 동일한 비밀번호를 사용하는 길드원이 둘 이상 존재합니다.\n관리자에게 문의하여 비밀번호를 재설정해주세요.");
+      let dbPin = String(identifiedMember.pin || '').trim();
+      if (!dbPin) dbPin = "0000";
+
+      if (dbPin !== inputPin) {
+        return alert("❌ 비밀번호가 올바르지 않습니다.\n초기화 상태인 경우 기본값 [ 0000 ] 입니다.");
       }
 
-      const identifiedMember = matchedMembers[0];
-      const memberName = identifiedMember.name;
-
-      const currentList = Array.isArray(targetSelfRaidData.members) ? targetSelfRaidData.members : [];
-      if (currentList.includes(memberName)) {
-        showSuccessConfirmCard(memberName, true);
-        return;
+      const btn = document.getElementById("btnSubmitSelfCheckinAction");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "등록 중...";
       }
 
       try {
-        const updatedMembers = currentList.concat([memberName]);
+        // 동시성 방어: 등록 직전 DB에서 최신 토벌 명단을 실시간으로 가져와 병합
+        const latestRaid = await apiRequest(`boss_participations?id=eq.${targetSelfRaidData.id}&select=id,members,raid_time,boss_name`);
+        if (!latestRaid || latestRaid.length === 0) {
+          throw new Error("토벌 기록을 찾을 수 없습니다.");
+        }
+
+        const freshMembers = Array.isArray(latestRaid[0].members) ? latestRaid[0].members : [];
+
+        if (freshMembers.includes(selectedName)) {
+          showSuccessConfirmCard(selectedName, true);
+          return;
+        }
+
+        const updatedMembers = freshMembers.concat([selectedName]);
         await apiRequest(`boss_participations?id=eq.${targetSelfRaidData.id}`, "PATCH", {
           members: updatedMembers,
           member_count: updatedMembers.length
         });
 
-        showSuccessConfirmCard(memberName, false);
+        targetSelfRaidData.members = updatedMembers;
+        showSuccessConfirmCard(selectedName, false);
 
       } catch (err) {
         alert("추가 실패: " + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = "추가하기";
+        }
       }
     }
 
