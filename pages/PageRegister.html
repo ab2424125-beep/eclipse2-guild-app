@@ -12,18 +12,19 @@
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
   }
 
+  /* 🎯 높이를 콤팩트하게 축소(min-height: 48px, 여백 최적화)하여 한눈에 들어오는 레이아웃 구성 */
   .ocr-paste-box {
     background: rgba(14, 23, 42, 0.9);
     border: 1px dashed rgba(168, 85, 247, 0.6);
     border-radius: 12px;
-    padding: 12px 10px;
+    padding: 8px 10px;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;
     position: relative;
-    min-height: 72px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -43,8 +44,8 @@
     padding: 2px 4px;
   }
   .ocr-preview-thumb {
-    width: 54px;
-    height: 46px;
+    width: 48px;
+    height: 40px;
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid rgba(56, 189, 248, 0.4);
@@ -112,7 +113,6 @@
     color: #fff;
   }
 
-  /* 🎯 높낮이 및 여백 균일화 (수평 일치) */
   .control-label-header {
     height: 20px;
     display: flex;
@@ -194,7 +194,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     min-height: 44px;
     box-sizing: border-box;
     gap: 8px;
@@ -284,6 +284,10 @@
     border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
+  }
+  .btn-item-inline-add:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #ffffff;
   }
 
   .members-grid-fixed {
@@ -376,101 +380,25 @@
   }
   .custom-reg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .self-checkin-modal-backdrop {
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(6, 10, 20, 0.88);
-    backdrop-filter: blur(8px);
-    z-index: 9999999;
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px;
-  }
-  .self-checkin-modal-card {
-    background: rgba(18, 26, 45, 0.96);
-    border: 1.5px solid #38bdf8;
-    border-radius: 20px;
-    padding: 22px 18px;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(56, 189, 248, 0.25);
-    text-align: center;
-  }
-  .input-self-modal {
-    background-color: #080d1a !important;
-    border: 1px solid #233554 !important;
-    color: #ffffff !important;
-    border-radius: 10px !important;
-    padding: 9px 12px !important;
-    font-size: 0.88rem !important;
-    color-scheme: dark;
-  }
-
-  /* 📱 휴대용 기기별 반응형 미디어 쿼리 (스타일/기능 유지, 크기 및 그리드 최적화) */
   @media (max-width: 480px) {
-    .register-card-main {
-      padding: 14px 12px;
-    }
-    .members-grid-fixed {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 5px;
-    }
-    .member-grid-cell-btn {
-      font-size: 0.72rem;
-      padding: 6px 3px;
-    }
-    .time-touch-box {
-      padding: 8px 8px;
-    }
-    .time-touch-text {
-      font-size: 0.75rem;
-      gap: 4px;
-    }
-    .select-custom-reg {
-      padding: 0 26px 0 9px !important;
-      font-size: 0.76rem !important;
-      background-position: right 7px center !important;
-    }
-    .war-badge-check-custom {
-      padding: 8px 10px;
-    }
-    .war-badge-check-custom > div:first-child {
-      gap: 10px !important;
-    }
-    .ocr-preview-wrapper {
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .ocr-action-btn-group {
-      width: 100%;
-      justify-content: flex-end;
-      padding-top: 4px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .btn-ocr-analyze, .btn-ocr-reset {
-      flex: 1;
-      text-align: center;
-      padding: 6px 8px;
-    }
+    .register-card-main { padding: 14px 12px; }
+    .members-grid-fixed { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+    .member-grid-cell-btn { font-size: 0.72rem; padding: 6px 3px; }
+    .time-touch-box { padding: 8px 8px; }
+    .time-touch-text { font-size: 0.75rem; gap: 4px; }
+    .select-custom-reg { padding: 0 26px 0 9px !important; font-size: 0.76rem !important; background-position: right 7px center !important; }
+    .war-badge-check-custom { padding: 8px 10px; }
+    .war-badge-check-custom > div:first-child { gap: 10px !important; }
+    .ocr-preview-wrapper { flex-wrap: wrap; gap: 6px; }
+    .ocr-action-btn-group { width: 100%; justify-content: flex-end; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+    .btn-ocr-analyze, .btn-ocr-reset { flex: 1; text-align: center; padding: 6px 8px; }
   }
 
   @media (max-width: 360px) {
-    .members-grid-fixed {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .war-badge-check-custom {
-      flex-wrap: wrap;
-      height: auto;
-      gap: 8px;
-    }
-    .war-badge-check-custom > div:last-child {
-      width: 100%;
-      justify-content: space-between;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .control-label-header span {
-      display: none;
-    }
+    .members-grid-fixed { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .war-badge-check-custom { flex-wrap: wrap; height: auto; gap: 8px; }
+    .war-badge-check-custom > div:last-child { width: 100%; justify-content: space-between; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+    .control-label-header span { display: none; }
   }
 </style>
 
@@ -482,17 +410,18 @@
     </div>
   </div>
 
+  <!-- 슬림해진 OCR 스크린샷 붙여넣기 영역 -->
   <div class="ocr-paste-box" tabindex="0" id="ocrDropZone" 
        onclick="handleOcrBoxClick(event)" 
        ondragover="handleDragOver(event)" 
        ondragleave="handleDragLeave(event)" 
        ondrop="handleFileDrop(event)">
     <div id="ocrDefaultGuideView">
-      <div class="fw-bold" style="color: #c084fc; font-size: 0.82rem;">
-        <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i> 파티창/순위표 스크린샷 붙여넣기 (Ctrl+V)
+      <div class="fw-bold" style="color: #c084fc; font-size: 0.8rem;">
+        <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i> 파티창/순위표 스샷 붙여넣기 (Ctrl+V)
       </div>
-      <div class="text-secondary mt-1" style="font-size: 0.72rem;">
-        터치/클릭하여 파일선택, 드래그 또는 <kbd style="background: #1e1b4b; border: 1px solid #4338ca; color: #a5b4fc;">Ctrl+V</kbd>
+      <div class="text-secondary" style="font-size: 0.68rem; margin-top: 2px;">
+        클릭/터치하여 파일선택, 드래그 또는 <kbd style="background: #1e1b4b; border: 1px solid #4338ca; color: #a5b4fc;">Ctrl+V</kbd>
       </div>
     </div>
 
@@ -514,9 +443,8 @@
     <input type="file" id="ocrFileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
   </div>
 
-  <!-- 🎯 완벽 정렬된 토벌 일시 & 보스 선택 2단 그리드 -->
+  <!-- 토벌 일시 & 보스 선택 2단 그리드 -->
   <div class="row g-2 mb-2 align-items-end">
-    <!-- 1. 토벌 일시 -->
     <div class="col-6">
       <div class="control-label-header">
         <label class="small text-secondary m-0" style="font-size: 0.72rem;">토벌 일시</label>
@@ -532,7 +460,6 @@
       </div>
     </div>
 
-    <!-- 2. 보스 선택 -->
     <div class="col-6">
       <div class="control-label-header">
         <label class="small text-secondary m-0" style="font-size: 0.72rem;">보스 선택</label>
@@ -577,7 +504,8 @@
     </div>
   </div>
 
-  <div class="mb-3">
+  <!-- 획득 아이템 목록 -->
+  <div class="mb-2">
     <div class="d-flex justify-content-between align-items-center mb-1">
       <label class="small text-secondary" style="font-size: 0.72rem;">획득 아이템 목록 (선택)</label>
       <span class="text-secondary" style="font-size: 0.68rem;">입력 후 [추가]</span>
@@ -593,12 +521,33 @@
     <div id="dropItemsContainer" class="d-flex flex-wrap gap-1 mt-1"></div>
   </div>
 
+  <!-- 🎯 신규 추가: 참여 길드원 직접 타이핑 일괄 입력창 -->
+  <div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <label class="small text-secondary" style="font-size: 0.72rem;">
+        <i class="fa-solid fa-keyboard me-1 text-info"></i>참여 인원 직접 타이핑 일괄 추가
+      </label>
+      <span class="text-secondary" style="font-size: 0.68rem;">쉼표(,), 띄어쓰기 또는 줄바꿈 구분</span>
+    </div>
+    <div class="item-input-wrapper">
+      <input type="text" id="inputBatchMembers" class="form-control input-item-custom" 
+             placeholder="예: 불편한형진, 심기불편, 삼땡 (카톡 복붙 가능)" 
+             autocomplete="off" 
+             onkeypress="if(event.keyCode==13){ addBatchMembersFromInput(); }">
+      <button type="button" class="btn-item-inline-add" onclick="addBatchMembersFromInput()">+ 일괄추가</button>
+    </div>
+  </div>
+
+  <!-- 참여 길드원 칩 선택 영역 (직전참여자 원클릭 버튼 탑재) -->
   <div class="mb-3">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <span class="small text-secondary" style="font-size: 0.74rem;">
         참여 길드원 (<strong id="selectedMemberCount" class="text-info">0</strong>명 선택됨)
       </span>
       <div class="d-flex gap-1">
+        <button type="button" class="btn btn-outline-info btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="loadPreviousRaidMembers()">
+          <i class="fa-solid fa-clock-rotate-left me-1"></i>직전참여자
+        </button>
         <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="selectAllMembers(true)">전체선택</button>
         <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.68rem;" onclick="selectAllMembers(false)">초기화</button>
       </div>
@@ -618,40 +567,6 @@
   <span id="regToastMsg">알림</span>
 </div>
 
-<!-- 🚪 자가등록(#SelfCheckin) 모달 UI -->
-<div id="selfCheckinModalContainer" class="self-checkin-modal-backdrop" style="display: none;">
-  <div class="self-checkin-modal-card" id="selfCheckinCardInner">
-    <div style="font-size: 2.2rem; margin-bottom: 8px;">⚔️</div>
-    <h6 class="fw-bold text-white mb-1">보스 토벌 추가 참여</h6>
-    <p class="text-secondary small mb-2" id="modalRaidInfoText" style="font-size: 0.76rem;">-</p>
-
-    <div class="p-2 mb-3 rounded d-flex justify-content-between align-items-center" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35);">
-      <span class="small text-danger fw-bold" style="font-size: 0.74rem;"><i class="fa-regular fa-clock me-1"></i>남은 유효시간</span>
-      <span class="small text-danger fw-bold" id="modalCheckinTimerText" style="font-size: 0.78rem;">03:00</span>
-    </div>
-
-    <div class="mb-2 text-start">
-      <label class="form-label small text-secondary mb-1" style="font-size: 0.74rem;">길드원 닉네임</label>
-      <select id="modalSelfMemberSelect" class="form-select input-self-modal">
-        <option value="">본인 닉네임을 선택하세요</option>
-      </select>
-    </div>
-
-    <div class="mb-3 text-start">
-      <label class="form-label small text-secondary mb-1" style="font-size: 0.74rem;">개인 비밀번호 (PIN)</label>
-      <input type="password" id="modalSelfMemberPw" class="form-control input-self-modal" 
-             placeholder="비밀번호 입력" maxlength="12" 
-             autocomplete="new-password" 
-             onkeypress="if(event.keyCode==13){ submitModalSelfCheckin(); }">
-    </div>
-
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-secondary w-50 py-2 small fw-bold" onclick="closeSelfCheckinSafeExit()">취소</button>
-      <button type="button" class="btn btn-primary w-50 py-2 small fw-bold" id="btnSubmitModalCheckin" onclick="submitModalSelfCheckin()">등록하기</button>
-    </div>
-  </div>
-</div>
-
 <script>
   window.allMemberList = window.allMemberList || [];
   window.selectedMemberSet = new Set();
@@ -663,10 +578,6 @@
   window.currentGuildName = "불편한사람들";
   window.useSelfCheckinSetting = true;
   window.allowBossRegisterPerm = true;
-
-  window.modalCheckinRaidId = null;
-  window.modalCheckinCreatedAt = null;
-  window.modalCheckinInterval = null;
 
   window.currentScoreRules = {
     base: 1,
@@ -680,44 +591,7 @@
       clearTimeout(window.regToastTimer);
       window.regToastTimer = null;
     }
-    if (window.modalCheckinInterval) {
-      clearInterval(window.modalCheckinInterval);
-      window.modalCheckinInterval = null;
-    }
   };
-
-  window.closeSelfCheckinSafeExit = function() {
-    if (window.modalCheckinInterval) {
-      clearInterval(window.modalCheckinInterval);
-      window.modalCheckinInterval = null;
-    }
-
-    const modal = document.getElementById("selfCheckinModalContainer");
-    if (modal) {
-      modal.innerHTML = `
-        <div class="self-checkin-modal-card" style="border-color:#64748b; max-width:320px;">
-          <div style="font-size:2.8rem; margin-bottom:12px;">🔒</div>
-          <h6 style="color:#ffffff; font-weight:700; margin-bottom:8px;">화면이 종료되었습니다</h6>
-          <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:16px;">카카오톡 상단의 닫기(X) 버튼을 눌러주세요.</p>
-          <button type="button" class="btn btn-secondary btn-sm w-100 py-2" onclick="window.close();">닫기</button>
-        </div>
-      `;
-    }
-
-    window.close();
-    try { window.open('', '_self').close(); } catch(e) {}
-
-    setTimeout(() => {
-      if (window.history && window.history.length > 1) {
-        window.history.back();
-      }
-    }, 180);
-  };
-
-  function alertAndCloseModal(message) {
-    alert(message);
-    window.closeSelfCheckinSafeExit();
-  }
 
   function showRegToast(message, icon = "✅") {
     const toast = document.getElementById("regToastBox");
@@ -868,6 +742,69 @@
     renderMemberGridCells();
   };
 
+  // 🎯 직접 타이핑 일괄 추가 함수 (쉼표, 띄어쓰기, 줄바꿈 자동 분리)
+  window.addBatchMembersFromInput = function() {
+    const input = document.getElementById('inputBatchMembers');
+    const rawText = input.value.trim();
+    if (!rawText) return;
+
+    const tokens = rawText.split(/[\s,\n\r\t]+/).map(s => s.trim()).filter(Boolean);
+    if (tokens.length === 0) return;
+
+    const memberNameMap = {};
+    window.allMemberList.forEach(m => {
+      memberNameMap[m.name.toLowerCase()] = m.name;
+    });
+
+    let addedCount = 0;
+    tokens.forEach(tok => {
+      const lower = tok.toLowerCase();
+      if (memberNameMap[lower]) {
+        window.selectedMemberSet.add(memberNameMap[lower]);
+        addedCount++;
+      } else {
+        // 부분 매칭 시도
+        const matched = window.allMemberList.find(m => m.name.toLowerCase().includes(lower));
+        if (matched) {
+          window.selectedMemberSet.add(matched.name);
+          addedCount++;
+        }
+      }
+    });
+
+    input.value = '';
+    renderMemberGridCells();
+
+    if (addedCount > 0) {
+      showRegToast(`길드원 ${addedCount}명 추가 완료!`, "✅");
+    } else {
+      showRegToast("일치하는 길드원 닉네임을 찾지 못했습니다.", "⚠️");
+    }
+  };
+
+  // 🎯 직전 토벌 참여자 원클릭 불러오기 함수
+  window.loadPreviousRaidMembers = async function() {
+    try {
+      const latest = await apiRequest("boss_participations?select=boss_name,members&order=id.desc&limit=1");
+      if (!latest || latest.length === 0) {
+        return showRegToast("직전 토벌 기록이 존재하지 않습니다.", "⚠️");
+      }
+
+      const prev = latest[0];
+      const prevMembers = Array.isArray(prev.members) ? prev.members : [];
+
+      if (prevMembers.length === 0) {
+        return showRegToast("직전 토벌에 등록된 참여 인원이 없습니다.", "⚠️");
+      }
+
+      prevMembers.forEach(name => window.selectedMemberSet.add(name));
+      renderMemberGridCells();
+      showRegToast(`[${prev.boss_name}] 직전 참여자 ${prevMembers.length}명 불러오기 완료!`, "⏱️");
+    } catch (e) {
+      showRegToast("직전 참여자 로드 실패: " + e.message, "❌");
+    }
+  };
+
   window.addDropItem = function() {
     const input = document.getElementById('inputDropItemName');
     const val = input.value.trim();
@@ -970,7 +907,7 @@
         window.currentImageMimeType = "image/jpeg";
 
         showImageThumbnail(window.currentImageBase64, file.name || "스크린샷");
-        showRegToast("스크린샷 최적화 완료! [분석 시작]을 누르세요.", "📸");
+        showRegToast("스크린샷 로드 완료! [분석 시작]을 누르세요.", "📸");
       };
       tempImg.src = e.target.result;
     };
@@ -1332,6 +1269,9 @@
       const dropInput = document.getElementById('inputDropItemName');
       if (dropInput) dropInput.value = '';
 
+      const batchInput = document.getElementById('inputBatchMembers');
+      if (batchInput) batchInput.value = '';
+
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> 등록 완료 및 단톡방 복사`;
@@ -1354,7 +1294,7 @@
 
     if (selfAddUrl && selfAddUrl.trim() !== '') {
       text += `🙋‍♂️ [누락 인원 자가 등록 (3분 내 한정)]\n` +
-        `누락되신 분은 아래 링크에서 개인 비밀번호를 입력하여 추가하세요 (3분 후 만료):\n` +
+        `누락되신 분은 아래 링크에서 닉네임과 개인 비밀번호를 입력하여 추가하세요 (3분 후 만료):\n` +
         `${selfAddUrl}\n\n`;
     }
 
@@ -1364,138 +1304,6 @@
       navigator.clipboard.writeText(text);
     }
   }
-
-  window.checkAndOpenSelfCheckinModal = async function() {
-    const hash = window.location.hash || "";
-    if (hash.indexOf("#SelfCheckin") === -1) return;
-
-    const queryPart = hash.indexOf("?") !== -1 ? hash.split("?")[1] : "";
-    const params = new URLSearchParams(queryPart);
-
-    window.modalCheckinRaidId = params.get("id");
-    window.modalCheckinCreatedAt = parseInt(params.get("t"), 10) || null;
-
-    if (!window.modalCheckinRaidId || !window.modalCheckinCreatedAt) {
-      return alertAndCloseModal("⚠️ 유효하지 않은 자가 등록 링크입니다.");
-    }
-
-    const now = Date.now();
-    if (now - window.modalCheckinCreatedAt > 3 * 60 * 1000) {
-      return alertAndCloseModal("⏰ 3분 유효시간이 만료된 링크입니다.\n창을 닫습니다.");
-    }
-
-    const modal = document.getElementById("selfCheckinModalContainer");
-    if (modal) modal.style.display = "flex";
-
-    const timerElem = document.getElementById("modalCheckinTimerText");
-    if (window.modalCheckinInterval) clearInterval(window.modalCheckinInterval);
-
-    window.modalCheckinInterval = setInterval(() => {
-      const curNow = Date.now();
-      const remainMs = (3 * 60 * 1000) - (curNow - window.modalCheckinCreatedAt);
-
-      if (remainMs <= 0) {
-        clearInterval(window.modalCheckinInterval);
-        window.modalCheckinInterval = null;
-        if (timerElem) timerElem.innerText = "00:00 (만료됨)";
-
-        alertAndCloseModal("⏰ 3분 유효시간이 만료되었습니다.\n창을 닫습니다.");
-        return;
-      }
-
-      const totalSec = Math.floor(remainMs / 1000);
-      const min = Math.floor(totalSec / 60);
-      const sec = totalSec % 60;
-      if (timerElem) {
-        timerElem.innerText = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-      }
-    }, 1000);
-
-    try {
-      const raidRes = await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`);
-      if (!raidRes || raidRes.length === 0) {
-        return alertAndCloseModal("❌ 해당 토벌 기록을 찾을 수 없습니다.");
-      }
-      const r = raidRes[0];
-      const infoElem = document.getElementById("modalRaidInfoText");
-      if (infoElem) {
-        infoElem.innerHTML = `<strong>${r.boss_name}</strong> • ${(r.raid_time || '').replace('T', ' ').slice(0, 16)}`;
-      }
-
-      const mRes = await apiRequest("guild_members?select=name&order=name.asc");
-      const sel = document.getElementById("modalSelfMemberSelect");
-      if (sel && mRes) {
-        sel.innerHTML = '<option value="">본인 닉네임을 선택하세요</option>' +
-          mRes.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-      }
-    } catch (e) {
-      alertAndCloseModal("⚠️ 정보 조회 실패: " + e.message);
-    }
-  };
-
-  window.submitModalSelfCheckin = async function() {
-    const now = Date.now();
-    if (now - window.modalCheckinCreatedAt > 3 * 60 * 1000) {
-      return alertAndCloseModal("⏰ 3분 유효시간이 만료되었습니다.\n창을 닫습니다.");
-    }
-
-    const memberName = document.getElementById("modalSelfMemberSelect").value;
-    const password = document.getElementById("modalSelfMemberPw").value.trim();
-
-    if (!memberName) return alert("⚠️ 본인 닉네임을 선택해주세요.");
-    if (!password) return alert("⚠️ 개인 비밀번호를 입력해주세요.");
-
-    const btn = document.getElementById("btnSubmitModalCheckin");
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i>확인 중...`;
-
-    try {
-      const memberRow = await apiRequest(`guild_members?name=eq.${encodeURIComponent(memberName)}`);
-      if (!memberRow || memberRow.length === 0) {
-        btn.disabled = false;
-        btn.innerHTML = "등록하기";
-        return alertAndCloseModal("❌ 길드원 정보를 찾을 수 없습니다.");
-      }
-
-      const dbPw = String(memberRow[0].password || '').trim();
-
-      if (dbPw !== password) {
-        btn.disabled = false;
-        btn.innerHTML = "등록하기";
-        return alertAndCloseModal("❌ 비밀번호가 일치하지 않습니다.\n보안을 위해 창을 종료합니다.");
-      }
-
-      const freshRaid = await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`);
-      if (!freshRaid || freshRaid.length === 0) {
-        btn.disabled = false;
-        btn.innerHTML = "등록하기";
-        return alertAndCloseModal("❌ 토벌 기록이 존재하지 않습니다.");
-      }
-
-      let membersList = Array.isArray(freshRaid[0].members) ? freshRaid[0].members : [];
-
-      if (membersList.includes(memberName)) {
-        btn.disabled = false;
-        btn.innerHTML = "등록하기";
-        return alertAndCloseModal(`ℹ️ [${memberName}] 님은 이미 해당 토벌에 등록되어 있습니다.\n창을 종료합니다.`);
-      }
-
-      membersList.push(memberName);
-
-      await apiRequest(`boss_participations?id=eq.${window.modalCheckinRaidId}`, "PATCH", {
-        members: membersList,
-        member_count: membersList.length
-      });
-
-      alert(`🎉 [${memberName}] 님 추가 참여가 성공적으로 등록되었습니다!\n창을 종료합니다.`);
-      window.closeSelfCheckinSafeExit();
-
-    } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = "등록하기";
-      alertAndCloseModal("❌ 등록 처리 실패: " + err.message);
-    }
-  };
 
   (async function initRegisterModule() {
     window.selectedMemberSet.clear();
@@ -1507,9 +1315,10 @@
     const dropInput = document.getElementById('inputDropItemName');
     if (dropInput) dropInput.value = '';
 
+    const batchInput = document.getElementById('inputBatchMembers');
+    if (batchInput) batchInput.value = '';
+
     window.removeEventListener("paste", handleGlobalImagePaste);
     window.addEventListener("paste", handleGlobalImagePaste);
-
-    await window.checkAndOpenSelfCheckinModal();
   })();
 </script>
