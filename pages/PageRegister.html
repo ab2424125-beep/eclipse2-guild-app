@@ -521,7 +521,7 @@
     <div id="dropItemsContainer" class="d-flex flex-wrap gap-1 mt-1"></div>
   </div>
 
-  <!-- 🎯 신규 추가: 참여 길드원 직접 타이핑 일괄 입력창 (요청 문구 적용) -->
+  <!-- 🎯 신규 추가: 참여 길드원 직접 타이핑 일괄 입력창 (placeholder="닉네임별 ,(쉼표) 구분" 적용) -->
   <div class="mb-3">
     <div class="d-flex justify-content-between align-items-center mb-1">
       <label class="small text-secondary" style="font-size: 0.72rem;">
@@ -1343,7 +1343,7 @@
 
     if (selfAddUrl && selfAddUrl.trim() !== '') {
       text += `🙋‍♂️ [누락 인원 자가 등록 (3분 내 한정)]\n` +
-        `누락되신 분은 아래 링크에서 닉네임과 개인 비밀번호를 입력하여 추가하세요 (3분 후 만료):\n` +
+        `누락되신 분은 아래 링크에서 개인 비밀번호를 입력하여 추가하세요 (3분 후 만료):\n` +
         `${selfAddUrl}\n\n`;
     }
 
