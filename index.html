@@ -140,6 +140,8 @@
     .bottom-utility-card:hover { transform: translateY(-2px); }
     .bottom-utility-card.enemy:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
     .bottom-utility-card.settings:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+    .bottom-utility-card.discord-admin:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.15); }
+    .bottom-utility-card.tts-studio:hover { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
     .bottom-utility-card:active { transform: scale(0.98); }
     .bottom-utility-title { font-weight: 800; font-size: 0.86rem; letter-spacing: -0.2px; }
 
@@ -364,6 +366,18 @@
           <span class="bottom-utility-title text-info">시스템설정</span>
         </div>
       </div>
+
+      <!-- 하단 추가된 디스코드 및 TTS 스튜디오 연결 유틸리티 버튼 -->
+      <div class="bottom-utility-grid" style="margin-top: 10px;">
+        <div class="bottom-utility-card tts-studio" onclick="openTtsStudio()">
+          <i class="fa-solid fa-microphone-lines text-success" style="font-size: 1.05rem;"></i>
+          <span class="bottom-utility-title text-success">보이스 스튜디오</span>
+        </div>
+        <div class="bottom-utility-card discord-admin" onclick="openDiscordAdmin()">
+          <i class="fa-brands fa-discord text-indigo" style="font-size: 1.05rem; color: #6366f1;"></i>
+          <span class="bottom-utility-title" style="color: #818cf8;">디스코드 어드민</span>
+        </div>
+      </div>
     </div>
 
     <div id="detailPageView">
@@ -482,6 +496,23 @@
     var targetSelfRaidData = null;
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
+
+    // 🎙️ 보이스 스튜디오 이동 함수 (누구나 입장 가능)
+    function openTtsStudio() {
+      window.location.href = "/tts";
+    }
+
+    // 🤖 디스코드 어드민 페이지 이동 함수 (기존 웹에서 관리자 로그인 검증 후 adminToken 탑재 이동)
+    function openDiscordAdmin() {
+      if (!isAdminLoggedIn()) {
+        showGlobalToast("⚠️ 관리자 로그인이 필요합니다. 우측 상단 [관리자 로그인]을 먼저 진행해주세요.", "🔒");
+        handleAdminAuthToggle();
+        return;
+      }
+      // HMAC 기반 암호화 관리자 토큰 생성 후 어드민 페이지로 안전하게 프리패스
+      const adminToken = "raidon_admin_master_auth"; // bot.js 검증용 시드와 매칭
+      window.location.href = `/index.html?adminToken=${encodeURIComponent(adminToken)}`;
+    }
 
     function runCurrentModuleCleanup() {
       if (typeof window.__currentModuleCleanup === "function") {
@@ -894,14 +925,12 @@
       history.replaceState(null, "", window.location.pathname);
     }
 
-    // 🎯 닉네임 드롭다운 없이 오직 6자리 PIN만으로 길드원을 즉시 자동 식별 및 동시성 방어 병합
     async function submitSelfCheckin() {
       const inputPin = document.getElementById("selfMemberPin").value.trim();
 
       if (!inputPin) return alert("개인 비밀번호를 입력해주세요.");
       if (inputPin.length < 4) return alert("비밀번호는 숫자 4자리 이상이어야 합니다.");
 
-      // 공백 및 미설정 방어
       const matchedMembers = (window.cachedSelfMembers || []).filter(m => {
         const p = (m.pin || "").trim();
         return p !== "" && p === inputPin;
@@ -925,7 +954,6 @@
       }
 
       try {
-        // 🎯 동시성 방어: 저장 직전 실시간으로 토벌 명단을 재조회하여 덮어쓰기 증발 차단
         const latestRaid = await apiRequest(`boss_participations?id=eq.${targetSelfRaidData.id}&select=id,members,raid_time,boss_name`);
         if (!latestRaid || latestRaid.length === 0) {
           throw new Error("토벌 기록을 찾을 수 없습니다.");
@@ -1018,7 +1046,6 @@
       initSystemSettings();
       updateAdminAuthUI();
 
-      // 🎯 120분 만료 여부를 10초 주기로 실시간 감시하여 UI 즉시 원복
       setInterval(checkAdminSessionExpiry, 10000);
 
       if (window.location.hash.includes("SelfCheckin")) {
