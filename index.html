@@ -497,21 +497,20 @@
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
 
-    // 🎙️ 보이스 스튜디오 이동 함수 (누구나 입장 가능)
+    // 🎙️ 보이스 스튜디오 이동 함수 (실제 운영 URL 연결)
     function openTtsStudio() {
-      window.location.href = "/tts";
+      window.location.href = "https://raidonbot.onrender.com/tts?admin=1";
     }
 
-    // 🤖 디스코드 어드민 페이지 이동 함수 (기존 웹에서 관리자 로그인 검증 후 adminToken 탑재 이동)
+    // 🤖 디스코드 어드민 페이지 이동 함수 (기존 웹에서 관리자 로그인 검증 후 실사 주소로 이동)
     function openDiscordAdmin() {
       if (!isAdminLoggedIn()) {
         showGlobalToast("⚠️ 관리자 로그인이 필요합니다. 우측 상단 [관리자 로그인]을 먼저 진행해주세요.", "🔒");
         handleAdminAuthToggle();
         return;
       }
-      // HMAC 기반 암호화 관리자 토큰 생성 후 어드민 페이지로 안전하게 프리패스
-      const adminToken = "raidon_admin_master_auth"; // bot.js 검증용 시드와 매칭
-      window.location.href = `/index.html?adminToken=${encodeURIComponent(adminToken)}`;
+      const adminToken = "raidon_admin_master_auth";
+      window.location.href = `https://raidonbot.onrender.com/index.html?adminToken=${encodeURIComponent(adminToken)}`;
     }
 
     function runCurrentModuleCleanup() {
@@ -594,7 +593,6 @@
       }
     }
 
-    // 🎯 120분 만료 실시간 감지 타이머
     function checkAdminSessionExpiry() {
       const expire = sessionStorage.getItem("admin_auth_expire");
       if (expire) {
