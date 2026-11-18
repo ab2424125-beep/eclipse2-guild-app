@@ -451,7 +451,7 @@
     <div class="self-checkin-box" id="selfCheckinInputCard">
       <div class="self-timer-badge">
         <i class="fa-solid fa-stopwatch fa-spin"></i>
-        <span>자가 등록 제한 시간: </span><strong id="selfTimerCountdown">03:00</strong>
+        <span>자가 등록 제한 시간: </span><strong id="selfTimerCountdown">05:00</strong>
       </div>
 
       <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
@@ -854,10 +854,10 @@
       if (!raidId || !createdTime) return;
 
       const elapsedMs = Date.now() - createdTime;
-      const expireLimitMs = 3 * 60 * 1000;
+      const expireLimitMs = 5 * 60 * 1000;
 
       if (elapsedMs > expireLimitMs) {
-        alert("⚠️ 자가 추가 가능 시간(3분)이 이미 만료되었습니다.\n명단 추가가 필요한 경우 길드 관리자에게 문의하세요.");
+        alert("⚠️ 자가 추가 가능 시간(5분)이 이미 만료되었습니다.\n명단 추가가 필요한 경우 길드 관리자에게 문의하세요.");
         history.replaceState(null, "", window.location.pathname);
         return;
       }
