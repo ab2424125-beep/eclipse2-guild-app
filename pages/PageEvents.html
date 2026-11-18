@@ -124,7 +124,7 @@
     transform: translateY(-1px);
   }
 
-  /* 서브뷰 공통 박스 및 인풋 */
+  /* 서브뷰 공통 박스 및 인풋 (글씨 잘림 방지 및 가독성 대폭 강화) */
   .event-sub-box {
     background: #0d1527;
     border: 1px solid #1e2c47;
@@ -135,31 +135,57 @@
 
   .input-custom-ev {
     background-color: #080d1a !important;
-    border: 1px solid #233554 !important;
+    border: 1px solid #2b4168 !important;
     color: #ffffff !important;
     border-radius: 10px !important;
-    padding: 8px 12px !important;
-    font-size: 0.82rem !important;
+    padding: 7px 11px !important;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    min-height: 38px !important;
+    line-height: 1.35 !important;
     color-scheme: dark;
+  }
+  .input-custom-ev::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
   }
   .input-custom-ev:focus {
     border-color: #38bdf8 !important;
     outline: none !important;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
   }
   .input-custom-ev:disabled {
     background-color: #050811 !important;
     color: #64748b !important;
     border-color: #172235 !important;
+    cursor: not-allowed;
+  }
+  select.input-custom-ev {
+    padding-right: 28px !important;
+  }
+  select.input-custom-ev option {
+    background-color: #0d1527;
+    color: #ffffff;
+  }
+
+  /* 숫자 스핀 버튼 숨김 (좁은 칸에서도 숫자가 큼직하게 보이도록 처리) */
+  input.no-spin::-webkit-outer-spin-button,
+  input.no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input.no-spin[type=number] {
+    -moz-appearance: textfield;
   }
 
   .btn-ev-back {
     background: rgba(56, 189, 248, 0.12);
     border: 1px solid rgba(56, 189, 248, 0.35);
     color: #38bdf8;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 5px 10px;
+    padding: 6px 11px;
     border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
@@ -173,15 +199,135 @@
     background: #fee500;
     color: #191919;
     border: none;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 800;
     border-radius: 8px;
-    padding: 5px 10px;
+    padding: 6px 11px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
     cursor: pointer;
     white-space: nowrap;
+  }
+
+  /* 관리자 일괄 입력 시트 전용 스타일 */
+  .admin-sheet-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .btn-sheet-mode {
+    background: #080d1a;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 9px 6px;
+    border-radius: 9px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .btn-sheet-mode.active-start {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+  .btn-sheet-mode.active-end {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+  }
+
+  .admin-sheet-header,
+  .admin-sheet-row {
+    display: grid;
+    grid-template-columns: minmax(74px, 1.3fr) 1fr 1fr 1fr minmax(62px, 0.95fr);
+    gap: 5px;
+    align-items: center;
+  }
+  .admin-sheet-header {
+    background: #060a14;
+    border: 1px solid #1e2c47;
+    border-radius: 8px;
+    padding: 7px 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #cbd5e1;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .admin-sheet-row {
+    background: #080d1a;
+    border: 1px solid #1b2842;
+    border-radius: 9px;
+    padding: 6px 8px;
+    margin-bottom: 5px;
+    transition: border-color 0.15s;
+  }
+  .admin-sheet-row.is-dirty {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.07);
+  }
+
+  .sheet-input-cell {
+    width: 100%;
+    background: #0d1629 !important;
+    border: 1px solid #2b4168 !important;
+    color: #ffffff !important;
+    border-radius: 7px !important;
+    height: 34px !important;
+    text-align: center;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    padding: 2px 4px !important;
+  }
+  .sheet-input-cell::placeholder {
+    color: #64748b !important;
+    font-weight: 500 !important;
+    font-size: 0.72rem !important;
+  }
+  .sheet-input-cell:focus {
+    border-color: #38bdf8 !important;
+    background: #132240 !important;
+    outline: none !important;
+  }
+
+  .sheet-score-pill {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #fbbf24;
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 5px 4px;
+    border-radius: 7px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .lock-status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .lock-status-tag.locked {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #f87171;
+  }
+  .lock-status-tag.unlocked {
+    background: rgba(148, 163, 184, 0.15);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #94a3b8;
   }
 
   /* PVP TOP 5 랭킹 스타일 */
@@ -406,11 +552,18 @@
     background: #0d1527;
     border: 1.5px solid #38bdf8;
     border-radius: 18px;
-    width: 100%; max-width: 390px;
+    width: 100%; max-width: 420px;
     max-height: 88vh;
     overflow-y: auto;
     padding: 18px 16px;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+  }
+
+  .pin-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr minmax(72px, 1.1fr);
+    gap: 6px;
+    align-items: center;
   }
 
   .custom-ev-toast {
@@ -446,6 +599,11 @@
     .event-item-title { font-size: 0.84rem; }
     .ev-members-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .phase-selector-grid { grid-template-columns: 1fr; }
+    .admin-sheet-header, .admin-sheet-row {
+      grid-template-columns: minmax(66px, 1.2fr) 1fr 1fr 1fr minmax(56px, 0.9fr);
+      gap: 4px;
+      padding: 5px 6px;
+    }
   }
 </style>
 
@@ -562,75 +720,82 @@
     <div class="event-sub-box" style="border-color: rgba(239, 68, 68, 0.35);">
       <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
         <span class="small fw-bold text-danger"><i class="fa-solid fa-fire me-1"></i> 쟁 참여 독려형 배점 규정</span>
-        <span class="badge bg-info text-dark fw-bold" style="font-size: 0.7rem;" id="pvpCurrentPhaseBadge">1단계: 시작 전적 등록 기간</span>
+        <span class="badge bg-info text-dark fw-bold" style="font-size: 0.72rem;" id="pvpCurrentPhaseBadge">1단계: 시작 전적 등록 기간</span>
       </div>
-      <div class="text-light fw-bold mb-1" style="font-size: 0.8rem;" id="pvpFormulaDisplayText">
-        공식: (기간 킬 × 3점) + (기간 어시 × 2점) + (인정 데스 × 1점)
+      <div class="text-light fw-bold mb-1" style="font-size: 0.82rem;" id="pvpFormulaDisplayText">
+        배점 공식: (기간 킬 × 3점) + (기간 어시 × 2점) + (인정 데스 × 1점)
       </div>
-      <div class="text-warning small mb-2" style="font-size: 0.72rem; line-height: 1.4;" id="pvpAbusingRuleDisplayText">
+      <div class="text-warning small mb-2" style="font-size: 0.74rem; line-height: 1.45;" id="pvpAbusingRuleDisplayText">
         🛡️ 어뷰징(고의 데스) 방지 작동 중: 기간 (킬+어시) 합계를 초과하는 데스 수치는 점수에 미반영됩니다.
       </div>
-      <div class="p-2 rounded d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.74rem;">
+      <div class="p-2 rounded d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.76rem;">
         <span class="text-secondary">🏆 포상: <strong class="text-warning" id="pvpPrizeSummaryText">-</strong></span>
-        <button type="button" class="btn btn-danger btn-sm fw-bold py-1 px-3" style="font-size: 0.76rem;" onclick="window.openPvpPinEntryModal()">
-          <i class="fa-solid fa-key me-1"></i>내 전적 등록/갱신 (PIN)
+        <button type="button" class="btn btn-danger btn-sm fw-bold py-1 px-3" style="font-size: 0.78rem;" onclick="window.openPvpPinEntryModal()">
+          <i class="fa-solid fa-key me-1"></i>개인 전적 등록/갱신 (PIN)
         </button>
+      </div>
+      <div class="text-secondary mt-1" style="font-size: 0.68rem;">
+        * 🔒 부정방지 보안: 개인이 등록한 [시작 전적]은 최초 1회 저장 즉시 자동 잠금되어 종료 시점에 임의로 조작할 수 없습니다.
       </div>
     </div>
 
-    <!-- 관리자 전용: 인게임 랭킹 스샷 AI 판독 & 수동 대리 입력 박스 -->
+    <!-- 관리자 전용: 전체 길드원 일괄 입력 시트 & 스샷 AI 판독 박스 -->
     <div class="event-sub-box border-info border-opacity-50" id="pvpAdminControlBox" style="display: none; background: #091224;">
-      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
-        <span class="small fw-bold text-info"><i class="fa-solid fa-user-shield me-1"></i> [관리자] 스샷 AI 판독(Ctrl+V) & 수동 전적 관리</span>
-        <div class="d-flex gap-1">
-          <select id="pvpOcrTargetMode" class="form-select input-custom-ev py-0 px-2" style="font-size: 0.72rem !important; height: 28px; width: auto;">
-            <option value="start">스샷 ➔ 시작 전적으로 저장</option>
-            <option value="end" selected>스샷 ➔ 종료(현재) 전적으로 저장</option>
-          </select>
-          <button type="button" class="btn btn-outline-info btn-xs py-0 px-2 fw-bold" style="font-size: 0.72rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
-            <i class="fa-solid fa-camera me-1"></i>스샷 선택
-          </button>
-          <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <span class="small fw-bold text-info" style="font-size: 0.82rem;">
+          <i class="fa-solid fa-table-list me-1"></i> [관리자] 전체 길드원 일괄 입력 시트 & 스샷 AI 판독
+        </span>
+        <button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size: 0.74rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
+          <i class="fa-solid fa-camera me-1"></i>랭킹 스샷 업로드 (또는 Ctrl+V)
+        </button>
+        <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
+      </div>
+
+      <!-- 시작 전적 일괄 입력 / 종료 전적 일괄 입력 모드 전환 탭 -->
+      <div class="admin-sheet-mode-tabs">
+        <div class="btn-sheet-mode active-start" id="btnSheetMode_start" onclick="window.setAdminPvpSheetMode('start')">
+          📌 시작 전적 일괄 입력 모드
+        </div>
+        <div class="btn-sheet-mode" id="btnSheetMode_end" onclick="window.setAdminPvpSheetMode('end')">
+          🔥 종료(현재) 전적 일괄 입력 모드
         </div>
       </div>
 
-      <div class="row g-1 align-items-center">
-        <div class="col-12 col-sm-3">
-          <select id="adminPvpMemberSelect" class="form-select input-custom-ev py-1" style="font-size: 0.75rem !important;" onchange="window.loadMemberPvpToAdminInputs()">
-            <option value="">길드원 선택...</option>
-          </select>
-        </div>
-        <div class="col-4 col-sm-2">
-          <input type="number" id="admStartK" class="form-control input-custom-ev py-1 text-center" placeholder="시작 킬" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-4 col-sm-2">
-          <input type="number" id="admStartA" class="form-control input-custom-ev py-1 text-center" placeholder="시작 어시" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-4 col-sm-2">
-          <input type="number" id="admStartD" class="form-control input-custom-ev py-1 text-center" placeholder="시작 데스" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-4 col-sm-1">
-          <input type="number" id="admEndK" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료킬" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-4 col-sm-1">
-          <input type="number" id="admEndA" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료어시" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-4 col-sm-1">
-          <input type="number" id="admEndD" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료데스" style="font-size:0.74rem !important;">
-        </div>
-        <div class="col-12 mt-1">
-          <button type="button" class="btn btn-info btn-sm w-100 fw-bold py-1 text-dark" style="font-size: 0.76rem;" onclick="window.saveAdminPvpRecord()">
-            <i class="fa-solid fa-check me-1"></i> 선택한 길드원 시작/종료 전적 DB 저장
-          </button>
-        </div>
+      <!-- 길드원 빠른 검색 필터 & 설명 -->
+      <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+        <input type="text" id="adminPvpSearchInput" class="form-control input-custom-ev py-1" placeholder="길드원 이름 빠른 검색..." style="font-size: 0.78rem !important; min-height: 34px !important;" oninput="window.filterAdminPvpSheetRows()">
+        <span class="text-secondary flex-shrink-0" style="font-size: 0.7rem;" id="adminSheetModeGuideText">
+          현재: <strong>시작 전적</strong> 입력 중
+        </span>
+      </div>
+
+      <!-- 시트 컬럼 헤더: 길드원 | 킬 | 어시 | 데스 | 총점 -->
+      <div class="admin-sheet-header">
+        <div class="text-start ps-1">길드원 (잠금상태)</div>
+        <div class="text-info">⚔️ 킬</div>
+        <div class="text-success">🛡️ 어시</div>
+        <div class="text-danger">💀 데스</div>
+        <div class="text-warning">🏆 총점</div>
+      </div>
+
+      <!-- 전체 길드원 일괄 입력 스크롤 리스트 -->
+      <div id="adminPvpBulkSheetList" style="max-height: 290px; overflow-y: auto; padding-right: 2px;"></div>
+
+      <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="text-secondary" style="font-size: 0.7rem;">
+          * 숫자를 여러 명 연속 입력한 뒤 우측 저장 버튼을 누르면 한 번에 반영됩니다.
+        </span>
+        <button type="button" class="btn btn-info btn-sm fw-bold px-3 py-2 text-dark" style="font-size: 0.8rem;" id="btnSaveBulkPvpSheet" onclick="window.saveAdminBulkPvpSheet()">
+          <i class="fa-solid fa-floppy-disk me-1"></i> 입력/변경된 전적 전체 일괄 저장
+        </button>
       </div>
     </div>
 
     <!-- TOP 5 명예의 전당 -->
     <div class="pvp-top5-box">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="fw-bold text-warning" style="font-size: 0.84rem;">👑 길드 내 PVP 랭킹 TOP 5 (1위 ~ 5위)</span>
-        <span class="text-secondary" style="font-size: 0.7rem;" id="pvpParticipantCountText">참여 0명</span>
+        <span class="fw-bold text-warning" style="font-size: 0.86rem;">👑 길드 내 PVP 랭킹 TOP 5 (1위 ~ 5위)</span>
+        <span class="text-secondary" style="font-size: 0.72rem;" id="pvpParticipantCountText">참여 0명</span>
       </div>
       <div id="pvpTop5Container">
         <div class="text-secondary small text-center py-3">등록된 전적 데이터가 없습니다.</div>
@@ -639,7 +804,7 @@
 
     <!-- 전체 순위 및 상세 전적 표 -->
     <div class="event-sub-box mb-0">
-      <div class="small fw-bold text-secondary mb-2">📊 전체 참여 길드원 상세 전적 (시작 ➔ 종료 증감)</div>
+      <div class="small fw-bold text-secondary mb-2">📊 전체 참여 길드원 상세 전적 (시작 ➔ 종료 증감 및 총점)</div>
       <div id="pvpAllRankingContainer" style="max-height: 320px; overflow-y: auto;"></div>
     </div>
   </div>
@@ -693,7 +858,7 @@
         </div>
         <div class="col-3">
           <label class="small text-secondary mb-1" style="font-size: 0.72rem;">1인 상금(D)</label>
-          <input type="number" id="roulettePrizeAmount" class="form-control input-custom-ev" value="1000" placeholder="다이아">
+          <input type="number" id="roulettePrizeAmount" class="form-control input-custom-ev no-spin" value="1000" placeholder="다이아">
         </div>
       </div>
     </div>
@@ -963,11 +1128,11 @@
         <div class="phase-selector-grid">
           <div class="btn-phase-mode active" id="btnPvpPhase_start" onclick="window.selectPvpPhase('start')">
             <div class="fw-bold text-info" style="font-size: 0.78rem;">1단계: 시작 전적 등록 기간</div>
-            <div class="text-secondary mt-1" style="font-size: 0.68rem; line-height: 1.3;">이벤트 시작 시점의 본인 킬·어시·데스 기준점을 자유롭게 입력합니다.</div>
+            <div class="text-secondary mt-1" style="font-size: 0.68rem; line-height: 1.3;">길드원이 최초 1회 시작 전적을 등록합니다. (1회 저장 즉시 시작 전적은 자동 잠금됨)</div>
           </div>
           <div class="btn-phase-mode" id="btnPvpPhase_end" onclick="window.selectPvpPhase('end')">
             <div class="fw-bold text-warning" style="font-size: 0.78rem;">2단계: 종료 전적 등록 (시작고정)</div>
-            <div class="text-secondary mt-1" style="font-size: 0.68rem; line-height: 1.3;">시작 전적 수정이 잠기고, 종료(현재) 전적만 입력하여 최종 점수를 계산합니다.</div>
+            <div class="text-secondary mt-1" style="font-size: 0.68rem; line-height: 1.3;">시작 전적은 절대 바꿀 수 없으며, 종료(현재) 전적만 입력하여 최종 점수를 계산합니다.</div>
           </div>
         </div>
       </div>
@@ -1041,7 +1206,7 @@
     <div id="cfgDetail_roulette" class="event-sub-box" style="display: none;">
       <div class="fw-bold text-warning small mb-2"><i class="fa-solid fa-dharmachakra me-1"></i> 행운의 룰렛 기본 설정</div>
       <label class="small text-secondary mb-1" style="font-size: 0.72rem;">기본 1인당 당첨 상금 (다이아)</label>
-      <input type="number" id="setRouletteDefaultPrize" class="form-control input-custom-ev" value="1000" placeholder="예: 1000">
+      <input type="number" id="setRouletteDefaultPrize" class="form-control input-custom-ev no-spin" value="1000" placeholder="예: 1000">
     </div>
 
     <!-- [종목별 맞춤 설정 C] 🏆 MVP 투표 & 🎲 주사위 공통 포상 설정 -->
@@ -1060,7 +1225,7 @@
       <div class="row g-2">
         <div class="col-6">
           <label class="small text-secondary mb-1" style="font-size: 0.72rem;">선착순 당첨 커트라인 (명)</label>
-          <input type="number" id="setFcfsMaxWinners" class="form-control input-custom-ev" value="5">
+          <input type="number" id="setFcfsMaxWinners" class="form-control input-custom-ev no-spin" value="5">
         </div>
         <div class="col-6">
           <label class="small text-secondary mb-1" style="font-size: 0.72rem;">1인당 보상 안내</label>
@@ -1088,12 +1253,12 @@
 </div>
 
 <!-- ==========================================
-     [모달] 길드원 개인 PIN 기반 PVP 전적 등록/갱신
+     [모달] 길드원 개인 PIN 기반 PVP 전적 등록/갱신 (1회 저장 즉시 시작전적 영구 잠금)
      ========================================== -->
 <div id="modalPvpPinEntry" class="ev-modal-backdrop" style="display: none;">
   <div class="ev-modal-box">
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-      <h6 class="fw-bold text-white m-0"><i class="fa-solid fa-hand-fist text-danger me-1"></i> 내 PVP 전적 등록/갱신</h6>
+      <h6 class="fw-bold text-white m-0"><i class="fa-solid fa-hand-fist text-danger me-1"></i> 개인 PVP 전적 등록/갱신</h6>
       <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="window.closePvpPinEntryModal()"></button>
     </div>
 
@@ -1107,46 +1272,48 @@
       </div>
     </div>
 
-    <!-- 2단계: 시작/종료 킬·어시·데스 입력 -->
+    <!-- 2단계: 시작/종료 킬·어시·데스 및 우측 총점 표시 -->
     <div id="pvpPinStep2" style="display: none;">
       <div class="p-2 rounded mb-3 text-center" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35);">
         <span class="fw-bold text-info" id="pvpVerifiedMemberNameText">[길드원] 님 전적 입력</span>
       </div>
 
-      <div class="mb-2">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-          <label class="small text-secondary fw-bold" style="font-size: 0.74rem;">📌 이벤트 시작 전적 (기준점)</label>
-          <span class="text-warning" style="font-size: 0.68rem;" id="pvpStartLockNotice"></span>
-        </div>
-        <div class="row g-1">
-          <div class="col-4">
-            <input type="number" id="pinStartKill" class="form-control input-custom-ev text-center" placeholder="시작 킬" oninput="window.previewPinPvpScore()">
-          </div>
-          <div class="col-4">
-            <input type="number" id="pinStartAssist" class="form-control input-custom-ev text-center" placeholder="시작 어시" oninput="window.previewPinPvpScore()">
-          </div>
-          <div class="col-4">
-            <input type="number" id="pinStartDeath" class="form-control input-custom-ev text-center" placeholder="시작 데스" oninput="window.previewPinPvpScore()">
-          </div>
-        </div>
-      </div>
-
+      <!-- 시작 전적 행 (킬 / 어시 / 데스 / 상태) -->
       <div class="mb-3">
-        <label class="small text-info fw-bold mb-1" style="font-size: 0.74rem;">🔥 이벤트 종료(현재) 전적</label>
-        <div class="row g-1">
-          <div class="col-4">
-            <input type="number" id="pinEndKill" class="form-control input-custom-ev text-center border-info" placeholder="현재 킬" oninput="window.previewPinPvpScore()">
+        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+          <label class="small text-light fw-bold" style="font-size: 0.76rem;">📌 1. 이벤트 시작 전적 (기준점)</label>
+          <span class="text-warning fw-bold" style="font-size: 0.7rem;" id="pvpStartLockNotice"></span>
+        </div>
+        <div class="pin-stat-grid">
+          <input type="number" id="pinStartKill" class="form-control input-custom-ev text-center no-spin" placeholder="시작 킬" oninput="window.previewPinPvpScore()">
+          <input type="number" id="pinStartAssist" class="form-control input-custom-ev text-center no-spin" placeholder="시작 어시" oninput="window.previewPinPvpScore()">
+          <input type="number" id="pinStartDeath" class="form-control input-custom-ev text-center no-spin" placeholder="시작 데스" oninput="window.previewPinPvpScore()">
+          <div class="p-2 rounded text-center fw-bold text-secondary" style="background:#080d1a; border:1px solid #233554; font-size:0.72rem;" id="pinStartBaseTag">
+            기준점
           </div>
-          <div class="col-4">
-            <input type="number" id="pinEndAssist" class="form-control input-custom-ev text-center border-info" placeholder="현재 어시" oninput="window.previewPinPvpScore()">
-          </div>
-          <div class="col-4">
-            <input type="number" id="pinEndDeath" class="form-control input-custom-ev text-center border-info" placeholder="현재 데스" oninput="window.previewPinPvpScore()">
+        </div>
+        <div class="text-secondary mt-1" style="font-size: 0.68rem;" id="pinStartSecurityGuide">
+          * 시작 전적은 최초 1회 저장 즉시 자동 잠금되어 이후 수정할 수 없습니다. (오타 시 관리자 문의)
+        </div>
+      </div>
+
+      <!-- 종료(현재) 전적 행 (킬 / 어시 / 데스 / 산출 총점) -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="small text-info fw-bold" style="font-size: 0.76rem;">🔥 2. 이벤트 종료(현재) 전적</label>
+          <span class="text-secondary" style="font-size: 0.68rem;">우측에 실시간 총점 표시</span>
+        </div>
+        <div class="pin-stat-grid">
+          <input type="number" id="pinEndKill" class="form-control input-custom-ev text-center border-info no-spin" placeholder="종료 킬" oninput="window.previewPinPvpScore()">
+          <input type="number" id="pinEndAssist" class="form-control input-custom-ev text-center border-info no-spin" placeholder="종료 어시" oninput="window.previewPinPvpScore()">
+          <input type="number" id="pinEndDeath" class="form-control input-custom-ev text-center border-info no-spin" placeholder="종료 데스" oninput="window.previewPinPvpScore()">
+          <div class="sheet-score-pill" id="pinInlineTotalScoreBadge" style="font-size: 0.85rem; padding: 7px 4px;">
+            0점
           </div>
         </div>
       </div>
 
-      <!-- 실시간 계산 미리보기 -->
+      <!-- 실시간 상세 계산 내역 박스 -->
       <div class="p-2 rounded mb-3" style="background: #080d1a; border: 1px dashed #38bdf8; font-size: 0.75rem;" id="pinScorePreviewBox">
         전적을 입력하면 기간 내 점수가 자동 계산됩니다.
       </div>
@@ -1169,6 +1336,8 @@
   window.evRaidRecords = [];
   window.evEntriesByKey = { pvp: [], roulette: [], mvp: [], dice: [], fcfs: [] };
   window.evVerifiedMemberName = "";
+  window.evAdminSheetMode = "start"; // 'start' | 'end'
+  window.evAdminDraftMap = {}; // { "닉네임": { startK, startA, startD, endK, endA, endD, startLocked, dirty } }
   window.evTeamSelectedSet = new Set();
   window.evLastGeneratedTeams = [];
   window.evCurrentSubView = "";
@@ -1262,7 +1431,7 @@
     window.evToastTimer = setTimeout(() => t.classList.remove("show"), 2400);
   };
 
-  // 관리자 권한 검증 함수 (비로그인 차단 + 일반 관리자 세부 권한 연동)
+  // 관리자 권한 검증 함수
   window.verifyEventManagePermission = async function() {
     const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) {
@@ -1344,6 +1513,7 @@
       sK, sA, sD, eK, eA, eD,
       dK, dA, rawDeltaD, recognizedD,
       isCapped,
+      startLocked: !!rec.startLocked,
       totalScore: Math.max(0, Math.round(totalScore * 10) / 10)
     };
   };
@@ -1455,8 +1625,192 @@
   };
 
   /* ==========================================
-     1. PVP 랭킹 이벤트 로직 (guild_event_entries 연동)
+     1. PVP 랭킹 이벤트 로직 (관리자 전체 길드원 일괄 시트 + 개인 시작전적 영구 잠금)
      ========================================== */
+  window.initAdminPvpDraftMap = function() {
+    window.evAdminDraftMap = {};
+    const pvpRows = window.evEntriesByKey.pvp || [];
+    const rowMap = {};
+    pvpRows.forEach(r => { rowMap[r.member_name] = r; });
+
+    window.evGuildMembers.forEach(m => {
+      const existing = rowMap[m.name]?.record_data || {};
+      const hasSaved = rowMap[m.name] !== undefined;
+      window.evAdminDraftMap[m.name] = {
+        hasSaved,
+        rowId: rowMap[m.name]?.id || null,
+        startK: existing.startK !== undefined ? existing.startK : "",
+        startA: existing.startA !== undefined ? existing.startA : "",
+        startD: existing.startD !== undefined ? existing.startD : "",
+        endK: existing.endK !== undefined ? existing.endK : "",
+        endA: existing.endA !== undefined ? existing.endA : "",
+        endD: existing.endD !== undefined ? existing.endD : "",
+        startLocked: existing.startLocked !== undefined ? !!existing.startLocked : hasSaved,
+        dirty: false
+      };
+    });
+  };
+
+  window.setAdminPvpSheetMode = function(mode) {
+    window.evAdminSheetMode = mode;
+    const btnStart = document.getElementById("btnSheetMode_start");
+    const btnEnd = document.getElementById("btnSheetMode_end");
+    const guide = document.getElementById("adminSheetModeGuideText");
+
+    if (mode === "start") {
+      btnStart.className = "btn-sheet-mode active-start";
+      btnEnd.className = "btn-sheet-mode";
+      if (guide) guide.innerHTML = `현재: <strong class="text-info">시작 전적(기준점)</strong> 일괄 입력 중`;
+    } else {
+      btnStart.className = "btn-sheet-mode";
+      btnEnd.className = "btn-sheet-mode active-end";
+      if (guide) guide.innerHTML = `현재: <strong class="text-warning">종료(현재) 전적</strong> 일괄 입력 중`;
+    }
+    window.renderAdminPvpBulkSheet();
+  };
+
+  window.renderAdminPvpBulkSheet = function() {
+    const container = document.getElementById("adminPvpBulkSheetList");
+    if (!container) return;
+
+    const mode = window.evAdminSheetMode; // 'start' | 'end'
+    const q = (document.getElementById("adminPvpSearchInput")?.value || "").trim().toLowerCase();
+
+    const html = window.evGuildMembers.map((m, idx) => {
+      const name = m.name;
+      const d = window.evAdminDraftMap[name] || { startK: "", startA: "", startD: "", endK: "", endA: "", endD: "", startLocked: false, dirty: false };
+      const isHidden = q && !name.toLowerCase().includes(q);
+
+      const valK = mode === "start" ? d.startK : d.endK;
+      const valA = mode === "start" ? d.startA : d.endA;
+      const valD = mode === "start" ? d.startD : d.endD;
+
+      const phK = mode === "start" ? "시작킬" : (d.startK !== "" ? `기준:${d.startK}` : "종료킬");
+      const phA = mode === "start" ? "시작어시" : (d.startA !== "" ? `기준:${d.startA}` : "종료어시");
+      const phD = mode === "start" ? "시작데스" : (d.startD !== "" ? `기준:${d.startD}` : "종료데스");
+
+      const calc = window.calculateMemberPvpScore(d);
+      const lockBadge = d.startLocked
+        ? `<span class="lock-status-tag locked" title="클릭하여 개인 시작전적 잠금 해제" onclick="window.toggleMemberStartLock('${name}')">🔒잠금</span>`
+        : `<span class="lock-status-tag unlocked" title="클릭하여 개인 시작전적 잠금 설정" onclick="window.toggleMemberStartLock('${name}')">🔓해제</span>`;
+
+      return `
+        <div class="admin-sheet-row ${d.dirty ? 'is-dirty' : ''}" id="admRow_${idx}" data-name="${name.toLowerCase()}" style="${isHidden ? 'display:none;' : ''}">
+          <div class="d-flex flex-column align-items-start" style="min-width:0;">
+            <span class="fw-bold text-white text-truncate w-100" style="font-size: 0.78rem;" title="${name}">${name}</span>
+            <div class="mt-1">${lockBadge}</div>
+          </div>
+          <div>
+            <input type="number" class="sheet-input-cell no-spin" value="${valK}" placeholder="${phK}"
+                   oninput="window.onAdminSheetCellInput('${name}', ${idx}, 'K', this.value)">
+          </div>
+          <div>
+            <input type="number" class="sheet-input-cell no-spin" value="${valA}" placeholder="${phA}"
+                   oninput="window.onAdminSheetCellInput('${name}', ${idx}, 'A', this.value)">
+          </div>
+          <div>
+            <input type="number" class="sheet-input-cell no-spin" value="${valD}" placeholder="${phD}"
+                   oninput="window.onAdminSheetCellInput('${name}', ${idx}, 'D', this.value)">
+          </div>
+          <div class="sheet-score-pill" id="admScorePill_${idx}">
+            ${calc.totalScore.toLocaleString()}점
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html || '<div class="text-secondary small text-center py-3">길드원 목록이 없습니다.</div>';
+  };
+
+  window.filterAdminPvpSheetRows = function() {
+    const q = (document.getElementById("adminPvpSearchInput")?.value || "").trim().toLowerCase();
+    document.querySelectorAll("#adminPvpBulkSheetList .admin-sheet-row").forEach(row => {
+      const name = row.getAttribute("data-name") || "";
+      row.style.display = (!q || name.includes(q)) ? "grid" : "none";
+    });
+  };
+
+  window.onAdminSheetCellInput = function(name, idx, field, rawVal) {
+    const d = window.evAdminDraftMap[name];
+    if (!d) return;
+
+    const cleanVal = rawVal === "" ? "" : Math.max(0, parseInt(rawVal, 10) || 0);
+    if (window.evAdminSheetMode === "start") {
+      if (field === "K") d.startK = cleanVal;
+      if (field === "A") d.startA = cleanVal;
+      if (field === "D") d.startD = cleanVal;
+      d.startLocked = true; // 시작 전적 입력 시 자동 잠금 활성화
+    } else {
+      if (field === "K") d.endK = cleanVal;
+      if (field === "A") d.endA = cleanVal;
+      if (field === "D") d.endD = cleanVal;
+    }
+
+    d.dirty = true;
+    const rowEl = document.getElementById(`admRow_${idx}`);
+    if (rowEl) rowEl.classList.add("is-dirty");
+
+    const calc = window.calculateMemberPvpScore(d);
+    const pillEl = document.getElementById(`admScorePill_${idx}`);
+    if (pillEl) pillEl.innerText = `${calc.totalScore.toLocaleString()}점`;
+  };
+
+  window.toggleMemberStartLock = async function(name) {
+    const d = window.evAdminDraftMap[name];
+    if (!d) return;
+    d.startLocked = !d.startLocked;
+    d.dirty = true;
+    window.renderAdminPvpBulkSheet();
+    window.showEvToast(`[${name}] 시작 전적 ${d.startLocked ? '🔒 잠금' : '🔓 잠금해제'} 상태로 변경됨 ([일괄 저장]을 누르면 확정)`, "ℹ️");
+  };
+
+  window.saveAdminBulkPvpSheet = async function() {
+    const dirtyNames = Object.keys(window.evAdminDraftMap).filter(n => window.evAdminDraftMap[n].dirty);
+    if (dirtyNames.length === 0) {
+      return window.showEvToast("변경되거나 새로 입력된 전적이 없습니다.", "ℹ️");
+    }
+
+    const btn = document.getElementById("btnSaveBulkPvpSheet");
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> ${dirtyNames.length}명 저장 중...`;
+    }
+
+    try {
+      let savedCount = 0;
+      for (const name of dirtyNames) {
+        const d = window.evAdminDraftMap[name];
+        const hasAnyInput = (d.startK !== "" || d.startA !== "" || d.startD !== "" || d.endK !== "" || d.endA !== "" || d.endD !== "");
+        if (!hasAnyInput && !d.hasSaved) continue;
+
+        const sK = Number(d.startK) || 0;
+        const sA = Number(d.startA) || 0;
+        const sD = Number(d.startD) || 0;
+        const eK = d.endK !== "" ? Number(d.endK) : sK;
+        const eA = d.endA !== "" ? Number(d.endA) : sA;
+        const eD = d.endD !== "" ? Number(d.endD) : sD;
+
+        await window.upsertPvpMemberRecordToDB(name, {
+          startK: sK, startA: sA, startD: sD,
+          endK: eK, endA: eA, endD: eD,
+          startLocked: !!d.startLocked,
+          updatedAt: new Date().toISOString()
+        });
+        savedCount++;
+      }
+
+      await window.loadAllEventsFromDB();
+      window.showEvToast(`✅ 총 ${savedCount}명의 PVP 전적이 일괄 저장되었습니다!`, "🎉");
+    } catch (err) {
+      window.showEvToast("일괄 저장 실패: " + err.message, "❌");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> 입력/변경된 전적 전체 일괄 저장`;
+      }
+    }
+  };
+
   window.renderPvpView = function() {
     const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     document.getElementById("pvpAdminControlBox").style.display = isAdmin ? "block" : "none";
@@ -1483,12 +1837,9 @@
 
     document.getElementById("pvpPrizeSummaryText").innerText = opts.prizeDesc || "길드 공지 참고";
 
-    const admSel = document.getElementById("adminPvpMemberSelect");
-    if (admSel) {
-      const curVal = admSel.value;
-      admSel.innerHTML = '<option value="">길드원 선택...</option>' +
-        window.evGuildMembers.map(gm => `<option value="${gm.name}">${gm.name}</option>`).join('');
-      admSel.value = curVal;
+    if (isAdmin) {
+      window.initAdminPvpDraftMap();
+      window.renderAdminPvpBulkSheet();
     }
 
     const pvpRows = window.evEntriesByKey.pvp || [];
@@ -1522,13 +1873,13 @@
               <span class="rank-badge-ev ${rClass}">${rIcon}</span>
               <div style="min-width:0;">
                 <div class="fw-bold text-white small text-truncate">${item.name} ${capTag}</div>
-                <div class="text-secondary" style="font-size: 0.7rem;">
+                <div class="text-secondary" style="font-size: 0.72rem;">
                   기간증가: <strong class="text-info">+${item.dK}킬</strong> · <strong class="text-success">+${item.dA}어시</strong> · <strong class="text-danger">+${item.recognizedD}데스</strong>${item.isCapped ? `(실제 ${item.rawDeltaD})` : ''}
                 </div>
               </div>
             </div>
-            <span class="badge rounded-pill px-3 py-2" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; font-size: 0.78rem; font-weight: 800;">
-              ${item.totalScore.toLocaleString()}점
+            <span class="badge rounded-pill px-3 py-2" style="background: rgba(245, 158, 11, 0.22); border: 1px solid #f59e0b; color: #fbbf24; font-size: 0.82rem; font-weight: 900;">
+              총 ${item.totalScore.toLocaleString()}점
             </span>
           </div>
         `;
@@ -1541,19 +1892,19 @@
     } else {
       allEl.innerHTML = list.map((item, idx) => {
         const delBtn = isAdmin
-          ? `<button class="btn btn-outline-danger btn-xs py-0 px-2 ms-2" style="font-size:0.65rem;" onclick="window.deletePvpEntryById(${item.rowId}, '${item.name}')">삭제</button>`
+          ? `<button class="btn btn-outline-danger btn-xs py-0 px-2 ms-2" style="font-size:0.68rem;" onclick="window.deletePvpEntryById(${item.rowId}, '${item.name}')">삭제</button>`
           : "";
         return `
-          <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background:#080d1a; border:1px solid #1b263b; font-size:0.74rem;">
+          <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background:#080d1a; border:1px solid #1b263b; font-size:0.76rem;">
             <div>
               <strong class="text-white">${idx + 1}위. ${item.name}</strong>
-              <div class="text-secondary" style="font-size:0.68rem;">
-                시작(${item.sK}/${item.sA}/${item.sD}) ➔ 종료(${item.eK}/${item.eA}/${item.eD})
-              </div>
+              <span class="text-secondary ms-1" style="font-size:0.7rem;">
+                [시작 ${item.sK}/${item.sA}/${item.sD} ➔ 종료 ${item.eK}/${item.eA}/${item.eD}]
+              </span>
             </div>
-            <div class="text-end">
-              <strong class="text-warning">${item.totalScore}점</strong>
-              <span class="text-secondary ms-1">(+${item.dK}/${item.dA}/${item.recognizedD})</span>
+            <div class="d-flex align-items-center">
+              <span class="text-secondary me-2" style="font-size:0.72rem;">(+${item.dK}킬/+${item.dA}어시/+${item.recognizedD}데스)</span>
+              <strong class="text-warning" style="font-size:0.82rem;">총 ${item.totalScore.toLocaleString()}점</strong>
               ${delBtn}
             </div>
           </div>
@@ -1606,9 +1957,11 @@
 
     const existingRow = (window.evEntriesByKey.pvp || []).find(r => r.member_name === memberName);
     const existing = existingRow ? (existingRow.record_data || {}) : {};
-    const hasStart = existing.startK !== undefined && existing.startK !== "";
+    const hasStartRecorded = (existingRow !== undefined) && (existing.startK !== undefined && existing.startK !== "");
+
+    // 핵심 보안: 최초 1회라도 시작 전적이 저장되어 있으면(또는 startLocked가 true이거나 2단계 기간이면) 개인은 절대 시작 전적을 수정할 수 없음!
     const isEndPhase = (window.evConfigsMap.pvp?.options?.phase === "end");
-    const lockStart = isEndPhase && hasStart;
+    const isStartLocked = (existing.startLocked !== undefined ? !!existing.startLocked : hasStartRecorded) || (isEndPhase && hasStartRecorded);
 
     document.getElementById("pvpVerifiedMemberNameText").innerText = `⚔️ [${memberName}] 님 전적 등록/갱신`;
 
@@ -1620,10 +1973,25 @@
     sA.value = existing.startA !== undefined ? existing.startA : "";
     sD.value = existing.startD !== undefined ? existing.startD : "";
 
-    sK.disabled = lockStart;
-    sA.disabled = lockStart;
-    sD.disabled = lockStart;
-    document.getElementById("pvpStartLockNotice").innerText = lockStart ? "🔒 2단계 기간 (시작전적 자동고정)" : "";
+    sK.disabled = isStartLocked;
+    sA.disabled = isStartLocked;
+    sD.disabled = isStartLocked;
+
+    const lockNoticeEl = document.getElementById("pvpStartLockNotice");
+    const baseTagEl = document.getElementById("pinStartBaseTag");
+    if (isStartLocked) {
+      lockNoticeEl.innerText = "🔒 최초 등록 완료 (수정 불가)";
+      if (baseTagEl) {
+        baseTagEl.innerText = "🔒 잠금됨";
+        baseTagEl.className = "p-2 rounded text-center fw-bold text-danger";
+      }
+    } else {
+      lockNoticeEl.innerText = "✏️ 최초 1회 입력 가능";
+      if (baseTagEl) {
+        baseTagEl.innerText = "기준점";
+        baseTagEl.className = "p-2 rounded text-center fw-bold text-secondary";
+      }
+    }
 
     document.getElementById("pinEndKill").value = existing.endK !== undefined ? existing.endK : (existing.startK ?? "");
     document.getElementById("pinEndAssist").value = existing.endA !== undefined ? existing.endA : (existing.startA ?? "");
@@ -1652,8 +2020,13 @@
       endD: rawEndD !== "" ? parseInt(rawEndD, 10) : sD
     };
     const calc = window.calculateMemberPvpScore(rec);
-    const box = document.getElementById("pinScorePreviewBox");
 
+    const inlineBadge = document.getElementById("pinInlineTotalScoreBadge");
+    if (inlineBadge) {
+      inlineBadge.innerText = `총 ${calc.totalScore.toLocaleString()}점`;
+    }
+
+    const box = document.getElementById("pinScorePreviewBox");
     let capWarn = "";
     if (calc.isCapped) {
       capWarn = `<div class="text-warning mt-1">🛡️ 어뷰징 방지 적용: 기간 데스 +${calc.rawDeltaD}회 중 <strong>${calc.recognizedD}회</strong>만 점수로 인정됩니다.</div>`;
@@ -1663,7 +2036,7 @@
       <div>• 기간 순수 증가: <strong class="text-info">+${calc.dK}킬</strong> / <strong class="text-success">+${calc.dA}어시</strong> / <strong class="text-danger">+${calc.recognizedD}데스</strong></div>
       ${capWarn}
       <div class="mt-1 pt-1 border-top border-secondary border-opacity-25 fw-bold text-white">
-        👉 산출 길드 점수: <strong class="text-warning fs-6">${calc.totalScore}점</strong>
+        👉 산출 길드 총점: <strong class="text-warning fs-6">${calc.totalScore.toLocaleString()}점</strong>
       </div>
     `;
   };
@@ -1671,9 +2044,15 @@
   window.submitMemberPvpStats = async function() {
     if (!window.evVerifiedMemberName) return;
 
-    const sK = parseInt(document.getElementById("pinStartKill").value, 10) || 0;
-    const sA = parseInt(document.getElementById("pinStartAssist").value, 10) || 0;
-    const sD = parseInt(document.getElementById("pinStartDeath").value, 10) || 0;
+    const existingRow = (window.evEntriesByKey.pvp || []).find(r => r.member_name === window.evVerifiedMemberName);
+    const existing = existingRow ? (existingRow.record_data || {}) : {};
+    const hasStartRecorded = (existingRow !== undefined) && (existing.startK !== undefined && existing.startK !== "");
+    const isStartLocked = (existing.startLocked !== undefined ? !!existing.startLocked : hasStartRecorded);
+
+    // 이미 시작 전적이 잠긴 상태라면 DB에 저장된 기존 시작 전적을 강제로 유지하여 클라이언트 변조까지 100% 차단
+    const sK = isStartLocked ? (Number(existing.startK) || 0) : (parseInt(document.getElementById("pinStartKill").value, 10) || 0);
+    const sA = isStartLocked ? (Number(existing.startA) || 0) : (parseInt(document.getElementById("pinStartAssist").value, 10) || 0);
+    const sD = isStartLocked ? (Number(existing.startD) || 0) : (parseInt(document.getElementById("pinStartDeath").value, 10) || 0);
 
     const rawEK = document.getElementById("pinEndKill").value;
     const rawEA = document.getElementById("pinEndAssist").value;
@@ -1687,58 +2066,23 @@
       return alert("⚠️ 종료(현재) 전적은 시작 전적보다 작을 수 없습니다.");
     }
 
+    if (!isStartLocked) {
+      const ok = confirm(`📌 [시작 전적 최초 등록 확인]\n시작 전적(킬:${sK} / 어시:${sA} / 데스:${sD})을 저장하면 이후에는 시작 전적을 수정할 수 없으며 종료 전적만 입력할 수 있습니다.\n저장하시겠습니까?`);
+      if (!ok) return;
+    }
+
     try {
       await window.upsertPvpMemberRecordToDB(window.evVerifiedMemberName, {
         startK: sK, startA: sA, startD: sD,
         endK: eK, endA: eA, endD: eD,
+        startLocked: true, // 최초 1회 저장 즉시 영구 잠금
         updatedAt: new Date().toISOString()
       });
       window.closePvpPinEntryModal();
       await window.loadAllEventsFromDB();
-      window.showEvToast(`[${window.evVerifiedMemberName}] 님 PVP 전적이 저장되었습니다!`, "⚔️");
+      window.showEvToast(`[${window.evVerifiedMemberName}] 님 PVP 전적이 안전하게 저장되었습니다!`, "⚔️");
     } catch (err) {
       alert("전적 저장 실패: " + err.message);
-    }
-  };
-
-  window.loadMemberPvpToAdminInputs = function() {
-    const name = document.getElementById("adminPvpMemberSelect").value;
-    const row = (window.evEntriesByKey.pvp || []).find(r => r.member_name === name);
-    const rec = row ? (row.record_data || {}) : {};
-    document.getElementById("admStartK").value = rec.startK !== undefined ? rec.startK : "";
-    document.getElementById("admStartA").value = rec.startA !== undefined ? rec.startA : "";
-    document.getElementById("admStartD").value = rec.startD !== undefined ? rec.startD : "";
-    document.getElementById("admEndK").value = rec.endK !== undefined ? rec.endK : "";
-    document.getElementById("admEndA").value = rec.endA !== undefined ? rec.endA : "";
-    document.getElementById("admEndD").value = rec.endD !== undefined ? rec.endD : "";
-  };
-
-  window.saveAdminPvpRecord = async function() {
-    const name = document.getElementById("adminPvpMemberSelect").value;
-    if (!name) return window.showEvToast("길드원을 먼저 선택하세요.", "⚠️");
-
-    const sK = parseInt(document.getElementById("admStartK").value, 10) || 0;
-    const sA = parseInt(document.getElementById("admStartA").value, 10) || 0;
-    const sD = parseInt(document.getElementById("admStartD").value, 10) || 0;
-
-    const rawEK = document.getElementById("admEndK").value;
-    const rawEA = document.getElementById("admEndA").value;
-    const rawED = document.getElementById("admEndD").value;
-
-    const eK = rawEK !== "" ? parseInt(rawEK, 10) : sK;
-    const eA = rawEA !== "" ? parseInt(rawEA, 10) : sA;
-    const eD = rawED !== "" ? parseInt(rawED, 10) : sD;
-
-    try {
-      await window.upsertPvpMemberRecordToDB(name, {
-        startK: sK, startA: sA, startD: sD,
-        endK: eK, endA: eA, endD: eD,
-        updatedAt: new Date().toISOString()
-      });
-      await window.loadAllEventsFromDB();
-      window.showEvToast(`[${name}] 전적이 DB에 저장되었습니다.`);
-    } catch (err) {
-      window.showEvToast("저장 실패: " + err.message, "❌");
     }
   };
 
@@ -1753,7 +2097,7 @@
     }
   };
 
-  // 관리자 PVP 인게임 랭킹 스샷 AI OCR 일괄 판독
+  // 관리자 PVP 인게임 랭킹 스샷 AI OCR 일괄 판독 (현재 선택된 시트 모드: 시작 or 종료에 자동 반영)
   window.handlePvpOcrFile = function(event) {
     const file = event.target.files && event.target.files[0];
     if (file) runPvpScreenshotOcr(file);
@@ -1777,7 +2121,8 @@
   }
 
   async function runPvpScreenshotOcr(file) {
-    window.showEvToast("인게임 PvP 랭킹 스샷 AI 분석 중...", "⏳");
+    const mode = window.evAdminSheetMode || "end";
+    window.showEvToast(`인게임 PvP 랭킹 스샷을 [${mode === 'start' ? '시작 전적' : '종료 전적'}]으로 AI 분석 중...`, "⏳");
     try {
       const keyRows = await apiRequest("guild_settings?key=eq.gemini_api_key");
       const apiKey = (keyRows && keyRows.length > 0) ? (keyRows[0].value || "").trim() : "";
@@ -1812,18 +2157,17 @@
         return window.showEvToast("스샷에서 길드원 전적을 찾지 못했습니다.", "⚠️");
       }
 
-      const mode = document.getElementById("pvpOcrTargetMode").value;
       let count = 0;
-
       for (const row of extracted) {
         if (!row.name) continue;
         const existingRow = (window.evEntriesByKey.pvp || []).find(r => r.member_name === row.name);
-        const cur = existingRow ? Object.assign({}, existingRow.record_data) : { startK: 0, startA: 0, startD: 0, endK: 0, endA: 0, endD: 0 };
+        const cur = existingRow ? Object.assign({}, existingRow.record_data) : { startK: 0, startA: 0, startD: 0, endK: 0, endA: 0, endD: 0, startLocked: true };
 
         if (mode === "start") {
           cur.startK = Number(row.kill) || 0;
           cur.startA = Number(row.assist) || 0;
           cur.startD = Number(row.death) || 0;
+          cur.startLocked = true;
           if (!cur.endK) { cur.endK = cur.startK; cur.endA = cur.startA; cur.endD = cur.startD; }
         } else {
           cur.endK = Number(row.kill) || 0;
@@ -1865,7 +2209,7 @@
   };
 
   /* ==========================================
-     2. 행운의 룰렛 로직 (guild_event_entries 연동)
+     2. 행운의 룰렛 로직
      ========================================== */
   window.getRouletteCandidateNames = function() {
     const mode = document.getElementById("rouletteTargetMode")?.value || "all";
@@ -1974,7 +2318,7 @@
   };
 
   /* ==========================================
-     3. MVP 투표 이벤트 로직 (guild_event_entries 연동)
+     3. MVP 투표 이벤트 로직
      ========================================== */
   window.renderMvpView = function() {
     const prizeText = window.evConfigsMap.mvp?.options?.prizeDesc || "";
@@ -2070,7 +2414,7 @@
   };
 
   /* ==========================================
-     4. 주사위 하이로우 로직 (guild_event_entries 연동)
+     4. 주사위 하이로우 로직
      ========================================== */
   window.renderDiceView = function() {
     const prizeText = window.evConfigsMap.dice?.options?.prizeDesc || "";
@@ -2133,7 +2477,7 @@
   };
 
   /* ==========================================
-     5. 선착순 깜짝응모 로직 (guild_event_entries 연동)
+     5. 선착순 깜짝응모 로직
      ========================================== */
   window.renderFcfsView = function() {
     const opts = window.evConfigsMap.fcfs?.options || {};
@@ -2296,7 +2640,6 @@
     document.getElementById("cfgStartTimeInput").value = cfg.start_time || "";
     document.getElementById("cfgEndTimeInput").value = cfg.end_time || "";
 
-    // 오픈 상태 모드 결정
     if (!cfg.is_enabled) {
       window.setEventOpenMode("closed");
     } else if (cfg.start_time || cfg.end_time) {
@@ -2305,7 +2648,6 @@
       window.setEventOpenMode("open");
     }
 
-    // 종목별 세부 설정 영역 표시 전환
     document.getElementById("cfgDetail_pvp").style.display = (key === "pvp") ? "block" : "none";
     document.getElementById("cfgDetail_roulette").style.display = (key === "roulette") ? "block" : "none";
     document.getElementById("cfgDetail_SimplePrize").style.display = (key === "mvp" || key === "dice") ? "block" : "none";
