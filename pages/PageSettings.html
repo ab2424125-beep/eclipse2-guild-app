@@ -168,7 +168,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    max-height: 220px;
+    max-height: 320px;
     overflow-y: auto;
     margin-top: 10px;
   }
@@ -184,32 +184,6 @@
   }
   .boss-item-del { color: #94a3b8; cursor: pointer; flex-shrink: 0; }
   .boss-item-del:hover { color: #f87171; }
-
-  .ground-region-chips { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; scrollbar-width: thin; }
-  .region-chip-btn {
-    white-space: nowrap;
-    background: #080d1a;
-    border: 1px solid #1e2c47;
-    color: #94a3b8;
-    padding: 3px 9px;
-    border-radius: 14px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .region-chip-btn.active { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; font-weight: 700; }
-
-  .ground-grid-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 240px; overflow-y: auto; }
-  .ground-item-card {
-    background: rgba(11, 20, 36, 0.95);
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    border-radius: 8px;
-    padding: 6px 7px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-  }
 
   .custom-app-toast {
     position: fixed;
@@ -238,21 +212,11 @@
   }
   .custom-app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* 📱 휴대용 기기별 반응형 미디어 쿼리 */
   @media (max-width: 480px) {
-    .settings-card {
-      padding: 14px 12px;
-    }
-    .settings-section-box {
-      padding: 12px 10px;
-    }
-    .boss-grid-container, .ground-grid-container {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-    .settings-nav-btn {
-      font-size: 0.7rem;
-      padding: 7px 4px;
-    }
+    .settings-card { padding: 14px 12px; }
+    .settings-section-box { padding: 12px 10px; }
+    .boss-grid-container { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .settings-nav-btn { font-size: 0.7rem; padding: 7px 4px; }
   }
 </style>
 
@@ -278,7 +242,7 @@
       👑 관리자 권한
     </button>
     <button type="button" class="settings-nav-btn" id="btnNavBossGround" onclick="switchSettingsTab('bossGround')">
-      ⚔️ 보스/사냥터
+      ⚔️ 보스 관리
     </button>
   </div>
 
@@ -382,7 +346,7 @@
         <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 flex-shrink-0" style="font-size: 0.65rem; white-space: nowrap;">슈퍼관리자 전용</span>
       </div>
       <p class="text-secondary" style="font-size: 0.72rem; line-height: 1.4;">
-        관리자 비밀번호 및 슈퍼 마스터키는 **슈퍼관리자만 변경**할 수 있으며, 데이터베이스 내부에서 직접 암호화 검증 및 저장됩니다.
+        관리자 비밀번호 및 슈퍼 마스터키는 <strong>슈퍼관리자만 변경</strong>할 수 있으며, 데이터베이스 내부에서 직접 암호화 검증 및 저장됩니다.
       </p>
 
       <div class="mb-2">
@@ -461,12 +425,25 @@
       <div class="perm-switch-item">
         <div style="min-width:0; flex:1;">
           <div class="text-white fw-bold small" style="font-size: 0.8rem;">
-            <i class="fa-solid fa-skull text-info me-1"></i>설정창 보스/사냥터 탭 권한
+            <i class="fa-solid fa-skull text-info me-1"></i>설정창 보스 관리 탭 권한
           </div>
-          <div class="text-secondary" style="font-size: 0.68rem;">보스 타이머 스케줄 및 원수 사냥터 탭 진입 및 추가/삭제 허용</div>
+          <div class="text-secondary" style="font-size: 0.68rem;">보스 타이머 스케줄 탭 진입 및 보스 추가/삭제 허용</div>
         </div>
         <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
           <input class="form-check-input ms-0" type="checkbox" id="permSettingsBossGround" role="switch">
+        </div>
+      </div>
+
+      <!-- 신규 추가: 길드이벤트 설정 및 초기화 권한 -->
+      <div class="perm-switch-item" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05);">
+        <div style="min-width:0; flex:1;">
+          <div class="text-white fw-bold small" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-trophy text-warning me-1"></i>길드이벤트 설정 및 초기화 권한
+          </div>
+          <div class="text-secondary" style="font-size: 0.68rem;">일반 관리자의 [이벤트 설정] 진입, 오픈/마감 변경 및 기록 초기화 허용</div>
+        </div>
+        <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
+          <input class="form-check-input ms-0" type="checkbox" id="permEventsManage" role="switch">
         </div>
       </div>
 
@@ -548,9 +525,9 @@
     </button>
   </div>
 
-  <!-- [탭 4] 보스/사냥터 관리 -->
+  <!-- [탭 4] 보스 관리 -->
   <div id="tabSettingsBossGround" style="display: none;">
-    <div class="settings-section-box">
+    <div class="settings-section-box mb-0">
       <div class="fw-bold text-info small mb-2"><i class="fa-solid fa-skull me-1 text-danger"></i> 보스 목록 관리</div>
       <div class="row g-2 mb-2 align-items-center">
         <div class="col-4">
@@ -572,30 +549,6 @@
       </div>
       <div id="bossChipsContainer" class="boss-grid-container"></div>
     </div>
-
-    <div class="settings-section-box">
-      <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
-        <span class="fw-bold text-success small"><i class="fa-solid fa-map-location-dot me-1"></i> 원수 주요 사냥터 관리</span>
-        <span class="text-secondary flex-shrink-0" style="font-size: 0.68rem;" id="groundCountText">총 0개 등록됨</span>
-      </div>
-
-      <div class="row g-2 mb-2">
-        <div class="col-6">
-          <input type="text" id="newGroundRegionInput" class="form-control input-custom-set" placeholder="대분류 (예: 바리탄)">
-        </div>
-        <div class="col-6">
-          <input type="text" id="newHuntingGroundName" class="form-control input-custom-set" placeholder="소분류 (예: 평야)" onkeypress="if(event.keyCode==13){ addNewHuntingGround(); }">
-        </div>
-        <div class="col-12">
-          <button type="button" class="btn btn-success btn-sm w-100 py-2 fw-bold" onclick="addNewHuntingGround()">
-            <i class="fa-solid fa-plus me-1"></i> 사냥터 추가
-          </button>
-        </div>
-      </div>
-
-      <div class="ground-region-chips" id="groundRegionFilterBar"></div>
-      <div id="groundChipsContainer" class="ground-grid-container"></div>
-    </div>
   </div>
 </div>
 
@@ -607,9 +560,7 @@
 <script>
   window.currentSettingsMap = window.currentSettingsMap || {};
   window.cachedBosses = window.cachedBosses || [];
-  window.cachedGrounds = window.cachedGrounds || [];
   window.cachedGuildMembersForReset = window.cachedGuildMembersForReset || [];
-  window.selectedRegionFilter = '전체';
   window.toastTimer = null;
 
   function showToast(message, icon = "✅") {
@@ -631,11 +582,9 @@
   function switchSettingsTab(tab) {
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
 
-    if (tab === 'permissions') {
-      if (!isSuper) {
-        alert("⚠️ [관리자 권한] 제어판은 슈퍼관리자(Master)만 진입할 수 있습니다.");
-        return;
-      }
+    if (tab === 'permissions' && !isSuper) {
+      alert("⚠️ [관리자 권한] 제어판은 슈퍼관리자(Master)만 진입할 수 있습니다.");
+      return;
     }
 
     if (tab === 'auth' && !isSuper) {
@@ -649,7 +598,7 @@
     if (tab === 'bossGround' && !isSuper) {
       const allowBossGround = window.currentSettingsMap['perm_settings_boss_ground'] !== 'false';
       if (!allowBossGround) {
-        alert("⚠️ 일반 관리자에게는 보스/사냥터 관리 권한이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.");
+        alert("⚠️ 일반 관리자에게는 보스 관리 권한이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.");
         return;
       }
     }
@@ -708,17 +657,14 @@
       const parseBool = (k) => window.currentSettingsMap[k] !== 'false';
       document.getElementById('permSettingsSecurity').checked = parseBool('perm_settings_security');
       document.getElementById('permSettingsBossGround').checked = parseBool('perm_settings_boss_ground');
+      document.getElementById('permEventsManage').checked = parseBool('perm_events_manage');
       document.getElementById('permBossRegister').checked = parseBool('perm_boss_register');
       document.getElementById('permBossRecordsEdit').checked = parseBool('perm_boss_records_edit');
       document.getElementById('permMemberPinReset').checked = parseBool('perm_member_pin_reset');
       document.getElementById('permWishDistribute').checked = parseBool('perm_wish_distribute');
       document.getElementById('permSettleFundDist').checked = parseBool('perm_settle_fund_dist');
       document.getElementById('permFinanceInput').checked = parseBool('perm_finance_input');
-
-      const permNoticeElem = document.getElementById('permNoticeWrite');
-      if (permNoticeElem) {
-        permNoticeElem.checked = parseBool('perm_notice_write');
-      }
+      document.getElementById('permNoticeWrite').checked = parseBool('perm_notice_write');
 
       applyMemberPinResetUI();
     } catch (e) {}
@@ -836,6 +782,7 @@
     const permissions = {
       perm_settings_security: document.getElementById('permSettingsSecurity').checked ? 'true' : 'false',
       perm_settings_boss_ground: document.getElementById('permSettingsBossGround').checked ? 'true' : 'false',
+      perm_events_manage: document.getElementById('permEventsManage').checked ? 'true' : 'false',
       perm_boss_register: document.getElementById('permBossRegister').checked ? 'true' : 'false',
       perm_boss_records_edit: document.getElementById('permBossRecordsEdit').checked ? 'true' : 'false',
       perm_member_pin_reset: document.getElementById('permMemberPinReset').checked ? 'true' : 'false',
@@ -955,7 +902,7 @@
     const isSuper = (sessionStorage.getItem("admin_role") === "super");
     if (!isSuper) {
       if (window.currentSettingsMap['perm_settings_boss_ground'] === 'false') {
-        alert("⚠️ 일반 관리자에게는 보스/사냥터 수정 권한이 없습니다.");
+        alert("⚠️ 일반 관리자에게는 보스 수정 권한이 없습니다.");
         return false;
       }
     }
@@ -980,7 +927,7 @@
         fixed_schedule: (type === 'fixed' ? fixed_schedule : '')
       }]);
       document.getElementById('newBossName').value = '';
-      await loadBossAndGroundData();
+      await loadBossData();
       showToast(`[${boss_name}] 보스 추가 완료`);
     } catch (err) {
       showToast("추가 실패: " + err.message, "❌");
@@ -993,85 +940,11 @@
 
     try {
       await apiRequest(`boss_timers?id=eq.${id}`, "DELETE");
-      await loadBossAndGroundData();
+      await loadBossData();
       showToast(`[${name}] 삭제 완료`, "🗑️");
     } catch (err) {
       showToast("삭제 실패: " + err.message, "❌");
     }
-  }
-
-  async function addNewHuntingGround() {
-    if (!checkBossGroundPermission()) return;
-
-    const region = document.getElementById('newGroundRegionInput').value.trim();
-    const name = document.getElementById('newHuntingGroundName').value.trim();
-
-    if (!region || !name) return showToast("대분류와 소분류를 모두 입력하세요!", "⚠️");
-
-    try {
-      await apiRequest("hunting_grounds", "POST", [{ name, region }]);
-      document.getElementById('newHuntingGroundName').value = '';
-      await loadBossAndGroundData();
-      showToast(`[${region} > ${name}] 사냥터 추가 완료`);
-    } catch (err) {
-      showToast("추가 실패: " + err.message, "❌");
-    }
-  }
-
-  async function deleteHuntingGround(id, name) {
-    if (!checkBossGroundPermission()) return;
-    if (!confirm(`[${name}] 사냥터를 삭제하시겠습니까?`)) return;
-
-    try {
-      await apiRequest(`hunting_grounds?id=eq.${id}`, "DELETE");
-      await loadBossAndGroundData();
-      showToast(`[${name}] 사냥터 삭제 완료`, "🗑️");
-    } catch (err) {
-      showToast("삭제 실패: " + err.message, "❌");
-    }
-  }
-
-  function setRegionFilter(regionName) {
-    window.selectedRegionFilter = regionName;
-    renderGroundRegionFilters();
-    renderGroundList();
-  }
-
-  function renderGroundRegionFilters() {
-    const bar = document.getElementById('groundRegionFilterBar');
-    if (!bar) return;
-    const regions = new Set();
-    window.cachedGrounds.forEach(g => { if (g.region) regions.add(g.region); });
-
-    let html = `<span class="region-chip-btn ${window.selectedRegionFilter === '전체' ? 'active' : ''}" onclick="setRegionFilter('전체')">전체 (${window.cachedGrounds.length})</span>`;
-    regions.forEach(r => {
-      const count = window.cachedGrounds.filter(g => g.region === r).length;
-      html += `<span class="region-chip-btn ${window.selectedRegionFilter === r ? 'active' : ''}" onclick="setRegionFilter('${r}')">${r} (${count})</span>`;
-    });
-    bar.innerHTML = html;
-    document.getElementById('groundCountText').innerText = `총 ${window.cachedGrounds.length}개 등록됨`;
-  }
-
-  function renderGroundList() {
-    const container = document.getElementById('groundChipsContainer');
-    if (!container) return;
-    const filtered = (window.selectedRegionFilter === '전체') 
-      ? window.cachedGrounds 
-      : window.cachedGrounds.filter(g => g.region === window.selectedRegionFilter);
-
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="text-secondary small text-center py-3 w-100" style="grid-column: 1 / -1;">등록된 사냥터가 없습니다.</div>';
-      return;
-    }
-
-    container.innerHTML = filtered.map(g => `
-      <div class="ground-item-card">
-        <span class="small text-truncate" title="[${g.region || '기타'}] ${g.name}">
-          <strong class="text-success me-1">[${g.region || '기타'}]</strong>${g.name}
-        </span>
-        <i class="fa-solid fa-xmark boss-item-del" onclick="deleteHuntingGround(${g.id}, '${g.name}')"></i>
-      </div>
-    `).join('');
   }
 
   function renderBossChips() {
@@ -1095,24 +968,18 @@
     }).join('');
   }
 
-  async function loadBossAndGroundData() {
+  async function loadBossData() {
     try {
-      const [bosses, grounds] = await Promise.all([
-        apiRequest("boss_timers?select=*&order=id.asc"),
-        apiRequest("hunting_grounds?select=*&order=id.asc")
-      ]);
+      const bosses = await apiRequest("boss_timers?select=*&order=id.asc");
       window.cachedBosses = bosses || [];
-      window.cachedGrounds = grounds || [];
       renderBossChips();
-      renderGroundRegionFilters();
-      renderGroundList();
     } catch (e) {}
   }
 
   (async function initSettingsPage() {
     updateRoleBadge();
     await loadCurrentSettingsToForm();
-    await loadBossAndGroundData();
+    await loadBossData();
     await loadGuildMembersForPinResetDropdown();
   })();
 </script>
