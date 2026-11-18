@@ -138,7 +138,7 @@
       white-space: nowrap;
     }
     .bottom-utility-card:hover { transform: translateY(-2px); }
-    .bottom-utility-card.enemy:hover { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    .bottom-utility-card.events:hover { border-color: #f59e0b; background: rgba(245, 158, 11, 0.12); }
     .bottom-utility-card.settings:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
     .bottom-utility-card.discord-admin:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.15); }
     .bottom-utility-card.tts-studio:hover { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
@@ -356,10 +356,11 @@
         </div>
       </div>
 
+      <!-- 원수목록을 제거하고 길드이벤트로 교체한 하단 유틸리티 영역 -->
       <div class="bottom-utility-grid">
-        <div class="bottom-utility-card enemy" onclick="openModule('PageEnemies')">
-          <i class="fa-solid fa-skull text-danger" style="font-size: 1.05rem;"></i>
-          <span class="bottom-utility-title text-danger">원수목록</span>
+        <div class="bottom-utility-card events" onclick="openModule('PageEvents')">
+          <i class="fa-solid fa-trophy text-warning" style="font-size: 1.05rem;"></i>
+          <span class="bottom-utility-title text-warning">길드이벤트</span>
         </div>
         <div class="bottom-utility-card settings" onclick="openModule('PageSettings')">
           <i class="fa-solid fa-gear text-info" style="font-size: 1.05rem;"></i>
@@ -748,7 +749,7 @@
 
     async function checkPermissionBeforeOpen(pageName) {
       if (isSuperAdminLoggedIn()) return true;
-      if (pageName === "PageSettle") return true;
+      if (pageName === "PageSettle" || pageName === "PageEvents") return true;
 
       try {
         const settings = await apiRequest("guild_settings?select=key,value");
