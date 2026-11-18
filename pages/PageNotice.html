@@ -101,6 +101,10 @@
     border-color: rgba(239, 68, 68, 0.4);
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, #090e1c 100%);
   }
+  .notice-item-card.is-kakao-active {
+    border-color: rgba(250, 204, 21, 0.55);
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.12);
+  }
 
   /* 구분 뱃지 */
   .badge-notice-type {
@@ -125,6 +129,55 @@
     background: rgba(245, 158, 11, 0.15);
     border: 1px solid rgba(245, 158, 11, 0.4);
     color: #fbbf24;
+  }
+
+  /* 카톡 1시간 주기 발송 뱃지 및 체크 토글 버튼 */
+  .badge-kakao-hourly {
+    background: rgba(254, 229, 0, 0.16);
+    border: 1px solid rgba(254, 229, 0, 0.5);
+    color: #fde047;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .kakao-hourly-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    border: 1px solid #2b3d5e;
+    background: #0d162a;
+    color: #94a3b8;
+    white-space: nowrap;
+  }
+  .kakao-hourly-toggle-label:hover {
+    border-color: #fde047;
+    color: #ffffff;
+  }
+  .kakao-hourly-toggle-label.active {
+    background: rgba(254, 229, 0, 0.18);
+    border-color: #facc15;
+    color: #fde047;
+  }
+  .kakao-hourly-toggle-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #facc15;
   }
 
   /* 토스트 알림창 */
@@ -222,9 +275,22 @@
       <input type="text" id="noticeTitleInput" class="form-control input-custom-notice" placeholder="제목을 입력하세요">
     </div>
 
-    <div class="mb-3">
+    <div class="mb-2">
       <label class="form-label small text-secondary mb-1">공지 내용</label>
       <textarea id="noticeContentInput" class="form-control input-custom-notice" rows="4" placeholder="공지 내용을 자세히 입력하세요..." style="resize: vertical;"></textarea>
+    </div>
+
+    <!-- 카톡 1시간 주기 자동 발송 체크 옵션 -->
+    <div class="p-2 px-3 rounded mb-3 d-flex justify-content-between align-items-center" style="background: rgba(254, 229, 0, 0.08); border: 1px solid rgba(250, 204, 21, 0.35);">
+      <div style="min-width: 0; flex: 1;">
+        <div class="fw-bold small" style="color: #fde047; font-size: 0.78rem;">
+          <i class="fa-solid fa-comment-dots me-1"></i>카카오톡 1시간 주기 자동 발송
+        </div>
+        <div class="text-secondary" style="font-size: 0.68rem;">체크 시 메신저봇R이 1시간마다 단톡방에 이 공지를 자동 발송합니다.</div>
+      </div>
+      <div class="form-check form-switch m-0 ps-2 flex-shrink-0">
+        <input class="form-check-input" type="checkbox" id="noticeKakaoHourlyCheck" style="width: 2.5em; height: 1.35em; cursor: pointer;">
+      </div>
     </div>
 
     <div class="d-flex gap-2">
@@ -238,9 +304,14 @@
   </div>
 
   <!-- 상단 안내 인포바 -->
-  <div class="p-2 px-3 rounded mb-3 d-flex align-items-center gap-2" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
-    <span>💡</span>
-    <span class="small text-secondary" style="font-size: 0.76rem; word-break: keep-all;">길드 중요 공지 및 전달사항이 실시간으로 안내됩니다.</span>
+  <div class="p-2 px-3 rounded mb-3 d-flex align-items-center justify-content-between gap-2 flex-wrap" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+    <div class="d-flex align-items-center gap-2">
+      <span>💡</span>
+      <span class="small text-secondary" style="font-size: 0.75rem; word-break: keep-all;">길드 중요 공지 및 전달사항이 실시간으로 안내됩니다.</span>
+    </div>
+    <span class="badge-kakao-hourly" id="kakaoHourlyCountBadge" style="display: none;">
+      <i class="fa-solid fa-comment"></i> 카톡 1시간 주기 발송: 0건
+    </span>
   </div>
 
   <!-- 공지사항 목록 컨테이너 -->
@@ -258,6 +329,7 @@
 <script>
   window.noticeToastTimer = null;
   window.cachedNoticesList = [];
+  window.kakaoHourlyNoticeIdSet = new Set();
 
   window.__currentModuleCleanup = function() {
     if (window.noticeToastTimer) {
@@ -293,6 +365,84 @@
     return true;
   }
 
+  // DB(guild_settings)에서 카톡 1시간 주기 발송 대상 공지 ID 목록 로드
+  window.loadKakaoHourlyNoticeIds = async function() {
+    window.kakaoHourlyNoticeIdSet = new Set();
+    try {
+      const rows = await apiRequest("guild_settings?key=eq.kakao_hourly_notice_ids");
+      if (rows && rows.length > 0 && rows[0].value) {
+        const parsed = JSON.parse(rows[0].value);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(id => {
+            const numId = Number(id);
+            if (!isNaN(numId) && numId > 0) window.kakaoHourlyNoticeIdSet.add(numId);
+          });
+        }
+      }
+    } catch (e) {}
+  };
+
+  // DB(guild_settings)에 카톡 1시간 주기 발송 대상 공지 ID 목록 저장
+  window.saveKakaoHourlyNoticeIds = async function() {
+    const idArray = Array.from(window.kakaoHourlyNoticeIdSet);
+    const jsonStr = JSON.stringify(idArray);
+    const checkRow = await apiRequest("guild_settings?key=eq.kakao_hourly_notice_ids");
+    if (checkRow && checkRow.length > 0) {
+      await apiRequest("guild_settings?key=eq.kakao_hourly_notice_ids", "PATCH", { value: jsonStr });
+    } else {
+      await apiRequest("guild_settings", "POST", [{ key: "kakao_hourly_notice_ids", value: jsonStr }]);
+    }
+    window.updateKakaoHourlyCountBadge();
+  };
+
+  window.updateKakaoHourlyCountBadge = function() {
+    const badge = document.getElementById("kakaoHourlyCountBadge");
+    if (!badge) return;
+    const count = window.kakaoHourlyNoticeIdSet.size;
+    if (count > 0) {
+      badge.style.display = "inline-flex";
+      badge.innerHTML = `<i class="fa-solid fa-comment"></i> 카톡 1시간 주기 발송: ${count}건`;
+    } else {
+      badge.style.display = "none";
+    }
+  };
+
+  // 카드에서 즉시 [💬 카톡 1시간 발송] 체크/해제 토글
+  window.toggleNoticeKakaoHourly = async function(noticeId, isChecked) {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) {
+      window.showNoticeToast("관리자 로그인 후 설정할 수 있습니다.", "🔒");
+      await window.loadNoticeList();
+      return;
+    }
+
+    const hasPerm = await checkNoticeWritePermission();
+    if (!hasPerm) {
+      window.showNoticeToast("공지사항 관리 권한이 없습니다.", "⚠️");
+      await window.loadNoticeList();
+      return;
+    }
+
+    const numId = Number(noticeId);
+    if (isChecked) {
+      window.kakaoHourlyNoticeIdSet.add(numId);
+    } else {
+      window.kakaoHourlyNoticeIdSet.delete(numId);
+    }
+
+    try {
+      await window.saveKakaoHourlyNoticeIds();
+      window.renderNoticeCards(window.cachedNoticesList);
+      if (isChecked) {
+        window.showNoticeToast("💬 카톡 1시간 주기 자동 발송 공지로 등록되었습니다!", "✅");
+      } else {
+        window.showNoticeToast("카톡 1시간 주기 자동 발송이 해제되었습니다.", "ℹ️");
+      }
+    } catch (err) {
+      window.showNoticeToast("설정 저장 실패: " + err.message, "❌");
+    }
+  };
+
   function setNoticeDefaultValues() {
     const today = typeof getKSTDateString === "function" ? getKSTDateString() : new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('noticeDateInput');
@@ -306,6 +456,13 @@
   }
 
   window.toggleNoticeRegisterForm = async function() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) {
+      window.showNoticeToast("관리자 로그인이 필요합니다.", "🔒");
+      if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+      return;
+    }
+
     const hasPerm = await checkNoticeWritePermission();
     if (!hasPerm) {
       return window.showNoticeToast("공지사항 작성 권한이 비활성화되어 있습니다.", "⚠️");
@@ -321,6 +478,7 @@
       document.getElementById('noticeTitleInput').value = "";
       document.getElementById('noticeContentInput').value = "";
       document.getElementById('noticeTypeSelect').value = "일반";
+      document.getElementById('noticeKakaoHourlyCheck').checked = false;
       setNoticeDefaultValues();
       box.style.display = 'block';
       document.getElementById('noticeTitleInput').focus();
@@ -335,7 +493,6 @@
     document.getElementById('editingNoticeId').value = "";
   };
 
-  // 🎯 [완벽 수정]: 대괄호 접두사([중요], [필독] 등)를 안전하게 정밀 파싱하여 첫 글자 유실 원천 차단
   window.editNoticeItem = async function(id) {
     const hasPerm = await checkNoticeWritePermission();
     if (!hasPerm) {
@@ -361,7 +518,6 @@
       detectedType = '일반';
       rawTitle = rawTitle.replace('[일반]', '').trim();
     } else if (rawTitle.startsWith('[')) {
-      // 기타 대괄호 형식이 있는 경우 첫 번째 닫는 대괄호 뒤의 텍스트 추출
       const closeIdx = rawTitle.indexOf(']');
       if (closeIdx !== -1) {
         const prefix = rawTitle.substring(1, closeIdx).trim();
@@ -379,6 +535,7 @@
     document.getElementById('noticeTypeSelect').value = detectedType;
     document.getElementById('noticeTitleInput').value = rawTitle;
     document.getElementById('noticeContentInput').value = item.content || '';
+    document.getElementById('noticeKakaoHourlyCheck').checked = window.kakaoHourlyNoticeIdSet.has(Number(item.id));
     
     const dateStr = (item.created_at || item.date || '').slice(0, 10);
     if (dateStr) {
@@ -391,6 +548,105 @@
     document.getElementById('noticeTitleInput').focus();
   };
 
+  window.renderNoticeCards = function(notices) {
+    const container = document.getElementById('noticeListContainer');
+    if (!container) return;
+
+    if (!notices || notices.length === 0) {
+      container.innerHTML = `
+        <div class="text-secondary small text-center py-5">
+          <div>등록된 공지사항이 없습니다.</div>
+          <div class="mt-1" style="font-size: 0.75rem; color: #64748b;">우측 상단의 [+ 공지 등록]을 눌러 첫 공지를 작성해보세요!</div>
+        </div>
+      `;
+      return;
+    }
+
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+
+    container.innerHTML = notices.map(item => {
+      let rawTitle = item.title || '제목 없음';
+      let detectedType = '일반';
+
+      if (rawTitle.startsWith('[중요]')) {
+        detectedType = '중요';
+        rawTitle = rawTitle.replace('[중요]', '').trim();
+      } else if (rawTitle.startsWith('[필독]')) {
+        detectedType = '필독';
+        rawTitle = rawTitle.replace('[필독]', '').trim();
+      } else if (rawTitle.startsWith('[이벤트]')) {
+        detectedType = '이벤트';
+        rawTitle = rawTitle.replace('[이벤트]', '').trim();
+      } else if (rawTitle.startsWith('[일반]')) {
+        detectedType = '일반';
+        rawTitle = rawTitle.replace('[일반]', '').trim();
+      } else if (rawTitle.startsWith('[')) {
+        const closeIdx = rawTitle.indexOf(']');
+        if (closeIdx !== -1) {
+          const prefix = rawTitle.substring(1, closeIdx).trim();
+          if (['중요', '필독', '이벤트', '일반'].includes(prefix)) {
+            detectedType = prefix;
+          }
+          rawTitle = rawTitle.substring(closeIdx + 1).trim();
+        }
+      }
+
+      let badgeClass = 'badge-type-normal';
+      let isImp = false;
+
+      if (detectedType === '중요' || detectedType === '필독') {
+        badgeClass = 'badge-type-urgent';
+        isImp = (detectedType === '중요');
+      } else if (detectedType === '이벤트') {
+        badgeClass = 'badge-type-event';
+      }
+
+      const isKakaoHourly = window.kakaoHourlyNoticeIdSet.has(Number(item.id));
+      const kakaoBadgeHtml = isKakaoHourly
+        ? `<span class="badge-kakao-hourly"><i class="fa-solid fa-comment"></i>카톡 1시간 주기 발송중</span>`
+        : '';
+
+      const dateStr = (item.created_at || item.date || '').slice(0, 10);
+      const writer = item.writer || item.author || '관리자';
+      const content = (item.content || '').replace(/\n/g, '<br>');
+
+      const actionTools = isAdmin ? `
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <label class="kakao-hourly-toggle-label ${isKakaoHourly ? 'active' : ''}" title="체크 시 메신저봇R에서 1시간마다 카톡방으로 발송합니다">
+            <input type="checkbox" ${isKakaoHourly ? 'checked' : ''} onchange="window.toggleNoticeKakaoHourly(${item.id}, this.checked)">
+            <span>💬 카톡 1시간 발송</span>
+          </label>
+          <button type="button" class="btn btn-link btn-xs p-0 text-info" style="font-size: 0.72rem; text-decoration: none;" onclick="window.editNoticeItem(${item.id})">
+            <i class="fa-solid fa-pen-to-square me-1"></i>수정
+          </button>
+          <button type="button" class="btn btn-link btn-xs p-0 text-danger" style="font-size: 0.72rem; text-decoration: none;" onclick="window.deleteNoticeItem(${item.id})">
+            <i class="fa-solid fa-trash me-1"></i>삭제
+          </button>
+        </div>
+      ` : '';
+
+      return `
+        <div class="notice-item-card ${isImp ? 'is-important' : ''} ${isKakaoHourly ? 'is-kakao-active' : ''}">
+          <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-wrap" style="min-width: 0; flex: 1;">
+              <span class="badge-notice-type ${badgeClass}">${detectedType}</span>
+              ${kakaoBadgeHtml}
+              <span class="fw-bold text-white small" style="word-break: break-all; line-height: 1.4;">${rawTitle}</span>
+            </div>
+            <span class="text-secondary flex-shrink-0" style="font-size: 0.72rem;">${dateStr}</span>
+          </div>
+          <div class="text-secondary mb-2" style="font-size: 0.8rem; line-height: 1.6; color: #cbd5e1 !important; word-break: break-all;">
+            ${content}
+          </div>
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 gap-2 flex-wrap" style="font-size: 0.7rem;">
+            <span class="text-secondary">작성자: <strong class="text-info">${writer}</strong></span>
+            ${actionTools}
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
   window.loadNoticeList = async function() {
     const container = document.getElementById('noticeListContainer');
     if (container) {
@@ -398,93 +654,29 @@
     }
 
     try {
-      const notices = await apiRequest("guild_notices?select=*&order=id.desc");
+      const [notices] = await Promise.all([
+        apiRequest("guild_notices?select=*&order=id.desc"),
+        window.loadKakaoHourlyNoticeIds()
+      ]);
+
       window.cachedNoticesList = notices || [];
 
-      if (!notices || notices.length === 0) {
-        container.innerHTML = `
-          <div class="text-secondary small text-center py-5">
-            <div>등록된 공지사항이 없습니다.</div>
-            <div class="mt-1" style="font-size: 0.75rem; color: #64748b;">우측 상단의 [+ 공지 등록]을 눌러 첫 공지를 작성해보세요!</div>
-          </div>
-        `;
-        return;
+      // 삭제된 공지 ID가 남아 있다면 정리
+      const validIds = new Set(window.cachedNoticesList.map(n => Number(n.id)));
+      let cleaned = false;
+      for (const id of Array.from(window.kakaoHourlyNoticeIdSet)) {
+        if (!validIds.has(id)) {
+          window.kakaoHourlyNoticeIdSet.delete(id);
+          cleaned = true;
+        }
+      }
+      if (cleaned) {
+        await window.saveKakaoHourlyNoticeIds().catch(() => {});
+      } else {
+        window.updateKakaoHourlyCountBadge();
       }
 
-      const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
-
-      container.innerHTML = notices.map(item => {
-        let rawTitle = item.title || '제목 없음';
-        let detectedType = '일반';
-
-        if (rawTitle.startsWith('[중요]')) {
-          detectedType = '중요';
-          rawTitle = rawTitle.replace('[중요]', '').trim();
-        } else if (rawTitle.startsWith('[필독]')) {
-          detectedType = '필독';
-          rawTitle = rawTitle.replace('[필독]', '').trim();
-        } else if (rawTitle.startsWith('[이벤트]')) {
-          detectedType = '이벤트';
-          rawTitle = rawTitle.replace('[이벤트]', '').trim();
-        } else if (rawTitle.startsWith('[일반]')) {
-          detectedType = '일반';
-          rawTitle = rawTitle.replace('[일반]', '').trim();
-        } else if (rawTitle.startsWith('[')) {
-          const closeIdx = rawTitle.indexOf(']');
-          if (closeIdx !== -1) {
-            const prefix = rawTitle.substring(1, closeIdx).trim();
-            if (['중요', '필독', '이벤트', '일반'].includes(prefix)) {
-              detectedType = prefix;
-            }
-            rawTitle = rawTitle.substring(closeIdx + 1).trim();
-          }
-        }
-
-        let badgeClass = 'badge-type-normal';
-        let isImp = false;
-
-        if (detectedType === '중요' || detectedType === '필독') {
-          badgeClass = 'badge-type-urgent';
-          isImp = (detectedType === '중요');
-        } else if (detectedType === '이벤트') {
-          badgeClass = 'badge-type-event';
-        }
-
-        const dateStr = (item.created_at || item.date || '').slice(0, 10);
-        const writer = item.writer || item.author || '관리자';
-        const content = (item.content || '').replace(/\n/g, '<br>');
-
-        const actionTools = isAdmin ? `
-          <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-link btn-xs p-0 text-info" style="font-size: 0.72rem; text-decoration: none;" onclick="window.editNoticeItem(${item.id})">
-              <i class="fa-solid fa-pen-to-square me-1"></i>수정
-            </button>
-            <button type="button" class="btn btn-link btn-xs p-0 text-danger" style="font-size: 0.72rem; text-decoration: none;" onclick="window.deleteNoticeItem(${item.id})">
-              <i class="fa-solid fa-trash me-1"></i>삭제
-            </button>
-          </div>
-        ` : '';
-
-        return `
-          <div class="notice-item-card ${isImp ? 'is-important' : ''}">
-            <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
-              <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
-                <span class="badge-notice-type ${badgeClass}">${detectedType}</span>
-                <span class="fw-bold text-white small" style="word-break: break-all; line-height: 1.4;">${rawTitle}</span>
-              </div>
-              <span class="text-secondary flex-shrink-0" style="font-size: 0.72rem;">${dateStr}</span>
-            </div>
-            <div class="text-secondary mb-2" style="font-size: 0.8rem; line-height: 1.6; color: #cbd5e1 !important; word-break: break-all;">
-              ${content}
-            </div>
-            <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 gap-2 flex-wrap" style="font-size: 0.7rem;">
-              <span class="text-secondary">작성자: <strong class="text-info">${writer}</strong></span>
-              ${actionTools}
-            </div>
-          </div>
-        `;
-      }).join('');
-
+      window.renderNoticeCards(window.cachedNoticesList);
     } catch (err) {
       if (container) {
         container.innerHTML = `<div class="text-danger small text-center py-4">공지사항 조회 실패: ${err.message}</div>`;
@@ -502,6 +694,7 @@
     const type = document.getElementById('noticeTypeSelect').value;
     const title = (document.getElementById('noticeTitleInput').value || '').trim();
     const content = (document.getElementById('noticeContentInput').value || '').trim();
+    const isKakaoHourlyChecked = document.getElementById('noticeKakaoHourlyCheck').checked;
 
     if (!title) return window.showNoticeToast("공지 제목을 입력해주세요!", "⚠️");
     if (!content) return window.showNoticeToast("공지 내용을 입력해주세요!", "⚠️");
@@ -512,21 +705,33 @@
 
     try {
       const formattedTitle = `[${type}] ${title}`;
+      let savedNoticeId = editId ? Number(editId) : null;
 
       if (editId) {
         await apiRequest(`guild_notices?id=eq.${editId}`, "PATCH", {
           title: formattedTitle,
           content: content
         });
-        window.showNoticeToast("공지사항이 성공적으로 수정되었습니다!", "🎉");
       } else {
-        await apiRequest("guild_notices", "POST", [{
+        const inserted = await apiRequest("guild_notices", "POST", [{
           title: formattedTitle,
           content: content
         }]);
-        window.showNoticeToast("공지사항이 성공적으로 등록되었습니다!", "🎉");
+        if (inserted && inserted.length > 0 && inserted[0].id) {
+          savedNoticeId = Number(inserted[0].id);
+        }
       }
 
+      if (savedNoticeId) {
+        if (isKakaoHourlyChecked) {
+          window.kakaoHourlyNoticeIdSet.add(savedNoticeId);
+        } else {
+          window.kakaoHourlyNoticeIdSet.delete(savedNoticeId);
+        }
+        await window.saveKakaoHourlyNoticeIds();
+      }
+
+      window.showNoticeToast(editId ? "공지사항이 성공적으로 수정되었습니다!" : "공지사항이 성공적으로 등록되었습니다!", "🎉");
       window.closeNoticeForm();
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> 공지사항 저장하기';
@@ -544,6 +749,10 @@
 
     try {
       await apiRequest(`guild_notices?id=eq.${id}`, "DELETE");
+      if (window.kakaoHourlyNoticeIdSet.has(Number(id))) {
+        window.kakaoHourlyNoticeIdSet.delete(Number(id));
+        await window.saveKakaoHourlyNoticeIds().catch(() => {});
+      }
       window.showNoticeToast("공지사항이 삭제되었습니다.", "🗑️");
       await window.loadNoticeList();
     } catch (err) {
