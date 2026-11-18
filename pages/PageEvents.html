@@ -124,7 +124,7 @@
     transform: translateY(-1px);
   }
 
-  /* 서브뷰 공통 박스 및 인풋 (글씨 잘림 방지 및 가독성 대폭 강화) */
+  /* 서브뷰 공통 박스 및 인풋 */
   .event-sub-box {
     background: #0d1527;
     border: 1px solid #1e2c47;
@@ -169,7 +169,6 @@
     color: #ffffff;
   }
 
-  /* 숫자 스핀 버튼 숨김 (좁은 칸에서도 숫자가 큼직하게 보이도록 처리) */
   input.no-spin::-webkit-outer-spin-button,
   input.no-spin::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -208,6 +207,26 @@
     gap: 5px;
     cursor: pointer;
     white-space: nowrap;
+  }
+
+  /* 관리자 일괄 입력 시트 접기/펼치기 토글 바 스타일 */
+  .admin-sheet-toggle-bar {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.14) 0%, rgba(13, 21, 39, 0.95) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    border-radius: 12px;
+    padding: 11px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .admin-sheet-toggle-bar:hover {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: #38bdf8;
   }
 
   /* 관리자 일괄 입력 시트 전용 스타일 */
@@ -739,55 +758,66 @@
       </div>
     </div>
 
-    <!-- 관리자 전용: 전체 길드원 일괄 입력 시트 & 스샷 AI 판독 박스 -->
-    <div class="event-sub-box border-info border-opacity-50" id="pvpAdminControlBox" style="display: none; background: #091224;">
-      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <!-- 관리자 전용: 접기/펼치기(토글)가 적용된 전체 길드원 일괄 입력 시트 & 스샷 AI 판독 -->
+    <div id="pvpAdminControlWrapper" style="display: none;">
+      <div class="admin-sheet-toggle-bar" onclick="window.toggleAdminPvpSheet()">
         <span class="small fw-bold text-info" style="font-size: 0.82rem;">
           <i class="fa-solid fa-table-list me-1"></i> [관리자] 전체 길드원 일괄 입력 시트 & 스샷 AI 판독
         </span>
-        <button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size: 0.74rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
-          <i class="fa-solid fa-camera me-1"></i>랭킹 스샷 업로드 (또는 Ctrl+V)
-        </button>
-        <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
-      </div>
-
-      <!-- 시작 전적 일괄 입력 / 종료 전적 일괄 입력 모드 전환 탭 -->
-      <div class="admin-sheet-mode-tabs">
-        <div class="btn-sheet-mode active-start" id="btnSheetMode_start" onclick="window.setAdminPvpSheetMode('start')">
-          📌 시작 전적 일괄 입력 모드
-        </div>
-        <div class="btn-sheet-mode" id="btnSheetMode_end" onclick="window.setAdminPvpSheetMode('end')">
-          🔥 종료(현재) 전적 일괄 입력 모드
-        </div>
-      </div>
-
-      <!-- 길드원 빠른 검색 필터 & 설명 -->
-      <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
-        <input type="text" id="adminPvpSearchInput" class="form-control input-custom-ev py-1" placeholder="길드원 이름 빠른 검색..." style="font-size: 0.78rem !important; min-height: 34px !important;" oninput="window.filterAdminPvpSheetRows()">
-        <span class="text-secondary flex-shrink-0" style="font-size: 0.7rem;" id="adminSheetModeGuideText">
-          현재: <strong>시작 전적</strong> 입력 중
+        <span class="badge bg-info text-dark fw-bold" id="pvpAdminSheetToggleBadge" style="font-size: 0.72rem; white-space: nowrap;">
+          시트 열기 ▼
         </span>
       </div>
 
-      <!-- 시트 컬럼 헤더: 길드원 | 킬 | 어시 | 데스 | 총점 -->
-      <div class="admin-sheet-header">
-        <div class="text-start ps-1">길드원 (잠금상태)</div>
-        <div class="text-info">⚔️ 킬</div>
-        <div class="text-success">🛡️ 어시</div>
-        <div class="text-danger">💀 데스</div>
-        <div class="text-warning">🏆 총점</div>
-      </div>
+      <div class="event-sub-box border-info border-opacity-50" id="pvpAdminControlBox" style="display: none; background: #091224;">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <span class="text-secondary" style="font-size: 0.73rem;">
+            스샷을 업로드(또는 Ctrl+V)하거나 아래 표에서 직접 일괄 입력하세요.
+          </span>
+          <button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size: 0.74rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
+            <i class="fa-solid fa-camera me-1"></i>랭킹 스샷 업로드 (또는 Ctrl+V)
+          </button>
+          <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
+        </div>
 
-      <!-- 전체 길드원 일괄 입력 스크롤 리스트 -->
-      <div id="adminPvpBulkSheetList" style="max-height: 290px; overflow-y: auto; padding-right: 2px;"></div>
+        <!-- 시작 전적 일괄 입력 / 종료 전적 일괄 입력 모드 전환 탭 -->
+        <div class="admin-sheet-mode-tabs">
+          <div class="btn-sheet-mode active-start" id="btnSheetMode_start" onclick="window.setAdminPvpSheetMode('start')">
+            📌 시작 전적 일괄 입력 모드
+          </div>
+          <div class="btn-sheet-mode" id="btnSheetMode_end" onclick="window.setAdminPvpSheetMode('end')">
+            🔥 종료(현재) 전적 일괄 입력 모드
+          </div>
+        </div>
 
-      <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span class="text-secondary" style="font-size: 0.7rem;">
-          * 숫자를 여러 명 연속 입력한 뒤 우측 저장 버튼을 누르면 한 번에 반영됩니다.
-        </span>
-        <button type="button" class="btn btn-info btn-sm fw-bold px-3 py-2 text-dark" style="font-size: 0.8rem;" id="btnSaveBulkPvpSheet" onclick="window.saveAdminBulkPvpSheet()">
-          <i class="fa-solid fa-floppy-disk me-1"></i> 입력/변경된 전적 전체 일괄 저장
-        </button>
+        <!-- 길드원 빠른 검색 필터 & 설명 -->
+        <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+          <input type="text" id="adminPvpSearchInput" class="form-control input-custom-ev py-1" placeholder="길드원 이름 빠른 검색..." style="font-size: 0.78rem !important; min-height: 34px !important;" oninput="window.filterAdminPvpSheetRows()">
+          <span class="text-secondary flex-shrink-0" style="font-size: 0.7rem;" id="adminSheetModeGuideText">
+            현재: <strong>시작 전적</strong> 입력 중
+          </span>
+        </div>
+
+        <!-- 시트 컬럼 헤더: 길드원 | 킬 | 어시 | 데스 | 총점 -->
+        <div class="admin-sheet-header">
+          <div class="text-start ps-1">길드원 (잠금상태)</div>
+          <div class="text-info">⚔️ 킬</div>
+          <div class="text-success">🛡️ 어시</div>
+          <div class="text-danger">💀 데스</div>
+          <div class="text-warning">🏆 총점</div>
+        </div>
+
+        <!-- 전체 길드원 일괄 입력 스크롤 리스트 -->
+        <div id="adminPvpBulkSheetList" style="max-height: 290px; overflow-y: auto; padding-right: 2px;"></div>
+
+        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="text-secondary" style="font-size: 0.7rem;">
+            * 저장 완료 시 시트가 자동으로 접히고 랭킹이 갱신됩니다.
+          </span>
+          <button type="button" class="btn btn-info btn-sm fw-bold px-3 py-2 text-dark" style="font-size: 0.8rem;" id="btnSaveBulkPvpSheet" onclick="window.saveAdminBulkPvpSheet()">
+            <i class="fa-solid fa-floppy-disk me-1"></i> 입력/변경된 전적 전체 일괄 저장
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1253,7 +1283,7 @@
 </div>
 
 <!-- ==========================================
-     [모달] 길드원 개인 PIN 기반 PVP 전적 등록/갱신 (1회 저장 즉시 시작전적 영구 잠금)
+     [모달] 길드원 개인 PIN 기반 PVP 전적 등록/갱신
      ========================================== -->
 <div id="modalPvpPinEntry" class="ev-modal-backdrop" style="display: none;">
   <div class="ev-modal-box">
@@ -1337,6 +1367,7 @@
   window.evEntriesByKey = { pvp: [], roulette: [], mvp: [], dice: [], fcfs: [] };
   window.evVerifiedMemberName = "";
   window.evAdminSheetMode = "start"; // 'start' | 'end'
+  window.isPvpAdminSheetOpen = false; // 기본 접힘 상태 유지
   window.evAdminDraftMap = {}; // { "닉네임": { startK, startA, startD, endK, endA, endD, startLocked, dirty } }
   window.evTeamSelectedSet = new Set();
   window.evLastGeneratedTeams = [];
@@ -1594,6 +1625,10 @@
       }
     }
 
+    if (key === "pvp") {
+      window.isPvpAdminSheetOpen = false;
+    }
+
     window.evCurrentSubView = key;
     document.getElementById("evMainDashboardView").style.display = "none";
     ["pvp", "roulette", "mvp", "dice", "fcfs", "team", "settings"].forEach(k => {
@@ -1625,8 +1660,29 @@
   };
 
   /* ==========================================
-     1. PVP 랭킹 이벤트 로직 (관리자 전체 길드원 일괄 시트 + 개인 시작전적 영구 잠금)
+     1. PVP 랭킹 이벤트 로직 (접기/펼치기 관리자 시트 + 개인 시작전적 영구 잠금)
      ========================================== */
+  window.toggleAdminPvpSheet = function() {
+    window.isPvpAdminSheetOpen = !window.isPvpAdminSheetOpen;
+    window.updateAdminPvpSheetToggleUI();
+  };
+
+  window.updateAdminPvpSheetToggleUI = function() {
+    const box = document.getElementById("pvpAdminControlBox");
+    const badge = document.getElementById("pvpAdminSheetToggleBadge");
+    if (!box || !badge) return;
+
+    if (window.isPvpAdminSheetOpen) {
+      box.style.display = "block";
+      badge.innerText = "시트 접기 ▲";
+      badge.className = "badge bg-warning text-dark fw-bold";
+    } else {
+      box.style.display = "none";
+      badge.innerText = "시트 열기 ▼";
+      badge.className = "badge bg-info text-dark fw-bold";
+    }
+  };
+
   window.initAdminPvpDraftMap = function() {
     window.evAdminDraftMap = {};
     const pvpRows = window.evEntriesByKey.pvp || [];
@@ -1739,7 +1795,7 @@
       if (field === "K") d.startK = cleanVal;
       if (field === "A") d.startA = cleanVal;
       if (field === "D") d.startD = cleanVal;
-      d.startLocked = true; // 시작 전적 입력 시 자동 잠금 활성화
+      d.startLocked = true;
     } else {
       if (field === "K") d.endK = cleanVal;
       if (field === "A") d.endA = cleanVal;
@@ -1799,6 +1855,8 @@
         savedCount++;
       }
 
+      // 일괄 저장 완료 시 자동으로 시트 접기
+      window.isPvpAdminSheetOpen = false;
       await window.loadAllEventsFromDB();
       window.showEvToast(`✅ 총 ${savedCount}명의 PVP 전적이 일괄 저장되었습니다!`, "🎉");
     } catch (err) {
@@ -1813,7 +1871,11 @@
 
   window.renderPvpView = function() {
     const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
-    document.getElementById("pvpAdminControlBox").style.display = isAdmin ? "block" : "none";
+    const adminWrapper = document.getElementById("pvpAdminControlWrapper");
+    if (adminWrapper) {
+      adminWrapper.style.display = isAdmin ? "block" : "none";
+    }
+    window.updateAdminPvpSheetToggleUI();
 
     const cfg = window.evConfigsMap.pvp;
     const opts = cfg.options || {};
@@ -1959,7 +2021,6 @@
     const existing = existingRow ? (existingRow.record_data || {}) : {};
     const hasStartRecorded = (existingRow !== undefined) && (existing.startK !== undefined && existing.startK !== "");
 
-    // 핵심 보안: 최초 1회라도 시작 전적이 저장되어 있으면(또는 startLocked가 true이거나 2단계 기간이면) 개인은 절대 시작 전적을 수정할 수 없음!
     const isEndPhase = (window.evConfigsMap.pvp?.options?.phase === "end");
     const isStartLocked = (existing.startLocked !== undefined ? !!existing.startLocked : hasStartRecorded) || (isEndPhase && hasStartRecorded);
 
@@ -2049,7 +2110,6 @@
     const hasStartRecorded = (existingRow !== undefined) && (existing.startK !== undefined && existing.startK !== "");
     const isStartLocked = (existing.startLocked !== undefined ? !!existing.startLocked : hasStartRecorded);
 
-    // 이미 시작 전적이 잠긴 상태라면 DB에 저장된 기존 시작 전적을 강제로 유지하여 클라이언트 변조까지 100% 차단
     const sK = isStartLocked ? (Number(existing.startK) || 0) : (parseInt(document.getElementById("pinStartKill").value, 10) || 0);
     const sA = isStartLocked ? (Number(existing.startA) || 0) : (parseInt(document.getElementById("pinStartAssist").value, 10) || 0);
     const sD = isStartLocked ? (Number(existing.startD) || 0) : (parseInt(document.getElementById("pinStartDeath").value, 10) || 0);
@@ -2075,7 +2135,7 @@
       await window.upsertPvpMemberRecordToDB(window.evVerifiedMemberName, {
         startK: sK, startA: sA, startD: sD,
         endK: eK, endA: eA, endD: eD,
-        startLocked: true, // 최초 1회 저장 즉시 영구 잠금
+        startLocked: true,
         updatedAt: new Date().toISOString()
       });
       window.closePvpPinEntryModal();
@@ -2097,7 +2157,6 @@
     }
   };
 
-  // 관리자 PVP 인게임 랭킹 스샷 AI OCR 일괄 판독 (현재 선택된 시트 모드: 시작 or 종료에 자동 반영)
   window.handlePvpOcrFile = function(event) {
     const file = event.target.files && event.target.files[0];
     if (file) runPvpScreenshotOcr(file);
@@ -2179,6 +2238,7 @@
         count++;
       }
 
+      window.isPvpAdminSheetOpen = false;
       await window.loadAllEventsFromDB();
       window.showEvToast(`🎉 스샷에서 ${count}명의 [${mode === 'start' ? '시작' : '종료'}] 전적 DB 반영 완료!`, "✅");
     } catch (err) {
