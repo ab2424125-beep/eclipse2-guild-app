@@ -1,0 +1,2090 @@
+<!-- ==========================================
+     [ECLIPSE 길드관리] 길드 이벤트 센터 & 통합 제어 모듈
+     경로: pages/PageEvents.html
+     ========================================== -->
+<style>
+  .events-card-main {
+    background: rgba(18, 26, 45, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  /* 2x3 이벤트 그리드 레이아웃 */
+  .event-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .event-grid-item {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 16px;
+    padding: 16px 10px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    min-height: 112px;
+  }
+  .event-grid-item:hover {
+    background: #121f3a;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+  }
+  .event-grid-item:active {
+    transform: scale(0.98);
+  }
+  .event-grid-item.is-closed {
+    opacity: 0.62;
+    border-color: #172235;
+  }
+
+  .event-status-pill {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .status-open {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid #10b981;
+    color: #34d399;
+  }
+  .status-scheduled {
+    background: rgba(245, 158, 11, 0.18);
+    border: 1px solid #f59e0b;
+    color: #fbbf24;
+  }
+  .status-closed {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid #475569;
+    color: #94a3b8;
+  }
+
+  .event-icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+  }
+  .event-item-title {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.88rem;
+    margin-bottom: 2px;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+  .event-item-sub {
+    color: #94a3b8;
+    font-size: 0.68rem;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* 하단 전체폭 [이벤트 설정] 버튼 */
+  .event-settings-bar {
+    background: linear-gradient(135deg, rgba(13, 21, 39, 0.95) 0%, rgba(23, 37, 68, 0.95) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 14px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .event-settings-bar:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    transform: translateY(-1px);
+  }
+
+  /* 공통 서브뷰 박스 및 인풋 */
+  .event-sub-box {
+    background: #0d1527;
+    border: 1px solid #1e2c47;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .input-custom-ev {
+    background-color: #080d1a !important;
+    border: 1px solid #233554 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 0.82rem !important;
+    color-scheme: dark;
+  }
+  .input-custom-ev:focus {
+    border-color: #38bdf8 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+  }
+
+  .btn-ev-back {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-ev-back:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #fff;
+  }
+
+  .btn-kakao-ev {
+    background: #fee500;
+    color: #191919;
+    border: none;
+    font-size: 0.74rem;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 5px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* PVP TOP 5 랭킹 스타일 */
+  .pvp-top5-box {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, rgba(11, 18, 34, 0.85) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .pvp-rank-row {
+    background: #090e1c;
+    border: 1px solid #1b263b;
+    border-radius: 10px;
+    padding: 9px 11px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rank-badge-ev {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  .r-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+  .r-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+  .r-3 { background: linear-gradient(135deg, #b45309, #78350f); color: #fff; }
+  .r-n { background: #162036; color: #94a3b8; border: 1px solid #233554; }
+
+  .abusing-alert-badge {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* 스텝퍼 컨트롤 (배점 설정용) */
+  .ev-stepper-wrap {
+    display: flex;
+    align-items: center;
+    background: #080d1a;
+    border: 1px solid #233554;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .btn-ev-step {
+    background: #111d35;
+    border: none;
+    color: #38bdf8;
+    width: 32px;
+    height: 32px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .val-ev-step {
+    width: 42px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    color: #facc15;
+    font-weight: 800;
+    font-size: 0.9rem;
+  }
+
+  /* 룰렛 디스플레이 */
+  .roulette-slot-box {
+    background: radial-gradient(circle, #172544 0%, #080d1a 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 16px;
+    padding: 22px 14px;
+    text-align: center;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  }
+  .roulette-slot-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fbbf24;
+    letter-spacing: 1px;
+    min-height: 38px;
+  }
+
+  /* 팀짜기 칩 그리드 */
+  .ev-members-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    background: #080d1a;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #1e2c47;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .ev-mem-chip {
+    background: #0b1324;
+    border: 1px solid #1f2e4a;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 3px;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+  }
+  .ev-mem-chip.selected {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    font-weight: 800;
+  }
+
+  /* 모달 & 토스트 */
+  .ev-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(6, 10, 20, 0.85);
+    backdrop-filter: blur(7px);
+    z-index: 999999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .ev-modal-box {
+    background: #0d1527;
+    border: 1.5px solid #38bdf8;
+    border-radius: 18px;
+    width: 100%; max-width: 390px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 18px 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+  }
+
+  .custom-ev-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0d1830;
+    border: 1.5px solid #f59e0b;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 99999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s;
+    white-space: nowrap;
+    max-width: 92vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .custom-ev-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    .events-card-main { padding: 14px 12px; }
+    .event-grid-item { padding: 14px 8px 12px 8px; min-height: 104px; }
+    .event-item-title { font-size: 0.84rem; }
+    .ev-members-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>
+
+<div class="events-card-main mb-4">
+  <!-- ==========================================
+       [메인 뷰] 2x3 이벤트 그리드 + 하단 이벤트 설정
+       ========================================== -->
+  <div id="evMainDashboardView">
+    <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <span style="font-size: 1.3rem;">🎉</span>
+        <h6 class="fw-bold mb-0 text-white">길드 이벤트 센터</h6>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <button type="button" class="btn-kakao-ev" onclick="window.copyActiveEventsSummary()">
+          <i class="fa-solid fa-comment"></i> 이벤트 공지 복사
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.74rem;" onclick="window.loadGuildEventsConfig()">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 상단 안내 배너 -->
+    <div class="p-2 px-3 rounded mb-3 d-flex align-items-center justify-content-between gap-2" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
+      <div class="small text-secondary" style="font-size: 0.75rem; word-break: keep-all;">
+        <i class="fa-solid fa-bullhorn text-warning me-1"></i>
+        <span id="evTopNoticeBannerText">진행 중인 길드 이벤트를 선택하여 참여하세요! (개인 비밀번호 인증)</span>
+      </div>
+    </div>
+
+    <!-- 2x3 6대 길드 이벤트 그리드 -->
+    <div class="event-menu-grid">
+      <!-- 1. PVP 랭킹 이벤트 -->
+      <div class="event-grid-item" id="gridCard_pvp" onclick="window.openEventSubView('pvp')">
+        <span class="event-status-pill status-open" id="statusPill_pvp">진행중</span>
+        <div class="event-icon-circle" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">
+          <i class="fa-solid fa-hand-fist"></i>
+        </div>
+        <div class="event-item-title">PVP 랭킹 이벤트</div>
+        <div class="event-item-sub" id="gridSub_pvp">킬·어시·데스 쟁 기여도 1~5위</div>
+      </div>
+
+      <!-- 2. 행운의 룰렛 -->
+      <div class="event-grid-item" id="gridCard_roulette" onclick="window.openEventSubView('roulette')">
+        <span class="event-status-pill status-open" id="statusPill_roulette">진행중</span>
+        <div class="event-icon-circle" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+          <i class="fa-solid fa-dharmachakra"></i>
+        </div>
+        <div class="event-item-title">행운의 룰렛</div>
+        <div class="event-item-sub" id="gridSub_roulette">전체·조건부 랜덤 당첨 추첨</div>
+      </div>
+
+      <!-- 3. MVP 투표 이벤트 -->
+      <div class="event-grid-item" id="gridCard_mvp" onclick="window.openEventSubView('mvp')">
+        <span class="event-status-pill status-open" id="statusPill_mvp">진행중</span>
+        <div class="event-icon-circle" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div class="event-item-title">MVP 투표 이벤트</div>
+        <div class="event-item-sub" id="gridSub_mvp">길드원 PIN 1인 1표 익명투표</div>
+      </div>
+
+      <!-- 4. 주사위 하이로우 -->
+      <div class="event-grid-item" id="gridCard_dice" onclick="window.openEventSubView('dice')">
+        <span class="event-status-pill status-open" id="statusPill_dice">진행중</span>
+        <div class="event-icon-circle" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+          <i class="fa-solid fa-dice"></i>
+        </div>
+        <div class="event-item-title">주사위 하이로우</div>
+        <div class="event-item-sub" id="gridSub_dice">1~100 행운의 주사위 랭킹전</div>
+      </div>
+
+      <!-- 5. 선착순 깜짝응모 -->
+      <div class="event-grid-item" id="gridCard_fcfs" onclick="window.openEventSubView('fcfs')">
+        <span class="event-status-pill status-open" id="statusPill_fcfs">진행중</span>
+        <div class="event-icon-circle" style="background: rgba(236, 72, 153, 0.15); color: #f472b6;">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="event-item-title">선착순 깜짝응모</div>
+        <div class="event-item-sub" id="gridSub_fcfs">오픈 정각 선착순 & 퀴즈 미션</div>
+      </div>
+
+      <!-- 6. 내전 랜덤 팀짜기 -->
+      <div class="event-grid-item" id="gridCard_team" onclick="window.openEventSubView('team')">
+        <span class="event-status-pill status-open" id="statusPill_team">상시사용</span>
+        <div class="event-icon-circle" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div class="event-item-title">내전 랜덤 팀짜기</div>
+        <div class="event-item-sub" id="gridSub_team">점수·직급 밸런스 자동 팀편성</div>
+      </div>
+    </div>
+
+    <!-- 하단 [이벤트 설정] 통합 제어 바 -->
+    <div class="event-settings-bar" onclick="window.openEventSubView('settings')">
+      <i class="fa-solid fa-sliders text-info" style="font-size: 1.05rem;"></i>
+      <span class="fw-bold text-info" style="font-size: 0.9rem;">이벤트 설정</span>
+      <span class="text-secondary small" style="font-size: 0.74rem;">(오픈 시기 · 종목 ON/OFF · PVP 배점 · 어뷰징 방지)</span>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 1] ⚔️ PVP 랭킹 이벤트
+       ========================================== -->
+  <div id="evSubView_pvp" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">⚔️ PVP 랭킹 이벤트</h6>
+      </div>
+      <div class="d-flex gap-1">
+        <button type="button" class="btn-kakao-ev" onclick="window.copyPvpRankingToKakao()">
+          <i class="fa-solid fa-comment"></i> 랭킹 카톡 복사
+        </button>
+      </div>
+    </div>
+
+    <!-- 배점 공식 & 어뷰징 방지 안내 카드 -->
+    <div class="event-sub-box" style="border-color: rgba(239, 68, 68, 0.35);">
+      <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+        <span class="small fw-bold text-danger"><i class="fa-solid fa-fire me-1"></i> 쟁 참여 독려형 배점 규정</span>
+        <span class="badge bg-dark border border-secondary text-light" style="font-size: 0.68rem;" id="pvpScheduleText">상시 진행</span>
+      </div>
+      <div class="text-light fw-bold mb-1" style="font-size: 0.8rem;" id="pvpFormulaDisplayText">
+        공식: (기간 킬 × 3점) + (기간 어시 × 2점) + (기간 데스 × 1점)
+      </div>
+      <div class="text-warning small mb-2" style="font-size: 0.72rem; line-height: 1.4;" id="pvpAbusingRuleDisplayText">
+        🛡️ 어뷰징(고의 데스) 방지 작동 중: 기간 (킬+어시) 합계를 초과하는 데스 수치는 점수에 미반영됩니다.
+      </div>
+      <div class="p-2 rounded d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.74rem;">
+        <span class="text-secondary">🏆 1위~5위 포상: <strong class="text-warning" id="pvpPrizeSummaryText">설정된 상금 없음</strong></span>
+        <button type="button" class="btn btn-danger btn-sm fw-bold py-1 px-3" style="font-size: 0.76rem;" onclick="window.openPvpPinEntryModal()">
+          <i class="fa-solid fa-key me-1"></i>내 전적 등록/갱신 (PIN)
+        </button>
+      </div>
+    </div>
+
+    <!-- 관리자 전용: 인게임 랭킹 스샷 AI 판독 & 수동 대리 입력 박스 -->
+    <div class="event-sub-box border-info border-opacity-50" id="pvpAdminControlBox" style="display: none; background: #091224;">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+        <span class="small fw-bold text-info"><i class="fa-solid fa-user-shield me-1"></i> [관리자] 스샷 AI 일괄 추출 & 수동 전적 관리</span>
+        <div class="d-flex gap-1">
+          <select id="pvpOcrTargetMode" class="form-select input-custom-ev py-0 px-2" style="font-size: 0.72rem !important; height: 28px; width: auto;">
+            <option value="start">스샷 ➔ 시작 전적으로 저장</option>
+            <option value="end" selected>스샷 ➔ 종료(현재) 전적으로 저장</option>
+          </select>
+          <button type="button" class="btn btn-outline-info btn-xs py-0 px-2 fw-bold" style="font-size: 0.72rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
+            <i class="fa-solid fa-camera me-1"></i>랭킹 스샷 업로드
+          </button>
+          <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
+        </div>
+      </div>
+
+      <!-- 관리자 수동 개별 입력 행 -->
+      <div class="row g-1 align-items-center">
+        <div class="col-12 col-sm-3">
+          <select id="adminPvpMemberSelect" class="form-select input-custom-ev py-1" style="font-size: 0.75rem !important;" onchange="window.loadMemberPvpToAdminInputs()">
+            <option value="">길드원 선택...</option>
+          </select>
+        </div>
+        <div class="col-4 col-sm-2">
+          <input type="number" id="admStartK" class="form-control input-custom-ev py-1 text-center" placeholder="시작 킬" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-4 col-sm-2">
+          <input type="number" id="admStartA" class="form-control input-custom-ev py-1 text-center" placeholder="시작 어시" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-4 col-sm-2">
+          <input type="number" id="admStartD" class="form-control input-custom-ev py-1 text-center" placeholder="시작 데스" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-4 col-sm-1">
+          <input type="number" id="admEndK" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료킬" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-4 col-sm-1">
+          <input type="number" id="admEndA" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료어시" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-4 col-sm-1">
+          <input type="number" id="admEndD" class="form-control input-custom-ev py-1 text-center border-info" placeholder="종료데스" style="font-size:0.74rem !important;">
+        </div>
+        <div class="col-12 mt-1">
+          <button type="button" class="btn btn-info btn-sm w-100 fw-bold py-1 text-dark" style="font-size: 0.76rem;" onclick="window.saveAdminPvpRecord()">
+            <i class="fa-solid fa-check me-1"></i> 선택한 길드원 시작/종료 전적 즉시 반영
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP 5 명예의 전당 -->
+    <div class="pvp-top5-box">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold text-warning" style="font-size: 0.84rem;">👑 길드 내 PVP 랭킹 TOP 5 (1위 ~ 5위)</span>
+        <span class="text-secondary" style="font-size: 0.7rem;" id="pvpParticipantCountText">참여 0명</span>
+      </div>
+      <div id="pvpTop5Container">
+        <div class="text-secondary small text-center py-3">등록된 전적 데이터가 없습니다.</div>
+      </div>
+    </div>
+
+    <!-- 전체 순위 및 상세 전적 표 -->
+    <div class="event-sub-box mb-0">
+      <div class="small fw-bold text-secondary mb-2">📊 전체 참여 길드원 상세 전적 (시작 ➔ 종료 증감)</div>
+      <div id="pvpAllRankingContainer" style="max-height: 320px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 2] 🎰 행운의 룰렛
+       ========================================== -->
+  <div id="evSubView_roulette" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">🎰 행운의 룰렛 & 조건 추첨기</h6>
+      </div>
+      <button type="button" class="btn-kakao-ev" onclick="window.copyRouletteResultToKakao()">
+        <i class="fa-solid fa-comment"></i> 당첨 결과 복사
+      </button>
+    </div>
+
+    <div class="roulette-slot-box">
+      <div class="text-secondary small mb-1" id="roulettePoolStatusText">추첨 대상 후보: 0명</div>
+      <div class="roulette-slot-text" id="rouletteDisplaySlot">🎯 READY</div>
+      <div class="mt-3 d-flex justify-content-center gap-2">
+        <button type="button" class="btn btn-warning fw-bold px-4 py-2" id="btnSpinRoulette" onclick="window.startRouletteSpin()">
+          <i class="fa-solid fa-play me-1"></i> 룰렛 돌리기!
+        </button>
+      </div>
+    </div>
+
+    <div class="event-sub-box">
+      <div class="small fw-bold text-info mb-2"><i class="fa-solid fa-filter me-1"></i> 추첨 대상 및 당첨 인원 설정</div>
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="small text-secondary mb-1" style="font-size: 0.72rem;">추첨 대상 풀</label>
+          <select id="rouletteTargetMode" class="form-select input-custom-ev" onchange="window.updateRouletteCandidatePool()">
+            <option value="all">전체 길드원</option>
+            <option value="boss_week">이번주 보스 1회 이상 참여자</option>
+            <option value="inter_week">이번주 인터쟁 참여자</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <label class="small text-secondary mb-1" style="font-size: 0.72rem;">추첨 인원</label>
+          <select id="rouletteWinnerCount" class="form-select input-custom-ev">
+            <option value="1">1명</option>
+            <option value="2">2명</option>
+            <option value="3">3명</option>
+            <option value="5">5명</option>
+            <option value="10">10명</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <label class="small text-secondary mb-1" style="font-size: 0.72rem;">1인 상금(D)</label>
+          <input type="number" id="roulettePrizeAmount" class="form-control input-custom-ev" value="1000" placeholder="다이아">
+        </div>
+      </div>
+    </div>
+
+    <div class="event-sub-box mb-0">
+      <div class="small fw-bold text-secondary mb-2">🎉 최근 추첨 당첨자 명단</div>
+      <div id="rouletteHistoryList" style="max-height: 220px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 3] 🏆 MVP 투표 이벤트
+       ========================================== -->
+  <div id="evSubView_mvp" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">🏆 길드 MVP 투표</h6>
+      </div>
+      <button type="button" class="btn-kakao-ev" onclick="window.copyMvpResultToKakao()">
+        <i class="fa-solid fa-comment"></i> 투표 결과 복사
+      </button>
+    </div>
+
+    <div class="event-sub-box">
+      <div class="small fw-bold text-warning mb-2"><i class="fa-solid fa-check-to-slot me-1"></i> 개인 PIN 인증 익명 투표 (1인 1표, 본인 투표 불가)</div>
+      <div class="row g-2">
+        <div class="col-6">
+          <input type="password" id="mvpVoterPin" class="form-control input-custom-ev" placeholder="내 개인 비밀번호(PIN)" maxlength="12" inputmode="numeric">
+        </div>
+        <div class="col-6">
+          <select id="mvpCandidateSelect" class="form-select input-custom-ev">
+            <option value="">추천할 MVP 길드원 선택...</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <input type="text" id="mvpCheerComment" class="form-control input-custom-ev" placeholder="추천 이유 또는 응원 한마디 (익명 표시)" maxlength="60">
+        </div>
+        <div class="col-12">
+          <button type="button" class="btn btn-primary btn-sm w-100 fw-bold py-2" style="background: linear-gradient(135deg, #7c3aed, #a855f7); border: none;" onclick="window.submitMvpVote()">
+            <i class="fa-solid fa-paper-plane me-1"></i> 익명 MVP 투표하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-sub-box mb-2">
+      <div class="small fw-bold text-warning mb-2">👑 실시간 득표 TOP 5</div>
+      <div id="mvpTopRankingList"></div>
+    </div>
+
+    <div class="event-sub-box mb-0">
+      <div class="small fw-bold text-secondary mb-2">💬 익명 응원 한마디 피드</div>
+      <div id="mvpCommentsFeed" style="max-height: 200px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 4] 🎲 주사위 하이로우
+       ========================================== -->
+  <div id="evSubView_dice" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">🎲 주사위 하이로우 (1~100)</h6>
+      </div>
+      <button type="button" class="btn-kakao-ev" onclick="window.copyDiceResultToKakao()">
+        <i class="fa-solid fa-comment"></i> 주사위 순위 복사
+      </button>
+    </div>
+
+    <div class="event-sub-box text-center">
+      <div class="small text-secondary mb-2">개인 비밀번호(PIN)를 입력하고 주사위(1~100)를 굴리세요! (회차당 1인 1회)</div>
+      <div class="d-flex justify-content-center gap-2 mb-2" style="max-width: 320px; margin: 0 auto;">
+        <input type="password" id="diceRollerPin" class="form-control input-custom-ev text-center" placeholder="개인 PIN 입력" maxlength="12" inputmode="numeric">
+        <button type="button" class="btn btn-success fw-bold px-3" style="white-space: nowrap;" onclick="window.rollEventDice()">
+          <i class="fa-solid fa-dice me-1"></i>굴리기!
+        </button>
+      </div>
+    </div>
+
+    <div class="event-sub-box mb-0">
+      <div class="small fw-bold text-info mb-2">🏆 주사위 하이로우 실시간 랭킹</div>
+      <div id="diceRankingList" style="max-height: 320px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 5] 🙋‍♂️ 선착순 깜짝응모
+       ========================================== -->
+  <div id="evSubView_fcfs" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">🙋‍♂️ 선착순 & 깜짝 퀴즈 응모</h6>
+      </div>
+      <button type="button" class="btn-kakao-ev" onclick="window.copyFcfsResultToKakao()">
+        <i class="fa-solid fa-comment"></i> 선착순 명단 복사
+      </button>
+    </div>
+
+    <div class="event-sub-box">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small fw-bold text-warning">⚡ 미션 안내</span>
+        <span class="badge bg-danger" id="fcfsLimitBadge">선착순 5명</span>
+      </div>
+      <div class="p-2 rounded mb-3 text-white fw-bold" style="background: #080d1a; border: 1px solid #1e2c47; font-size: 0.84rem;" id="fcfsMissionQuestionText">
+        선착순 응모 버튼을 가장 먼저 누르세요!
+      </div>
+      <div class="row g-2">
+        <div class="col-5">
+          <input type="password" id="fcfsPinInput" class="form-control input-custom-ev" placeholder="개인 PIN 번호" maxlength="12" inputmode="numeric">
+        </div>
+        <div class="col-7">
+          <input type="text" id="fcfsAnswerInput" class="form-control input-custom-ev" placeholder="정답 또는 한마디 입력">
+        </div>
+        <div class="col-12">
+          <button type="button" class="btn btn-danger btn-sm w-100 fw-bold py-2" onclick="window.submitFcfsEntry()">
+            <i class="fa-solid fa-bolt me-1"></i> 선착순 응모 제출하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-sub-box mb-0">
+      <div class="small fw-bold text-secondary mb-2">⏱️ 실시간 선착순 당첨/응모 기록 (밀리초 정밀 판정)</div>
+      <div id="fcfsWinnerList" style="max-height: 280px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 6] ⚖️ 내전 랜덤 팀짜기
+       ========================================== -->
+  <div id="evSubView_team" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-white m-0">⚖️ 내전·이벤트 밸런스 팀 배정기</h6>
+      </div>
+      <button type="button" class="btn-kakao-ev" onclick="window.copyTeamResultToKakao()">
+        <i class="fa-solid fa-comment"></i> 팀 편성표 복사
+      </button>
+    </div>
+
+    <div class="event-sub-box">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-secondary">참가 길드원 선택 (<strong class="text-info" id="teamSelectedCount">0</strong>명)</span>
+        <div class="d-flex gap-1">
+          <button type="button" class="btn btn-outline-info btn-xs py-0 px-2" style="font-size: 0.7rem;" onclick="window.selectAllTeamMembers(true)">전체선택</button>
+          <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size: 0.7rem;" onclick="window.selectAllTeamMembers(false)">초기화</button>
+        </div>
+      </div>
+      <div id="teamMembersChipGrid" class="ev-members-grid mb-2"></div>
+      <div class="row g-2 align-items-center">
+        <div class="col-6">
+          <select id="teamCountSelect" class="form-select input-custom-ev">
+            <option value="2">2팀 (A팀 vs B팀)</option>
+            <option value="3">3팀 (A·B·C팀)</option>
+            <option value="4">4팀 (파티 분배)</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <button type="button" class="btn btn-info btn-sm w-100 fw-bold py-2 text-dark" onclick="window.generateBalancedTeams()">
+            <i class="fa-solid fa-shuffle me-1"></i> 랜덤 팀 편성 실행
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="teamGeneratedResultBox"></div>
+  </div>
+
+  <!-- ==========================================
+       [서브뷰 7] ⚙️ 이벤트 설정 (관리자 통합 제어판)
+       ========================================== -->
+  <div id="evSubView_settings" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-ev-back" onclick="window.backToEventMain()">
+          <i class="fa-solid fa-arrow-left me-1"></i>메뉴
+        </button>
+        <h6 class="fw-bold text-info m-0">⚙️ 이벤트 통합 설정 제어판</h6>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveAllEventSettings()">
+        <i class="fa-solid fa-floppy-disk me-1"></i>전체 설정 저장
+      </button>
+    </div>
+
+    <!-- 1. PVP 랭킹 배점 & 어뷰징 방지 설정 -->
+    <div class="event-sub-box" style="border-color: rgba(239, 68, 68, 0.4);">
+      <div class="fw-bold text-danger small mb-2">
+        <i class="fa-solid fa-hand-fist me-1"></i> 1. PVP 랭킹 배점 & 어뷰징(고의 데스) 방지 설정
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:#080d1a;">
+        <div>
+          <div class="text-white fw-bold small">1킬(Kill)당 점수</div>
+          <div class="text-secondary" style="font-size:0.68rem;">기간 내 증가한 1킬당 부여 점수 (기본 3점)</div>
+        </div>
+        <div class="ev-stepper-wrap">
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpKillWeight', -1, 0)">-</button>
+          <input type="text" id="setPvpKillWeight" class="val-ev-step" value="3" readonly>
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpKillWeight', 1, 0)">+</button>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:#080d1a;">
+        <div>
+          <div class="text-white fw-bold small">1어시(Assist)당 점수</div>
+          <div class="text-secondary" style="font-size:0.68rem;">기간 내 증가한 1어시당 부여 점수 (기본 2점)</div>
+        </div>
+        <div class="ev-stepper-wrap">
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpAssistWeight', -1, 0)">-</button>
+          <input type="text" id="setPvpAssistWeight" class="val-ev-step" value="2" readonly>
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpAssistWeight', 1, 0)">+</button>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:#080d1a;">
+        <div>
+          <div class="text-white fw-bold small">1데스(Death)당 훈장 점수</div>
+          <div class="text-secondary" style="font-size:0.68rem;">적극적인 쟁 참여 독려용 데스 가산점 (기본 1점)</div>
+        </div>
+        <div class="ev-stepper-wrap">
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpDeathWeight', -1, -5)">-</button>
+          <input type="text" id="setPvpDeathWeight" class="val-ev-step" value="1" readonly>
+          <button type="button" class="btn-ev-step" onclick="window.stepEvVal('setPvpDeathWeight', 1, -5)">+</button>
+        </div>
+      </div>
+
+      <!-- 어뷰징(고의 데스) 방지 옵션 박스 -->
+      <div class="p-2 rounded mb-2" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35);">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <div class="fw-bold text-warning small"><i class="fa-solid fa-shield-halved me-1"></i>고의 데스(어뷰징) 방지 상한선 적용</div>
+            <div class="text-secondary" style="font-size: 0.68rem;">가만히 서서 죽기만 하는 편법 차단 (킬+어시 비례 데스 인정)</div>
+          </div>
+          <div class="form-check form-switch m-0">
+            <input class="form-check-input" type="checkbox" id="setPvpAbusePrevent" checked style="width: 2.6em; height: 1.4em; cursor: pointer;">
+          </div>
+        </div>
+        <div class="row g-2 align-items-center">
+          <div class="col-7">
+            <label class="small text-secondary" style="font-size: 0.7rem;">데스 인정 상한선 기준</label>
+          </div>
+          <div class="col-5">
+            <select id="setPvpAbuseCapRatio" class="form-select input-custom-ev py-1" style="font-size: 0.74rem !important;">
+              <option value="0.5">킬+어시의 50%까지만</option>
+              <option value="1.0" selected>킬+어시 합계(100%)까지만</option>
+              <option value="1.5">킬+어시의 150%까지만</option>
+              <option value="2.0">킬+어시의 200%까지만</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 시작 전적 잠금 옵션 및 상금 설명 -->
+      <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#080d1a;">
+        <div>
+          <div class="text-white fw-bold small">길드원 시작 전적 수정 잠금</div>
+          <div class="text-secondary" style="font-size:0.68rem;">ON 설정 시 이미 입력된 시작 전적은 고정되고 종료 전적만 갱신 가능</div>
+        </div>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" id="setPvpLockStart" style="width: 2.6em; height: 1.4em; cursor: pointer;">
+        </div>
+      </div>
+
+      <div>
+        <label class="small text-secondary mb-1" style="font-size: 0.72rem;">PVP 1위~5위 포상 안내 문구</label>
+        <input type="text" id="setPvpPrizeDesc" class="form-control input-custom-ev" placeholder="예: 1위 5,000D / 2위 3,000D / 3위 2,000D / 4~5위 1,000D">
+      </div>
+    </div>
+
+    <!-- 2. 6대 이벤트별 활성화(ON/OFF) & 오픈/종료 시간 스케줄 제어 -->
+    <div class="event-sub-box">
+      <div class="fw-bold text-info small mb-2">
+        <i class="fa-solid fa-calendar-check me-1"></i> 2. 이벤트별 오픈 시기 · 시간 예약 및 초기화
+      </div>
+      <div id="eventScheduleConfigList"></div>
+    </div>
+
+    <!-- 3. 선착순 미션 문구 및 인원 설정 -->
+    <div class="event-sub-box">
+      <div class="fw-bold text-warning small mb-2">
+        <i class="fa-solid fa-bolt me-1"></i> 3. 선착순 깜짝응모 미션 & 당첨 인원수 설정
+      </div>
+      <div class="row g-2">
+        <div class="col-8">
+          <input type="text" id="setFcfsQuestion" class="form-control input-custom-ev" placeholder="미션 질문 또는 공지 입력">
+        </div>
+        <div class="col-4">
+          <input type="number" id="setFcfsMaxWinners" class="form-control input-custom-ev" placeholder="선착순 인원(명)" value="5">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100 fw-bold py-2" style="background: linear-gradient(135deg, #0284c7, #2563eb); border: none;" onclick="window.saveAllEventSettings()">
+      <i class="fa-solid fa-floppy-disk me-1"></i> 이벤트 설정 전체 저장하기
+    </button>
+  </div>
+</div>
+
+<!-- ==========================================
+     [모달] 길드원 개인 PIN 기반 PVP 전적 등록/갱신
+     ========================================== -->
+<div id="modalPvpPinEntry" class="ev-modal-backdrop" style="display: none;">
+  <div class="ev-modal-box">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+      <h6 class="fw-bold text-white m-0"><i class="fa-solid fa-hand-fist text-danger me-1"></i> 내 PVP 전적 등록/갱신</h6>
+      <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="window.closePvpPinEntryModal()"></button>
+    </div>
+
+    <!-- 1단계: PIN 인증 -->
+    <div id="pvpPinStep1">
+      <p class="text-secondary small mb-2" style="font-size: 0.76rem;">본인 개인 비밀번호(PIN)를 입력하면 내 전적 입력창이 열립니다.</p>
+      <input type="password" id="inputPvpMemberPin" class="form-control input-custom-ev text-center mb-3" placeholder="개인 비밀번호 입력" maxlength="12" inputmode="numeric" style="font-size: 1.1rem !important; letter-spacing: 4px;" onkeypress="if(event.keyCode==13) window.verifyPvpPinStep()">
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" onclick="window.closePvpPinEntryModal()">취소</button>
+        <button type="button" class="btn btn-primary btn-sm flex-fill fw-bold py-2" onclick="window.verifyPvpPinStep()">확인</button>
+      </div>
+    </div>
+
+    <!-- 2단계: 시작/종료 킬·어시·데스 입력 -->
+    <div id="pvpPinStep2" style="display: none;">
+      <div class="p-2 rounded mb-3 text-center" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35);">
+        <span class="fw-bold text-info" id="pvpVerifiedMemberNameText">[길드원] 님 전적 입력</span>
+      </div>
+
+      <div class="mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="small text-secondary fw-bold" style="font-size: 0.74rem;">📌 이벤트 시작 전적 (기준점)</label>
+          <span class="text-warning" style="font-size: 0.68rem;" id="pvpStartLockNotice"></span>
+        </div>
+        <div class="row g-1">
+          <div class="col-4">
+            <input type="number" id="pinStartKill" class="form-control input-custom-ev text-center" placeholder="시작 킬" oninput="window.previewPinPvpScore()">
+          </div>
+          <div class="col-4">
+            <input type="number" id="pinStartAssist" class="form-control input-custom-ev text-center" placeholder="시작 어시" oninput="window.previewPinPvpScore()">
+          </div>
+          <div class="col-4">
+            <input type="number" id="pinStartDeath" class="form-control input-custom-ev text-center" placeholder="시작 데스" oninput="window.previewPinPvpScore()">
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="small text-info fw-bold mb-1" style="font-size: 0.74rem;">🔥 이벤트 종료(현재) 전적</label>
+        <div class="row g-1">
+          <div class="col-4">
+            <input type="number" id="pinEndKill" class="form-control input-custom-ev text-center border-info" placeholder="현재 킬" oninput="window.previewPinPvpScore()">
+          </div>
+          <div class="col-4">
+            <input type="number" id="pinEndAssist" class="form-control input-custom-ev text-center border-info" placeholder="현재 어시" oninput="window.previewPinPvpScore()">
+          </div>
+          <div class="col-4">
+            <input type="number" id="pinEndDeath" class="form-control input-custom-ev text-center border-info" placeholder="현재 데스" oninput="window.previewPinPvpScore()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 실시간 계산 미리보기 -->
+      <div class="p-2 rounded mb-3" style="background: #080d1a; border: 1px dashed #38bdf8; font-size: 0.75rem;" id="pinScorePreviewBox">
+        전적을 입력하면 기간 내 점수가 자동 계산됩니다.
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm flex-fill py-2" onclick="window.closePvpPinEntryModal()">취소</button>
+        <button type="button" class="btn btn-danger btn-sm flex-fill fw-bold py-2" onclick="window.submitMemberPvpStats()">전적 저장하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="evToastBox" class="custom-ev-toast">
+  <span id="evToastIcon">✅</span>
+  <span id="evToastMsg">알림</span>
+</div>
+
+<script>
+  window.evGuildMembers = [];
+  window.evRaidRecords = [];
+  window.evVerifiedMemberName = "";
+  window.evTeamSelectedSet = new Set();
+  window.evLastGeneratedTeams = [];
+  window.evCurrentSubView = "";
+  window.evToastTimer = null;
+
+  // 기본 이벤트 통합 설정 데이터 구조
+  window.evMasterData = {
+    meta: {
+      pvp:      { title: "PVP 랭킹 이벤트", sub: "킬·어시·데스 쟁 기여도 1~5위", enabled: true, startTime: "", endTime: "" },
+      roulette: { title: "행운의 룰렛",     sub: "전체·조건부 랜덤 당첨 추첨",   enabled: true, startTime: "", endTime: "" },
+      mvp:      { title: "MVP 투표 이벤트", sub: "길드원 PIN 1인 1표 익명투표",  enabled: true, startTime: "", endTime: "" },
+      dice:     { title: "주사위 하이로우", sub: "1~100 행운의 주사위 랭킹전",   enabled: true, startTime: "", endTime: "" },
+      fcfs:     { title: "선착순 깜짝응모", sub: "오픈 정각 선착순 & 퀴즈 미션", enabled: true, startTime: "", endTime: "" },
+      team:     { title: "내전 랜덤 팀짜기",sub: "점수·직급 밸런스 자동 팀편성", enabled: true, startTime: "", endTime: "" }
+    },
+    pvpConfig: {
+      killWeight: 3,
+      assistWeight: 2,
+      deathWeight: 1,
+      abusePrevent: true,
+      abuseCapRatio: 1.0,
+      lockStartStats: false,
+      prizeDesc: "1위 5,000D / 2위 3,000D / 3위 2,000D / 4~5위 1,000D"
+    },
+    pvpRecords: {}, // { "닉네임": { startK, startA, startD, endK, endA, endD, updatedAt } }
+    rouletteHistory: [],
+    mvpVotes: [],   // [{ voter, candidate, comment, time }]
+    diceRolls: {},  // { "닉네임": { roll, time } }
+    fcfsConfig: {
+      question: "길드 단톡방 공지 암호를 입력하고 선착순 보상을 받으세요!",
+      maxWinners: 5
+    },
+    fcfsEntries: [] // [{ name, answer, timeMs, timeStr }]
+  };
+
+  window.__currentModuleCleanup = function() {
+    window.removeEventListener("paste", handlePvpGlobalPaste);
+    if (window.evToastTimer) clearTimeout(window.evToastTimer);
+  };
+
+  window.showEvToast = function(msg, icon = "✅") {
+    const t = document.getElementById("evToastBox");
+    if (!t) return;
+    document.getElementById("evToastMsg").innerText = msg;
+    document.getElementById("evToastIcon").innerText = icon;
+    t.classList.add("show");
+    if (window.evToastTimer) clearTimeout(window.evToastTimer);
+    window.evToastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+  };
+
+  // 이벤트 상태 판정 ('open' | 'scheduled' | 'closed')
+  window.getEventTimeState = function(key) {
+    const m = window.evMasterData.meta[key];
+    if (!m || !m.enabled) return { status: "closed", label: "비활성" };
+
+    const now = Date.now();
+    if (m.startTime) {
+      const st = new Date(m.startTime).getTime();
+      if (!isNaN(st) && now < st) {
+        return { status: "scheduled", label: "오픈예정" };
+      }
+    }
+    if (m.endTime) {
+      const et = new Date(m.endTime).getTime();
+      if (!isNaN(et) && now > et) {
+        return { status: "closed", label: "마감됨" };
+      }
+    }
+    return { status: "open", label: key === "team" ? "상시사용" : "진행중" };
+  };
+
+  // PVP 개인 점수 및 어뷰징 방지 정밀 계산 함수
+  window.calculateMemberPvpScore = function(rec) {
+    const cfg = window.evMasterData.pvpConfig;
+    const sK = Number(rec.startK) || 0;
+    const sA = Number(rec.startA) || 0;
+    const sD = Number(rec.startD) || 0;
+
+    const hasEnd = (rec.endK !== undefined && rec.endK !== null && rec.endK !== "");
+    const eK = hasEnd ? Number(rec.endK) : sK;
+    const eA = hasEnd ? Number(rec.endA) : sA;
+    const eD = hasEnd ? Number(rec.endD) : sD;
+
+    const dK = Math.max(0, eK - sK);
+    const dA = Math.max(0, eA - sA);
+    const rawDeltaD = Math.max(0, eD - sD);
+
+    let recognizedD = rawDeltaD;
+    let isCapped = false;
+
+    if (cfg.abusePrevent && Number(cfg.deathWeight) > 0) {
+      const ratio = Number(cfg.abuseCapRatio) || 1.0;
+      const maxAllowedD = Math.floor((dK + dA) * ratio);
+      if (rawDeltaD > maxAllowedD) {
+        recognizedD = maxAllowedD;
+        isCapped = true;
+      }
+    }
+
+    const totalScore = (dK * Number(cfg.killWeight)) +
+                       (dA * Number(cfg.assistWeight)) +
+                       (recognizedD * Number(cfg.deathWeight));
+
+    return {
+      sK, sA, sD, eK, eA, eD,
+      dK, dA, rawDeltaD, recognizedD,
+      isCapped,
+      totalScore: Math.max(0, Math.round(totalScore * 10) / 10)
+    };
+  };
+
+  // DB에서 이벤트 설정 및 길드원 데이터 로드
+  window.loadGuildEventsConfig = async function() {
+    try {
+      const [settingsRows, membersRows, raidsRows] = await Promise.all([
+        apiRequest("guild_settings?select=key,value"),
+        apiRequest("guild_members?select=id,name,role,pin&order=name.asc"),
+        apiRequest("boss_participations?select=boss_name,war_type,raid_time,members,extra_score&order=id.desc&limit=100")
+      ]);
+
+      window.evGuildMembers = membersRows || [];
+      window.evRaidRecords = raidsRows || [];
+
+      const evRow = (settingsRows || []).find(r => r.key === "guild_events_config");
+      if (evRow && evRow.value) {
+        try {
+          const parsed = JSON.parse(evRow.value);
+          window.evMasterData = Object.assign({}, window.evMasterData, parsed);
+          window.evMasterData.meta = Object.assign({}, window.evMasterData.meta, parsed.meta || {});
+          window.evMasterData.pvpConfig = Object.assign({}, window.evMasterData.pvpConfig, parsed.pvpConfig || {});
+          window.evMasterData.fcfsConfig = Object.assign({}, window.evMasterData.fcfsConfig, parsed.fcfsConfig || {});
+        } catch (e) {}
+      }
+
+      window.renderMainEventGrid();
+      if (window.evCurrentSubView) {
+        window.renderSubViewContent(window.evCurrentSubView);
+      }
+    } catch (err) {
+      window.showEvToast("이벤트 데이터 로드 실패: " + err.message, "❌");
+    }
+  };
+
+  // DB에 최신 이벤트 데이터 저장 (충돌 방지를 위해 최신본 병합 가능)
+  window.persistEventsDataToSupabase = async function() {
+    const jsonStr = JSON.stringify(window.evMasterData);
+    const existing = await apiRequest("guild_settings?key=eq.guild_events_config");
+    if (existing && existing.length > 0) {
+      await apiRequest("guild_settings?key=eq.guild_events_config", "PATCH", { value: jsonStr });
+    } else {
+      await apiRequest("guild_settings", "POST", [{ key: "guild_events_config", value: jsonStr }]);
+    }
+  };
+
+  window.renderMainEventGrid = function() {
+    const keys = ["pvp", "roulette", "mvp", "dice", "fcfs", "team"];
+    keys.forEach(k => {
+      const card = document.getElementById(`gridCard_${k}`);
+      const pill = document.getElementById(`statusPill_${k}`);
+      const sub = document.getElementById(`gridSub_${k}`);
+      const m = window.evMasterData.meta[k];
+      if (!card || !pill || !m) return;
+
+      const st = window.getEventTimeState(k);
+      pill.innerText = st.label;
+      pill.className = "event-status-pill " + (st.status === "open" ? "status-open" : (st.status === "scheduled" ? "status-scheduled" : "status-closed"));
+      card.classList.toggle("is-closed", st.status === "closed");
+
+      if (sub && m.sub) sub.innerText = m.sub;
+    });
+  };
+
+  window.openEventSubView = function(key) {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+
+    if (key === "settings") {
+      if (!isAdmin) {
+        window.showEvToast("이벤트 설정은 관리자 로그인 후 이용할 수 있습니다.", "🔒");
+        if (typeof handleAdminAuthToggle === "function") handleAdminAuthToggle();
+        return;
+      }
+    } else {
+      const st = window.getEventTimeState(key);
+      if (st.status === "closed" && !isAdmin) {
+        return window.showEvToast("현재 마감되었거나 비활성화된 이벤트입니다.", "⏳");
+      }
+    }
+
+    window.evCurrentSubView = key;
+    document.getElementById("evMainDashboardView").style.display = "none";
+    ["pvp", "roulette", "mvp", "dice", "fcfs", "team", "settings"].forEach(k => {
+      const el = document.getElementById(`evSubView_${k}`);
+      if (el) el.style.display = (k === key) ? "block" : "none";
+    });
+
+    window.renderSubViewContent(key);
+  };
+
+  window.backToEventMain = function() {
+    window.evCurrentSubView = "";
+    ["pvp", "roulette", "mvp", "dice", "fcfs", "team", "settings"].forEach(k => {
+      const el = document.getElementById(`evSubView_${k}`);
+      if (el) el.style.display = "none";
+    });
+    document.getElementById("evMainDashboardView").style.display = "block";
+    window.renderMainEventGrid();
+  };
+
+  window.renderSubViewContent = function(key) {
+    if (key === "pvp") window.renderPvpView();
+    else if (key === "roulette") window.renderRouletteView();
+    else if (key === "mvp") window.renderMvpView();
+    else if (key === "dice") window.renderDiceView();
+    else if (key === "fcfs") window.renderFcfsView();
+    else if (key === "team") window.renderTeamView();
+    else if (key === "settings") window.renderEventSettingsView();
+  };
+
+  /* ==========================================
+     1. PVP 랭킹 이벤트 로직
+     ========================================== */
+  window.renderPvpView = function() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    document.getElementById("pvpAdminControlBox").style.display = isAdmin ? "block" : "none";
+
+    const cfg = window.evMasterData.pvpConfig;
+    const m = window.evMasterData.meta.pvp;
+
+    document.getElementById("pvpFormulaDisplayText").innerText =
+      `배점 공식: (기간 킬 × ${cfg.killWeight}점) + (기간 어시 × ${cfg.assistWeight}점) + (인정 데스 × ${cfg.deathWeight}점)`;
+
+    const ratioPct = Math.round((Number(cfg.abuseCapRatio) || 1) * 100);
+    document.getElementById("pvpAbusingRuleDisplayText").innerText = cfg.abusePrevent
+      ? `🛡️ 어뷰징(고의 데스) 방지 ON: 기간 (킬+어시) 합계의 ${ratioPct}%를 초과하는 데스는 점수에서 자동 제외됩니다.`
+      : `ℹ️ 어뷰징 방지 OFF: 모든 데스가 제한 없이 반영됩니다.`;
+
+    document.getElementById("pvpPrizeSummaryText").innerText = cfg.prizeDesc || "별도 공지 참고";
+
+    const stText = (m.startTime || m.endTime)
+      ? `${(m.startTime || '').replace('T', ' ')} ~ ${(m.endTime || '').replace('T', ' ')}`
+      : "상시 진행 중";
+    document.getElementById("pvpScheduleText").innerText = stText;
+
+    // 관리자 드롭다운 채우기
+    const admSel = document.getElementById("adminPvpMemberSelect");
+    if (admSel) {
+      const curVal = admSel.value;
+      admSel.innerHTML = '<option value="">길드원 선택...</option>' +
+        window.evGuildMembers.map(gm => `<option value="${gm.name}">${gm.name}</option>`).join('');
+      admSel.value = curVal;
+    }
+
+    const recordsObj = window.evMasterData.pvpRecords || {};
+    const list = Object.keys(recordsObj).map(name => {
+      return Object.assign({ name }, window.calculateMemberPvpScore(recordsObj[name]));
+    });
+
+    list.sort((a, b) => {
+      if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+      if (b.dK !== a.dK) return b.dK - a.dK;
+      return b.dA - a.dA;
+    });
+
+    document.getElementById("pvpParticipantCountText").innerText = `참여 ${list.length}명`;
+
+    // TOP 5 렌더링
+    const top5El = document.getElementById("pvpTop5Container");
+    const top5 = list.slice(0, 5);
+    if (top5.length === 0) {
+      top5El.innerHTML = '<div class="text-secondary small text-center py-3">아직 등록된 PVP 전적이 없습니다.</div>';
+    } else {
+      top5El.innerHTML = top5.map((item, idx) => {
+        const r = idx + 1;
+        const rClass = r === 1 ? "r-1" : (r === 2 ? "r-2" : (r === 3 ? "r-3" : "r-n"));
+        const rIcon = r === 1 ? "👑" : (r === 2 ? "🥈" : (r === 3 ? "🥉" : r));
+        const capTag = item.isCapped ? `<span class="abusing-alert-badge ms-1" title="실제 데스 +${item.rawDeltaD}회 중 ${item.recognizedD}회만 인정됨">데스상한적용</span>` : "";
+
+        return `
+          <div class="pvp-rank-row">
+            <div class="d-flex align-items-center gap-2" style="min-width:0; flex:1;">
+              <span class="rank-badge-ev ${rClass}">${rIcon}</span>
+              <div style="min-width:0;">
+                <div class="fw-bold text-white small text-truncate">${item.name} ${capTag}</div>
+                <div class="text-secondary" style="font-size: 0.7rem;">
+                  기간증가: <strong class="text-info">+${item.dK}킬</strong> · <strong class="text-success">+${item.dA}어시</strong> · <strong class="text-danger">+${item.recognizedD}데스</strong>${item.isCapped ? `(실제 ${item.rawDeltaD})` : ''}
+                </div>
+              </div>
+            </div>
+            <span class="badge rounded-pill px-3 py-2" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; font-size: 0.78rem; font-weight: 800;">
+              ${item.totalScore.toLocaleString()}점
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 전체 상세 표 렌더링
+    const allEl = document.getElementById("pvpAllRankingContainer");
+    if (list.length === 0) {
+      allEl.innerHTML = '<div class="text-secondary small text-center py-2">데이터 없음</div>';
+    } else {
+      allEl.innerHTML = list.map((item, idx) => {
+        const delBtn = isAdmin
+          ? `<button class="btn btn-outline-danger btn-xs py-0 px-2 ms-2" style="font-size:0.65rem;" onclick="window.deletePvpMemberRecord('${item.name}')">삭제</button>`
+          : "";
+        return `
+          <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background:#080d1a; border:1px solid #1b263b; font-size:0.74rem;">
+            <div>
+              <strong class="text-white">${idx + 1}위. ${item.name}</strong>
+              <div class="text-secondary" style="font-size:0.68rem;">
+                시작(${item.sK}/${item.sA}/${item.sD}) ➔ 현재(${item.eK}/${item.eA}/${item.eD})
+              </div>
+            </div>
+            <div class="text-end">
+              <strong class="text-warning">${item.totalScore}점</strong>
+              <span class="text-secondary ms-1">(+${item.dK}/${item.dA}/${item.recognizedD})</span>
+              ${delBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  };
+
+  window.openPvpPinEntryModal = function() {
+    window.evVerifiedMemberName = "";
+    document.getElementById("inputPvpMemberPin").value = "";
+    document.getElementById("pvpPinStep1").style.display = "block";
+    document.getElementById("pvpPinStep2").style.display = "none";
+    document.getElementById("modalPvpPinEntry").style.display = "flex";
+    setTimeout(() => document.getElementById("inputPvpMemberPin").focus(), 100);
+  };
+
+  window.closePvpPinEntryModal = function() {
+    document.getElementById("modalPvpPinEntry").style.display = "none";
+  };
+
+  window.verifyPvpPinStep = function() {
+    const pin = document.getElementById("inputPvpMemberPin").value.trim();
+    if (!pin || pin.length < 4) return alert("개인 비밀번호(PIN) 4자리 이상을 입력해주세요.");
+
+    const matched = window.evGuildMembers.filter(m => String(m.pin || "").trim() === pin);
+    if (matched.length === 0) return alert("❌ 일치하는 길드원을 찾을 수 없습니다. 비밀번호를 확인해주세요.");
+    if (matched.length > 1) return alert("⚠️ 동일한 비밀번호를 쓰는 길드원이 있습니다. 관리자에게 문의하세요.");
+
+    const memberName = matched[0].name;
+    window.evVerifiedMemberName = memberName;
+
+    const existing = (window.evMasterData.pvpRecords || {})[memberName] || {};
+    const hasStart = existing.startK !== undefined && existing.startK !== "";
+    const lockStart = !!window.evMasterData.pvpConfig.lockStartStats && hasStart;
+
+    document.getElementById("pvpVerifiedMemberNameText").innerText = `⚔️ [${memberName}] 님 전적 등록/갱신`;
+
+    const sK = document.getElementById("pinStartKill");
+    const sA = document.getElementById("pinStartAssist");
+    const sD = document.getElementById("pinStartDeath");
+
+    sK.value = existing.startK !== undefined ? existing.startK : "";
+    sA.value = existing.startA !== undefined ? existing.startA : "";
+    sD.value = existing.startD !== undefined ? existing.startD : "";
+
+    sK.disabled = lockStart;
+    sA.disabled = lockStart;
+    sD.disabled = lockStart;
+    document.getElementById("pvpStartLockNotice").innerText = lockStart ? "🔒 시작 전적 고정됨" : "";
+
+    document.getElementById("pinEndKill").value = existing.endK !== undefined ? existing.endK : (existing.startK || "");
+    document.getElementById("pinEndAssist").value = existing.endA !== undefined ? existing.endA : (existing.startA || "");
+    document.getElementById("pinEndDeath").value = existing.endD !== undefined ? existing.endD : (existing.startD || "");
+
+    document.getElementById("pvpPinStep1").style.display = "none";
+    document.getElementById("pvpPinStep2").style.display = "block";
+    window.previewPinPvpScore();
+  };
+
+  window.previewPinPvpScore = function() {
+    const rec = {
+      startK: document.getElementById("pinStartKill").value,
+      startA: document.getElementById("pinStartAssist").value,
+      startD: document.getElementById("pinStartDeath").value,
+      endK: document.getElementById("pinEndKill").value,
+      endA: document.getElementById("pinEndAssist").value,
+      endD: document.getElementById("pinEndDeath").value
+    };
+    const calc = window.calculateMemberPvpScore(rec);
+    const box = document.getElementById("pinScorePreviewBox");
+
+    let capWarn = "";
+    if (calc.isCapped) {
+      capWarn = `<div class="text-warning mt-1">🛡️ 어뷰징 방지 적용: 기간 데스 +${calc.rawDeltaD}회 중 <strong>${calc.recognizedD}회</strong>만 점수로 인정됩니다.</div>`;
+    }
+
+    box.innerHTML = `
+      <div>• 기간 순수 증가: <strong class="text-info">+${calc.dK}킬</strong> / <strong class="text-success">+${calc.dA}어시</strong> / <strong class="text-danger">+${calc.recognizedD}데스</strong></div>
+      ${capWarn}
+      <div class="mt-1 pt-1 border-top border-secondary border-opacity-25 fw-bold text-white">
+        👉 산출 길드 점수: <strong class="text-warning fs-6">${calc.totalScore}점</strong>
+      </div>
+    `;
+  };
+
+  window.submitMemberPvpStats = async function() {
+    if (!window.evVerifiedMemberName) return;
+
+    const sK = parseInt(document.getElementById("pinStartKill").value, 10) || 0;
+    const sA = parseInt(document.getElementById("pinStartAssist").value, 10) || 0;
+    const sD = parseInt(document.getElementById("pinStartDeath").value, 10) || 0;
+    const eK = parseInt(document.getElementById("pinEndKill").value, 10) || 0;
+    const eA = parseInt(document.getElementById("pinEndAssist").value, 10) || 0;
+    const eD = parseInt(document.getElementById("pinEndDeath").value, 10) || 0;
+
+    if (eK < sK || eA < sA || eD < sD) {
+      return alert("⚠️ 종료(현재) 전적은 시작 전적보다 작을 수 없습니다.");
+    }
+
+    try {
+      await window.loadGuildEventsConfig();
+      window.evMasterData.pvpRecords = window.evMasterData.pvpRecords || {};
+      window.evMasterData.pvpRecords[window.evVerifiedMemberName] = {
+        startK: sK, startA: sA, startD: sD,
+        endK: eK, endA: eA, endD: eD,
+        updatedAt: new Date().toISOString()
+      };
+      await window.persistEventsDataToSupabase();
+      window.closePvpPinEntryModal();
+      window.renderPvpView();
+      window.showEvToast(`[${window.evVerifiedMemberName}] 님 PVP 전적이 저장되었습니다!`, "⚔️");
+    } catch (err) {
+      alert("전적 저장 실패: " + err.message);
+    }
+  };
+
+  window.loadMemberPvpToAdminInputs = function() {
+    const name = document.getElementById("adminPvpMemberSelect").value;
+    const rec = (window.evMasterData.pvpRecords || {})[name] || {};
+    document.getElementById("admStartK").value = rec.startK !== undefined ? rec.startK : "";
+    document.getElementById("admStartA").value = rec.startA !== undefined ? rec.startA : "";
+    document.getElementById("admStartD").value = rec.startD !== undefined ? rec.startD : "";
+    document.getElementById("admEndK").value = rec.endK !== undefined ? rec.endK : "";
+    document.getElementById("admEndA").value = rec.endA !== undefined ? rec.endA : "";
+    document.getElementById("admEndD").value = rec.endD !== undefined ? rec.endD : "";
+  };
+
+  window.saveAdminPvpRecord = async function() {
+    const name = document.getElementById("adminPvpMemberSelect").value;
+    if (!name) return window.showEvToast("길드원을 먼저 선택하세요.", "⚠️");
+
+    const sK = parseInt(document.getElementById("admStartK").value, 10) || 0;
+    const sA = parseInt(document.getElementById("admStartA").value, 10) || 0;
+    const sD = parseInt(document.getElementById("admStartD").value, 10) || 0;
+    const eK = parseInt(document.getElementById("admEndK").value, 10) || sK;
+    const eA = parseInt(document.getElementById("admEndA").value, 10) || sA;
+    const eD = parseInt(document.getElementById("admEndD").value, 10) || sD;
+
+    window.evMasterData.pvpRecords = window.evMasterData.pvpRecords || {};
+    window.evMasterData.pvpRecords[name] = {
+      startK: sK, startA: sA, startD: sD,
+      endK: eK, endA: eA, endD: eD,
+      updatedAt: new Date().toISOString()
+    };
+
+    await window.persistEventsDataToSupabase();
+    window.renderPvpView();
+    window.showEvToast(`[${name}] 전적이 반영되었습니다.`);
+  };
+
+  window.deletePvpMemberRecord = async function(name) {
+    if (!confirm(`[${name}] 님의 PVP 전적 기록을 삭제하시겠습니까?`)) return;
+    delete window.evMasterData.pvpRecords[name];
+    await window.persistEventsDataToSupabase();
+    window.renderPvpView();
+    window.showEvToast(`[${name}] 전적 삭제 완료`, "🗑️");
+  };
+
+  // 관리자 PVP 인게임 랭킹 스샷 AI OCR 일괄 판독
+  window.handlePvpOcrFile = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (file) runPvpScreenshotOcr(file);
+    event.target.value = "";
+  };
+
+  function handlePvpGlobalPaste(event) {
+    if (window.evCurrentSubView !== "pvp") return;
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) return;
+
+    const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) runPvpScreenshotOcr(blob);
+        break;
+      }
+    }
+  }
+
+  async function runPvpScreenshotOcr(file) {
+    window.showEvToast("인게임 PvP 랭킹 스샷 AI 분석 중...", "⏳");
+    try {
+      const keyRows = await apiRequest("guild_settings?key=eq.gemini_api_key");
+      const apiKey = (keyRows && keyRows.length > 0) ? (keyRows[0].value || "").trim() : "";
+      if (!apiKey) return window.showEvToast("시스템설정에 Gemini API 키가 등록되어 있지 않습니다.", "⚠️");
+
+      const base64Data = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
+        reader.readAsDataURL(file);
+      });
+
+      const memberNames = window.evGuildMembers.map(m => m.name);
+      const prompt = `다음 MMORPG PvP 랭킹 스크린샷에서 소속 길드가 '불편한사람들'이거나 아래 길드원 명단에 포함된 캐릭터의 이름과 전적(킬, 어시, 데스 순서의 3개 숫자)을 추출하세요.
+길드원 명단: ${JSON.stringify(memberNames)}
+출력 형식은 반드시 순수 JSON 배열로만 응답하세요:
+[{"name":"불편한티버","kill":136,"assist":203,"death":77}]`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: base64Data } }] }],
+          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
+        })
+      });
+
+      const json = await res.json();
+      const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+      const extracted = JSON.parse(rawText);
+
+      if (!Array.isArray(extracted) || extracted.length === 0) {
+        return window.showEvToast("스샷에서 길드원 전적을 찾지 못했습니다.", "⚠️");
+      }
+
+      const mode = document.getElementById("pvpOcrTargetMode").value;
+      window.evMasterData.pvpRecords = window.evMasterData.pvpRecords || {};
+
+      let count = 0;
+      extracted.forEach(row => {
+        if (!row.name) return;
+        const cur = window.evMasterData.pvpRecords[row.name] || { startK: 0, startA: 0, startD: 0, endK: 0, endA: 0, endD: 0 };
+        if (mode === "start") {
+          cur.startK = Number(row.kill) || 0;
+          cur.startA = Number(row.assist) || 0;
+          cur.startD = Number(row.death) || 0;
+          if (!cur.endK) { cur.endK = cur.startK; cur.endA = cur.startA; cur.endD = cur.startD; }
+        } else {
+          cur.endK = Number(row.kill) || 0;
+          cur.endA = Number(row.assist) || 0;
+          cur.endD = Number(row.death) || 0;
+        }
+        cur.updatedAt = new Date().toISOString();
+        window.evMasterData.pvpRecords[row.name] = cur;
+        count++;
+      });
+
+      await window.persistEventsDataToSupabase();
+      window.renderPvpView();
+      window.showEvToast(`🎉 스샷에서 ${count}명의 [${mode === 'start' ? '시작' : '종료'}] 전적 추출 완료!`, "✅");
+    } catch (err) {
+      window.showEvToast("스샷 판독 오류: " + err.message, "❌");
+    }
+  }
+
+  window.copyPvpRankingToKakao = function() {
+    const cfg = window.evMasterData.pvpConfig;
+    const recordsObj = window.evMasterData.pvpRecords || {};
+    const list = Object.keys(recordsObj).map(name => Object.assign({ name }, window.calculateMemberPvpScore(recordsObj[name])));
+    list.sort((a, b) => b.totalScore - a.totalScore);
+
+    if (list.length === 0) return window.showEvToast("복사할 랭킹 데이터가 없습니다.", "⚠️");
+
+    let text = `⚔️ [불편한사람들 PVP 랭킹 이벤트 TOP 5]\n` +
+      `• 배점: 킬(${cfg.killWeight}점) / 어시(${cfg.assistWeight}점) / 데스(${cfg.deathWeight}점)\n` +
+      `• 어뷰징 방지: ${cfg.abusePrevent ? '적용 (킬+어시 비례 데스 상한)' : '미적용'}\n` +
+      `──────────────────\n`;
+
+    list.slice(0, 5).forEach((item, i) => {
+      text += `${i + 1}위. ${item.name} : 총 ${item.totalScore}점 (+${item.dK}킬 / +${item.dA}어시 / 인정데스 +${item.recognizedD})\n`;
+    });
+    text += `──────────────────\n🔥 포상: ${cfg.prizeDesc || '길드 공지 참고'}`;
+
+    navigator.clipboard.writeText(text);
+    window.showEvToast("PVP 랭킹 결과가 카톡 공유용으로 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     2. 행운의 룰렛 로직
+     ========================================== */
+  window.getRouletteCandidateNames = function() {
+    const mode = document.getElementById("rouletteTargetMode")?.value || "all";
+    if (mode === "all") {
+      return window.evGuildMembers.map(m => m.name);
+    }
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
+    const set = new Set();
+
+    window.evRaidRecords.forEach(r => {
+      const d = (r.raid_time || "").slice(0, 10);
+      if (d < weekAgo) return;
+      if (mode === "inter_week" && !String(r.war_type || "").includes("인터")) return;
+      (r.members || []).forEach(m => set.add(m));
+    });
+    return Array.from(set);
+  };
+
+  window.updateRouletteCandidatePool = function() {
+    const pool = window.getRouletteCandidateNames();
+    const el = document.getElementById("roulettePoolStatusText");
+    if (el) el.innerText = `추첨 대상 후보: 총 ${pool.length}명`;
+  };
+
+  window.renderRouletteView = function() {
+    window.updateRouletteCandidatePool();
+    const histEl = document.getElementById("rouletteHistoryList");
+    const hist = window.evMasterData.rouletteHistory || [];
+    if (hist.length === 0) {
+      histEl.innerHTML = '<div class="text-secondary small text-center py-2">최근 추첨 기록이 없습니다.</div>';
+      return;
+    }
+    histEl.innerHTML = hist.slice(0, 15).map(h => `
+      <div class="p-2 mb-1 rounded d-flex justify-content-between align-items-center" style="background:#080d1a; border:1px solid #1b263b; font-size:0.76rem;">
+        <div>
+          <strong class="text-warning">🎉 ${h.winners.join(', ')}</strong>
+          <div class="text-secondary" style="font-size:0.68rem;">${h.date} (${h.poolName})</div>
+        </div>
+        <span class="badge bg-warning text-dark">1인 ${Number(h.prize || 0).toLocaleString()} D</span>
+      </div>
+    `).join('');
+  };
+
+  window.startRouletteSpin = async function() {
+    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAdmin) return window.showEvToast("룰렛 추첨 실행은 관리자만 가능합니다.", "🔒");
+
+    const pool = window.getRouletteCandidateNames();
+    const count = parseInt(document.getElementById("rouletteWinnerCount").value, 10) || 1;
+    const prize = parseInt(document.getElementById("roulettePrizeAmount").value, 10) || 0;
+
+    if (pool.length < count) return window.showEvToast(`대상 인원(${pool.length}명)이 추첨 인원보다 적습니다.`, "⚠️");
+
+    const slot = document.getElementById("rouletteDisplaySlot");
+    const btn = document.getElementById("btnSpinRoulette");
+    btn.disabled = true;
+
+    let ticks = 0;
+    const timer = setInterval(async () => {
+      const randName = pool[Math.floor(Math.random() * pool.length)];
+      slot.innerText = `🎰 ${randName}`;
+      ticks++;
+
+      if (ticks >= 22) {
+        clearInterval(timer);
+        const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+        const winners = shuffled.slice(0, count);
+        slot.innerText = `🎊 ${winners.join(', ')} 🎊`;
+        btn.disabled = false;
+
+        const modeSel = document.getElementById("rouletteTargetMode");
+        const poolName = modeSel.options[modeSel.selectedIndex].text;
+
+        window.evMasterData.rouletteHistory = window.evMasterData.rouletteHistory || [];
+        window.evMasterData.rouletteHistory.unshift({
+          winners,
+          prize,
+          poolName,
+          date: new Date().toLocaleString("ko-KR")
+        });
+        await window.persistEventsDataToSupabase();
+        window.renderRouletteView();
+        window.showEvToast(`축하합니다! ${winners.join(', ')} 당첨!`, "🎉");
+      }
+    }, 80);
+  };
+
+  window.copyRouletteResultToKakao = function() {
+    const hist = window.evMasterData.rouletteHistory || [];
+    if (hist.length === 0) return window.showEvToast("복사할 추첨 결과가 없습니다.", "⚠️");
+    const latest = hist[0];
+    const text = `🎰 [불편한사람들 행운의 룰렛 추첨 결과]\n• 대상: ${latest.poolName}\n• 당첨자(${latest.winners.length}명): ${latest.winners.join(', ')}\n• 당첨 상금: 1인당 ${Number(latest.prize).toLocaleString()} 다이아\n축하드립니다! 🎉`;
+    navigator.clipboard.writeText(text);
+    window.showEvToast("룰렛 당첨 결과가 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     3. MVP 투표 이벤트 로직
+     ========================================== */
+  window.renderMvpView = function() {
+    const sel = document.getElementById("mvpCandidateSelect");
+    if (sel) {
+      sel.innerHTML = '<option value="">추천할 MVP 길드원 선택...</option>' +
+        window.evGuildMembers.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+    }
+
+    const votes = window.evMasterData.mvpVotes || [];
+    const tally = {};
+    votes.forEach(v => { tally[v.candidate] = (tally[v.candidate] || 0) + 1; });
+
+    const ranked = Object.keys(tally).sort((a, b) => tally[b] - tally[a]);
+    const rankEl = document.getElementById("mvpTopRankingList");
+
+    if (ranked.length === 0) {
+      rankEl.innerHTML = '<div class="text-secondary small text-center py-2">아직 투표 내역이 없습니다.</div>';
+    } else {
+      rankEl.innerHTML = ranked.slice(0, 5).map((name, i) => `
+        <div class="pvp-rank-row">
+          <span class="fw-bold text-white small">${i + 1}위. ${name}</span>
+          <span class="badge bg-warning text-dark fw-bold">${tally[name]}표</span>
+        </div>
+      `).join('');
+    }
+
+    const feedEl = document.getElementById("mvpCommentsFeed");
+    const comments = votes.filter(v => v.comment);
+    if (comments.length === 0) {
+      feedEl.innerHTML = '<div class="text-secondary small text-center py-2">등록된 응원 댓글이 없습니다.</div>';
+    } else {
+      feedEl.innerHTML = comments.slice().reverse().map(c => `
+        <div class="p-2 mb-1 rounded" style="background:#080d1a; border:1px solid #1b263b; font-size:0.74rem;">
+          <strong class="text-info">[To. ${c.candidate}]</strong> <span class="text-light">${c.comment}</span>
+        </div>
+      `).join('');
+    }
+  };
+
+  window.submitMvpVote = async function() {
+    const pin = document.getElementById("mvpVoterPin").value.trim();
+    const cand = document.getElementById("mvpCandidateSelect").value;
+    const comment = document.getElementById("mvpCheerComment").value.trim();
+
+    if (!pin) return alert("본인 개인 비밀번호(PIN)를 입력해주세요.");
+    if (!cand) return alert("투표할 길드원을 선택해주세요.");
+
+    const matched = window.evGuildMembers.filter(m => String(m.pin || "").trim() === pin);
+    if (matched.length !== 1) return alert("❌ 유효한 개인 비밀번호가 아닙니다.");
+
+    const voterName = matched[0].name;
+    if (voterName === cand) return alert("⚠️ 본인에게는 투표할 수 없습니다!");
+
+    await window.loadGuildEventsConfig();
+    window.evMasterData.mvpVotes = window.evMasterData.mvpVotes || [];
+    if (window.evMasterData.mvpVotes.some(v => v.voter === voterName)) {
+      return alert("ℹ️ 이미 이번 MVP 투표에 참여하셨습니다. (1인 1표)");
+    }
+
+    window.evMasterData.mvpVotes.push({
+      voter: voterName,
+      candidate: cand,
+      comment,
+      time: new Date().toISOString()
+    });
+
+    await window.persistEventsDataToSupabase();
+    document.getElementById("mvpVoterPin").value = "";
+    document.getElementById("mvpCheerComment").value = "";
+    window.renderMvpView();
+    window.showEvToast("소중한 MVP 익명 투표가 완료되었습니다!", "👑");
+  };
+
+  window.copyMvpResultToKakao = function() {
+    const votes = window.evMasterData.mvpVotes || [];
+    if (votes.length === 0) return window.showEvToast("투표 내역이 없습니다.", "⚠️");
+    const tally = {};
+    votes.forEach(v => { tally[v.candidate] = (tally[v.candidate] || 0) + 1; });
+    const ranked = Object.keys(tally).sort((a, b) => tally[b] - tally[a]);
+
+    let text = `🏆 [불편한사람들 길드 MVP 투표 결과 (총 ${votes.length}명 참여)]\n──────────────────\n`;
+    ranked.slice(0, 5).forEach((n, idx) => { text += `${idx + 1}위. ${n} (${tally[n]}표)\n`; });
+    navigator.clipboard.writeText(text);
+    window.showEvToast("MVP 투표 결과가 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     4. 주사위 하이로우 로직
+     ========================================== */
+  window.renderDiceView = function() {
+    const rollsObj = window.evMasterData.diceRolls || {};
+    const list = Object.keys(rollsObj).map(name => ({
+      name,
+      roll: rollsObj[name].roll,
+      time: rollsObj[name].time
+    }));
+    list.sort((a, b) => b.roll - a.roll);
+
+    const el = document.getElementById("diceRankingList");
+    if (list.length === 0) {
+      el.innerHTML = '<div class="text-secondary small text-center py-3">아직 주사위를 굴린 길드원이 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = list.map((item, idx) => `
+      <div class="pvp-rank-row">
+        <span class="fw-bold text-white small">${idx + 1}위. ${item.name}</span>
+        <span class="badge bg-success fw-bold" style="font-size: 0.8rem;">🎲 ${item.roll}점</span>
+      </div>
+    `).join('');
+  };
+
+  window.rollEventDice = async function() {
+    const pin = document.getElementById("diceRollerPin").value.trim();
+    if (!pin) return alert("개인 비밀번호(PIN)를 입력해주세요.");
+
+    const matched = window.evGuildMembers.filter(m => String(m.pin || "").trim() === pin);
+    if (matched.length !== 1) return alert("❌ 일치하는 길드원이 없습니다.");
+
+    const memberName = matched[0].name;
+    await window.loadGuildEventsConfig();
+    window.evMasterData.diceRolls = window.evMasterData.diceRolls || {};
+
+    if (window.evMasterData.diceRolls[memberName]) {
+      return alert(`ℹ️ [${memberName}] 님은 이미 주사위를 굴리셨습니다! (기록: ${window.evMasterData.diceRolls[memberName].roll}점)`);
+    }
+
+    const rolled = Math.floor(Math.random() * 100) + 1;
+    window.evMasterData.diceRolls[memberName] = { roll: rolled, time: new Date().toISOString() };
+    await window.persistEventsDataToSupabase();
+
+    document.getElementById("diceRollerPin").value = "";
+    window.renderDiceView();
+    window.showEvToast(`🎲 [${memberName}] 님 주사위 결과: [ ${rolled} ] 나왔습니다!`, "🎉");
+  };
+
+  window.copyDiceResultToKakao = function() {
+    const rollsObj = window.evMasterData.diceRolls || {};
+    const list = Object.keys(rollsObj).map(n => ({ name: n, roll: rollsObj[n].roll })).sort((a, b) => b.roll - a.roll);
+    if (list.length === 0) return window.showEvToast("주사위 기록이 없습니다.", "⚠️");
+    let text = `🎲 [불편한사람들 주사위 하이로우 랭킹]\n──────────────────\n`;
+    list.slice(0, 10).forEach((it, i) => { text += `${i + 1}위. ${it.name} : ${it.roll}점\n`; });
+    navigator.clipboard.writeText(text);
+    window.showEvToast("주사위 순위가 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     5. 선착순 깜짝응모 로직
+     ========================================== */
+  window.renderFcfsView = function() {
+    const cfg = window.evMasterData.fcfsConfig || { question: "선착순 응모!", maxWinners: 5 };
+    document.getElementById("fcfsMissionQuestionText").innerText = cfg.question;
+    document.getElementById("fcfsLimitBadge").innerText = `선착순 ${cfg.maxWinners}명`;
+
+    const entries = window.evMasterData.fcfsEntries || [];
+    const el = document.getElementById("fcfsWinnerList");
+    if (entries.length === 0) {
+      el.innerHTML = '<div class="text-secondary small text-center py-3">아직 응모자가 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = entries.map((e, idx) => {
+      const isWin = idx < cfg.maxWinners;
+      return `
+        <div class="pvp-rank-row" style="border-color:${isWin ? '#10b981' : '#1b263b'};">
+          <div>
+            <span class="badge ${isWin ? 'bg-success' : 'bg-secondary'} me-1">${isWin ? '당첨 #' + (idx + 1) : '마감후 #' + (idx + 1)}</span>
+            <strong class="text-white small">${e.name}</strong>
+            <span class="text-info small ms-1">(${e.answer})</span>
+          </div>
+          <span class="text-secondary" style="font-size:0.68rem;">${e.timeStr}</span>
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.submitFcfsEntry = async function() {
+    const st = window.getEventTimeState("fcfs");
+    if (st.status !== "open") return alert("⏳ 현재 선착순 응모 오픈 시간이 아닙니다!");
+
+    const pin = document.getElementById("fcfsPinInput").value.trim();
+    const ans = document.getElementById("fcfsAnswerInput").value.trim() || "참여완료";
+    if (!pin) return alert("개인 PIN 번호를 입력해주세요.");
+
+    const matched = window.evGuildMembers.filter(m => String(m.pin || "").trim() === pin);
+    if (matched.length !== 1) return alert("❌ 일치하는 길드원이 없습니다.");
+
+    const memberName = matched[0].name;
+    await window.loadGuildEventsConfig();
+    window.evMasterData.fcfsEntries = window.evMasterData.fcfsEntries || [];
+
+    if (window.evMasterData.fcfsEntries.some(e => e.name === memberName)) {
+      return alert("ℹ️ 이미 응모를 완료하셨습니다.");
+    }
+
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}.${String(now.getMilliseconds()).padStart(3,'0')}`;
+
+    window.evMasterData.fcfsEntries.push({
+      name: memberName,
+      answer: ans,
+      timeMs: now.getTime(),
+      timeStr
+    });
+
+    await window.persistEventsDataToSupabase();
+    document.getElementById("fcfsPinInput").value = "";
+    document.getElementById("fcfsAnswerInput").value = "";
+    window.renderFcfsView();
+    window.showEvToast(`[${memberName}] 님 선착순 응모 등록 완료!`, "⚡");
+  };
+
+  window.copyFcfsResultToKakao = function() {
+    const entries = window.evMasterData.fcfsEntries || [];
+    const maxW = window.evMasterData.fcfsConfig?.maxWinners || 5;
+    if (entries.length === 0) return window.showEvToast("응모 내역이 없습니다.", "⚠️");
+    let text = `⚡ [불편한사람들 선착순 깜짝응모 당첨자 (커트라인 ${maxW}명)]\n──────────────────\n`;
+    entries.slice(0, maxW).forEach((e, i) => { text += `${i + 1}등. ${e.name} (${e.timeStr}) - ${e.answer}\n`; });
+    navigator.clipboard.writeText(text);
+    window.showEvToast("선착순 명단이 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     6. 내전 랜덤 팀짜기 로직
+     ========================================== */
+  window.renderTeamView = function() {
+    const grid = document.getElementById("teamMembersChipGrid");
+    grid.innerHTML = window.evGuildMembers.map(m => {
+      const sel = window.evTeamSelectedSet.has(m.name) ? "selected" : "";
+      return `<div class="ev-mem-chip ${sel}" onclick="window.toggleTeamMember('${m.name}')">${m.name}</div>`;
+    }).join('');
+    document.getElementById("teamSelectedCount").innerText = window.evTeamSelectedSet.size;
+  };
+
+  window.toggleTeamMember = function(name) {
+    if (window.evTeamSelectedSet.has(name)) window.evTeamSelectedSet.delete(name);
+    else window.evTeamSelectedSet.add(name);
+    window.renderTeamView();
+  };
+
+  window.selectAllTeamMembers = function(isAll) {
+    if (isAll) window.evTeamSelectedSet = new Set(window.evGuildMembers.map(m => m.name));
+    else window.evTeamSelectedSet.clear();
+    window.renderTeamView();
+  };
+
+  window.generateBalancedTeams = function() {
+    const members = Array.from(window.evTeamSelectedSet);
+    const teamCount = parseInt(document.getElementById("teamCountSelect").value, 10) || 2;
+    if (members.length < teamCount) return window.showEvToast("참가 인원을 더 선택해주세요.", "⚠️");
+
+    const shuffled = members.slice().sort(() => Math.random() - 0.5);
+    const teams = Array.from({ length: teamCount }, () => []);
+    shuffled.forEach((m, idx) => teams[idx % teamCount].push(m));
+    window.evLastGeneratedTeams = teams;
+
+    const teamNames = ["🔴 A팀 (레드)", "🔵 B팀 (블루)", "🟢 C팀 (그린)", "🟡 D팀 (골드)"];
+    document.getElementById("teamGeneratedResultBox").innerHTML = teams.map((t, i) => `
+      <div class="event-sub-box mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <strong class="text-white small">${teamNames[i]}</strong>
+          <span class="badge bg-dark text-info">${t.length}명</span>
+        </div>
+        <div class="text-light small" style="line-height: 1.5;">${t.join(', ')}</div>
+      </div>
+    `).join('');
+  };
+
+  window.copyTeamResultToKakao = function() {
+    if (!window.evLastGeneratedTeams.length) return window.showEvToast("먼저 팀 편성을 실행해주세요.", "⚠️");
+    const labels = ["A팀", "B팀", "C팀", "D팀"];
+    let text = `⚖️ [불편한사람들 내전/이벤트 팀 편성표]\n──────────────────\n`;
+    window.evLastGeneratedTeams.forEach((t, i) => {
+      text += `▪ ${labels[i]}(${t.length}명): ${t.join(', ')}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    window.showEvToast("팀 편성표가 복사되었습니다!", "📋");
+  };
+
+  /* ==========================================
+     7. 이벤트 설정 (통합 제어판) 로직
+     ========================================== */
+  window.stepEvVal = function(id, delta, minVal) {
+    const el = document.getElementById(id);
+    let v = parseInt(el.value, 10) || 0;
+    v = Math.max(minVal, v + delta);
+    el.value = v;
+  };
+
+  window.renderEventSettingsView = function() {
+    const pCfg = window.evMasterData.pvpConfig;
+    document.getElementById("setPvpKillWeight").value = pCfg.killWeight ?? 3;
+    document.getElementById("setPvpAssistWeight").value = pCfg.assistWeight ?? 2;
+    document.getElementById("setPvpDeathWeight").value = pCfg.deathWeight ?? 1;
+    document.getElementById("setPvpAbusePrevent").checked = !!pCfg.abusePrevent;
+    document.getElementById("setPvpAbuseCapRatio").value = String(pCfg.abuseCapRatio || "1.0");
+    document.getElementById("setPvpLockStart").checked = !!pCfg.lockStartStats;
+    document.getElementById("setPvpPrizeDesc").value = pCfg.prizeDesc || "";
+
+    document.getElementById("setFcfsQuestion").value = window.evMasterData.fcfsConfig?.question || "";
+    document.getElementById("setFcfsMaxWinners").value = window.evMasterData.fcfsConfig?.maxWinners || 5;
+
+    const listEl = document.getElementById("eventScheduleConfigList");
+    const keys = ["pvp", "roulette", "mvp", "dice", "fcfs", "team"];
+
+    listEl.innerHTML = keys.map(k => {
+      const m = window.evMasterData.meta[k];
+      return `
+        <div class="p-2 mb-2 rounded" style="background:#080d1a; border:1px solid #1e2c47;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong class="text-white small">${m.title}</strong>
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-outline-danger btn-xs py-0 px-2" style="font-size:0.68rem;" onclick="window.resetSingleEventData('${k}')">
+                기록 초기화
+              </button>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="cfgEnable_${k}" ${m.enabled ? 'checked' : ''} style="cursor:pointer;">
+              </div>
+            </div>
+          </div>
+          <div class="row g-1 mb-1">
+            <div class="col-6">
+              <label class="text-secondary" style="font-size:0.65rem;">오픈 시작 일시</label>
+              <input type="datetime-local" id="cfgStart_${k}" class="form-control input-custom-ev py-1" style="font-size:0.72rem !important;" value="${m.startTime || ''}">
+            </div>
+            <div class="col-6">
+              <label class="text-secondary" style="font-size:0.65rem;">마감 종료 일시</label>
+              <input type="datetime-local" id="cfgEnd_${k}" class="form-control input-custom-ev py-1" style="font-size:0.72rem !important;" value="${m.endTime || ''}">
+            </div>
+          </div>
+          <input type="text" id="cfgSub_${k}" class="form-control input-custom-ev py-1" style="font-size:0.74rem !important;" value="${m.sub || ''}" placeholder="카드 부제목/설명 입력">
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.saveAllEventSettings = async function() {
+    window.evMasterData.pvpConfig = {
+      killWeight: parseInt(document.getElementById("setPvpKillWeight").value, 10) || 0,
+      assistWeight: parseInt(document.getElementById("setPvpAssistWeight").value, 10) || 0,
+      deathWeight: parseInt(document.getElementById("setPvpDeathWeight").value, 10) || 0,
+      abusePrevent: document.getElementById("setPvpAbusePrevent").checked,
+      abuseCapRatio: parseFloat(document.getElementById("setPvpAbuseCapRatio").value) || 1.0,
+      lockStartStats: document.getElementById("setPvpLockStart").checked,
+      prizeDesc: document.getElementById("setPvpPrizeDesc").value.trim()
+    };
+
+    window.evMasterData.fcfsConfig = {
+      question: document.getElementById("setFcfsQuestion").value.trim() || "선착순 깜짝 응모!",
+      maxWinners: parseInt(document.getElementById("setFcfsMaxWinners").value, 10) || 5
+    };
+
+    ["pvp", "roulette", "mvp", "dice", "fcfs", "team"].forEach(k => {
+      window.evMasterData.meta[k].enabled = document.getElementById(`cfgEnable_${k}`).checked;
+      window.evMasterData.meta[k].startTime = document.getElementById(`cfgStart_${k}`).value;
+      window.evMasterData.meta[k].endTime = document.getElementById(`cfgEnd_${k}`).value;
+      window.evMasterData.meta[k].sub = document.getElementById(`cfgSub_${k}`).value.trim();
+    });
+
+    try {
+      await window.persistEventsDataToSupabase();
+      window.showEvToast("이벤트 통합 설정이 저장되었습니다!", "✅");
+      window.renderMainEventGrid();
+    } catch (err) {
+      window.showEvToast("설정 저장 실패: " + err.message, "❌");
+    }
+  };
+
+  window.resetSingleEventData = async function(key) {
+    const title = window.evMasterData.meta[key]?.title || key;
+    if (!confirm(`⚠️ [${title}]의 참여/점수 기록을 모두 초기화하시겠습니까?\n새 회차 시작 전에만 초기화하세요.`)) return;
+
+    if (key === "pvp") window.evMasterData.pvpRecords = {};
+    else if (key === "roulette") window.evMasterData.rouletteHistory = [];
+    else if (key === "mvp") window.evMasterData.mvpVotes = [];
+    else if (key === "dice") window.evMasterData.diceRolls = {};
+    else if (key === "fcfs") window.evMasterData.fcfsEntries = [];
+
+    await window.persistEventsDataToSupabase();
+    window.showEvToast(`[${title}] 기록이 초기화되었습니다.`, "🗑️");
+  };
+
+  window.copyActiveEventsSummary = function() {
+    const activeList = ["pvp", "roulette", "mvp", "dice", "fcfs", "team"]
+      .filter(k => window.getEventTimeState(k).status !== "closed")
+      .map(k => `• ${window.evMasterData.meta[k].title}: ${window.evMasterData.meta[k].sub}`);
+
+    const text = `🎉 [불편한사람들 길드 이벤트 안내]\n──────────────────\n${activeList.join('\n')}\n──────────────────\n길드 관리 웹 [길드이벤트] 메뉴에서 개인 비밀번호(PIN)로 간편하게 참여하세요!`;
+    navigator.clipboard.writeText(text);
+    window.showEvToast("이벤트 전체 공지가 복사되었습니다!", "📋");
+  };
+
+  (function initEventsModule() {
+    window.removeEventListener("paste", handlePvpGlobalPaste);
+    window.addEventListener("paste", handlePvpGlobalPaste);
+    window.loadGuildEventsConfig();
+  })();
+</script>
