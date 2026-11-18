@@ -758,11 +758,11 @@
       </div>
     </div>
 
-    <!-- 관리자 전용: 접기/펼치기(토글)가 적용된 전체 길드원 일괄 입력 시트 & 스샷 AI 판독 -->
+    <!-- 관리자 전용: 접기/펼치기(토글)가 적용된 전체 길드원 전적 일괄 입력 시트 -->
     <div id="pvpAdminControlWrapper" style="display: none;">
       <div class="admin-sheet-toggle-bar" onclick="window.toggleAdminPvpSheet()">
         <span class="small fw-bold text-info" style="font-size: 0.82rem;">
-          <i class="fa-solid fa-table-list me-1"></i> [관리자] 전체 길드원 일괄 입력 시트 & 스샷 AI 판독
+          <i class="fa-solid fa-table-list me-1"></i> [관리자] 전체 길드원 전적 일괄 입력 시트
         </span>
         <span class="badge bg-info text-dark fw-bold" id="pvpAdminSheetToggleBadge" style="font-size: 0.72rem; white-space: nowrap;">
           시트 열기 ▼
@@ -770,16 +770,6 @@
       </div>
 
       <div class="event-sub-box border-info border-opacity-50" id="pvpAdminControlBox" style="display: none; background: #091224;">
-        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-          <span class="text-secondary" style="font-size: 0.73rem;">
-            스샷을 업로드(또는 Ctrl+V)하거나 아래 표에서 직접 일괄 입력하세요.
-          </span>
-          <button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size: 0.74rem;" onclick="document.getElementById('pvpOcrFileInput').click()">
-            <i class="fa-solid fa-camera me-1"></i>랭킹 스샷 업로드 (또는 Ctrl+V)
-          </button>
-          <input type="file" id="pvpOcrFileInput" accept="image/*" style="display: none;" onchange="window.handlePvpOcrFile(event)">
-        </div>
-
         <!-- 시작 전적 일괄 입력 / 종료 전적 일괄 입력 모드 전환 탭 -->
         <div class="admin-sheet-mode-tabs">
           <div class="btn-sheet-mode active-start" id="btnSheetMode_start" onclick="window.setAdminPvpSheetMode('start')">
@@ -1448,7 +1438,6 @@
   };
 
   window.__currentModuleCleanup = function() {
-    window.removeEventListener("paste", handlePvpGlobalPaste);
     if (window.evToastTimer) clearTimeout(window.evToastTimer);
   };
 
@@ -2157,95 +2146,6 @@
     }
   };
 
-  window.handlePvpOcrFile = function(event) {
-    const file = event.target.files && event.target.files[0];
-    if (file) runPvpScreenshotOcr(file);
-    event.target.value = "";
-  };
-
-  function handlePvpGlobalPaste(event) {
-    if (window.evCurrentSubView !== "pvp") return;
-    const isAdmin = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
-    if (!isAdmin) return;
-
-    const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf("image") !== -1) {
-        const blob = items[i].getAsFile();
-        if (blob) runPvpScreenshotOcr(blob);
-        break;
-      }
-    }
-  }
-
-  async function runPvpScreenshotOcr(file) {
-    const mode = window.evAdminSheetMode || "end";
-    window.showEvToast(`인게임 PvP 랭킹 스샷을 [${mode === 'start' ? '시작 전적' : '종료 전적'}]으로 AI 분석 중...`, "⏳");
-    try {
-      const keyRows = await apiRequest("guild_settings?key=eq.gemini_api_key");
-      const apiKey = (keyRows && keyRows.length > 0) ? (keyRows[0].value || "").trim() : "";
-      if (!apiKey) return window.showEvToast("시스템설정에 Gemini API 키가 등록되어 있지 않습니다.", "⚠️");
-
-      const base64Data = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
-        reader.readAsDataURL(file);
-      });
-
-      const memberNames = window.evGuildMembers.map(m => m.name);
-      const prompt = `다음 MMORPG PvP 랭킹 스크린샷에서 소속 길드가 '불편한사람들'이거나 아래 길드원 명단에 포함된 캐릭터의 이름과 전적(킬, 어시, 데스 순서의 3개 숫자)을 추출하세요.
-길드원 명단: ${JSON.stringify(memberNames)}
-출력 형식은 반드시 순수 JSON 배열로만 응답하세요:
-[{"name":"불편한티버","kill":136,"assist":203,"death":77}]`;
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: base64Data } }] }],
-          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-        })
-      });
-
-      const json = await res.json();
-      const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-      const extracted = JSON.parse(rawText);
-
-      if (!Array.isArray(extracted) || extracted.length === 0) {
-        return window.showEvToast("스샷에서 길드원 전적을 찾지 못했습니다.", "⚠️");
-      }
-
-      let count = 0;
-      for (const row of extracted) {
-        if (!row.name) continue;
-        const existingRow = (window.evEntriesByKey.pvp || []).find(r => r.member_name === row.name);
-        const cur = existingRow ? Object.assign({}, existingRow.record_data) : { startK: 0, startA: 0, startD: 0, endK: 0, endA: 0, endD: 0, startLocked: true };
-
-        if (mode === "start") {
-          cur.startK = Number(row.kill) || 0;
-          cur.startA = Number(row.assist) || 0;
-          cur.startD = Number(row.death) || 0;
-          cur.startLocked = true;
-          if (!cur.endK) { cur.endK = cur.startK; cur.endA = cur.startA; cur.endD = cur.startD; }
-        } else {
-          cur.endK = Number(row.kill) || 0;
-          cur.endA = Number(row.assist) || 0;
-          cur.endD = Number(row.death) || 0;
-        }
-        cur.updatedAt = new Date().toISOString();
-        await window.upsertPvpMemberRecordToDB(row.name, cur);
-        count++;
-      }
-
-      window.isPvpAdminSheetOpen = false;
-      await window.loadAllEventsFromDB();
-      window.showEvToast(`🎉 스샷에서 ${count}명의 [${mode === 'start' ? '시작' : '종료'}] 전적 DB 반영 완료!`, "✅");
-    } catch (err) {
-      window.showEvToast("스샷 판독 오류: " + err.message, "❌");
-    }
-  }
-
   window.copyPvpRankingToKakao = function() {
     const opts = window.evConfigsMap.pvp?.options || {};
     const pvpRows = window.evEntriesByKey.pvp || [];
@@ -2877,8 +2777,6 @@
   };
 
   (function initEventsModule() {
-    window.removeEventListener("paste", handlePvpGlobalPaste);
-    window.addEventListener("paste", handlePvpGlobalPaste);
     window.loadAllEventsFromDB();
   })();
 </script>
