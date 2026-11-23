@@ -796,7 +796,7 @@
     const confirmMsg = `⚠️ [정산 기록 삭제 경고]\n` +
       `정말로 [${label}]에 집행된 '주간 길드자금 분배' 내역을 삭제하시겠습니까?\n` +
       `• 해당 기간의 주간 점수차등 정산 및 금고 출금 로그가 삭제됩니다.\n` +
-      `• 개별 보스 아이템 N/1 분배는 보존됩니다.`;
+      `• 개별 보스 아이템 분배는 보존됩니다.`;
 
     if (!confirm(confirmMsg)) return;
 
@@ -1167,8 +1167,12 @@
   window.fetchIncomeForDist = async function() {
     const s = document.getElementById('distScoreStartDate').value;
     const e = document.getElementById('distScoreEndDate').value;
+    if (s || e) {
+      document.getElementById('dBtnAll')?.classList.remove('active');
+    }
+    const isAllSelected = document.getElementById('dBtnAll')?.classList.contains('active');
 
-    if (!s && !e) {
+    if (!s && !e && !isAllSelected) {
       document.getElementById('weeklyTotalAmount').value = '';
       document.getElementById('distSourceLabel').innerText = '기간 미선택 (직접 입력 또는 기간 선택)';
       document.getElementById('distSourceLabel').style.color = '#fbbf24';
@@ -1180,7 +1184,10 @@
       const logs = await apiRequest("guild_finances?select=*&order=created_at.desc,id.desc");
       let pIn = 0, pOut = 0;
       (logs || []).forEach(l => {
-        const d = (l.created_at || '').slice(0, 10);
+        let d = '';
+        if (l.created_at) {
+          d = window.formatDateToYYYYMMDD(new Date(l.created_at));
+        }
         if (s && d < s) return;
         if (e && d > e) return;
         const t = (l.tx_type || '');
