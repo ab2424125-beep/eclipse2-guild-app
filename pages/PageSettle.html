@@ -1182,7 +1182,7 @@
 
     try {
       const logs = await apiRequest("guild_finances?select=*&order=created_at.desc,id.desc");
-      let pIn = 0, pOut = 0;
+      let netIncome = 0;
       (logs || []).forEach(l => {
         let d = '';
         if (l.created_at) {
@@ -1192,17 +1192,12 @@
         if (e && d > e) return;
         const t = (l.tx_type || '').trim();
         const cat = (l.category || '').trim();
-        const rsn = (l.reason || '').trim();
         const amt = Number(l.amount) || 0;
-        if (t === '입금') {
-          pIn += amt;
-        } else if (t === '출금') {
-          if (cat === '길드자금분배' || rsn.includes('[길드자금정산]')) return;
-          pOut += amt;
+        if (t === '입금' && cat === '수익금입금') {
+          netIncome += amt;
         }
       });
 
-      const netIncome = Math.max(0, pIn - pOut);
       const amountInput = document.getElementById('weeklyTotalAmount');
       const labelElem = document.getElementById('distSourceLabel');
 
