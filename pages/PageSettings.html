@@ -158,6 +158,36 @@
     white-space: nowrap;
   }
 
+  .auc-pos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .btn-auc-pos {
+    background: #080d1a;
+    border: 1px solid #233554;
+    color: #94a3b8;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 8px 6px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .btn-auc-pos:hover {
+    border-color: #f59e0b;
+    color: #fbbf24;
+  }
+  .btn-auc-pos.active {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: #f59e0b;
+    color: #fbbf24;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  }
+
   .form-switch .form-check-input {
     width: 2.8em;
     height: 1.5em;
@@ -460,7 +490,7 @@
           <div class="text-white fw-bold small" style="font-size: 0.8rem;">
             <i class="fa-solid fa-gavel text-warning me-1"></i>설정창 경매 탭 및 경매 관리 권한
           </div>
-          <div class="text-secondary" style="font-size: 0.68rem;">일반 관리자의 설정창 [경매] 탭 진입, 경매 등록·마감 및 입찰자 실명 조회 허용</div>
+          <div class="text-secondary" style="font-size: 0.68rem;">일반 관리자의 설정창 [경매] 탭 진입, 경매 등록·낙찰 승인 및 입찰자 실명 조회 허용</div>
         </div>
         <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
           <input class="form-check-input ms-0" type="checkbox" id="permSettingsAuction" role="switch">
@@ -599,7 +629,7 @@
             <i class="fa-solid fa-bell text-warning me-1"></i>경매 미니 플로팅 버튼 표시 (ON / OFF)
           </div>
           <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.4;">
-            활성화 시 모든 화면 우측 하단에 접이식 경매 버튼이 나타납니다.<br>
+            활성화 시 모든 화면에 접이식 경매 버튼이 나타납니다.<br>
             (카톡 누락자 자가 등록 화면에서는 자동으로 숨겨져 입력창을 가리지 않습니다)
           </div>
         </div>
@@ -608,14 +638,31 @@
         </div>
       </div>
 
+      <!-- 신규 추가: 경매 버튼 화면 표시 위치 4방향 선택 -->
+      <div class="perm-switch-item" style="display: block; border-color: rgba(56, 189, 248, 0.35);">
+        <div class="text-white fw-bold small mb-1" style="font-size: 0.8rem;">
+          <i class="fa-solid fa-arrows-up-down-left-right text-info me-1"></i>경매 미니 버튼 화면 표시 위치
+        </div>
+        <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.35;">
+          모바일 및 PC 앱 화면 테두리 안쪽에서 경매 버튼이 위치할 모서리를 선택하세요.
+        </div>
+        <input type="hidden" id="cfgAuctionFloatPosition" value="bottom-right">
+        <div class="auc-pos-grid">
+          <button type="button" class="btn-auc-pos" id="btnAucPos_top-left" onclick="selectAuctionFloatPos('top-left')">↖ 상단 좌측</button>
+          <button type="button" class="btn-auc-pos" id="btnAucPos_top-right" onclick="selectAuctionFloatPos('top-right')">↗ 상단 우측</button>
+          <button type="button" class="btn-auc-pos" id="btnAucPos_bottom-left" onclick="selectAuctionFloatPos('bottom-left')">↙ 하단 좌측</button>
+          <button type="button" class="btn-auc-pos active" id="btnAucPos_bottom-right" onclick="selectAuctionFloatPos('bottom-right')">↘ 하단 우측</button>
+        </div>
+      </div>
+
       <div class="perm-switch-item">
         <div style="min-width:0; flex:1;">
           <div class="text-white fw-bold small" style="font-size: 0.8rem;">
-            <i class="fa-solid fa-user-check text-info me-1"></i>경매 종료 후 낙찰자 닉네임 전체 공개
+            <i class="fa-solid fa-user-check text-info me-1"></i>낙찰 승인 후 낙찰자 닉네임 전체 공개
           </div>
           <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.4;">
-            <strong>ON:</strong> 진행 중엔 익명, 마감 후엔 최종 낙찰자 닉네임이 전원에게 공개됩니다.<br>
-            <strong>OFF:</strong> 마감 후에도 낙찰자 닉네임은 관리자만 확인할 수 있습니다.
+            <strong>ON:</strong> 진행 중엔 익명, 관리자 낙찰 승인 후 최종 낙찰자 닉네임이 공개됩니다.<br>
+            <strong>OFF:</strong> 낙찰 승인 후에도 낙찰자 닉네임은 관리자만 확인할 수 있습니다.
           </div>
         </div>
         <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
@@ -626,7 +673,7 @@
       <div class="row g-2 mt-2">
         <div class="col-6">
           <label class="small text-secondary mb-1" style="font-size: 0.72rem;">기본 최소 입찰 단위 (다이아)</label>
-          <input type="number" id="cfgAuctionMinInc" class="form-control input-custom-set" value="100" min="1">
+          <input type="number" id="cfgAuctionMinInc" class="form-control input-custom-set" value="10" min="10" step="10">
         </div>
         <div class="col-6">
           <label class="small text-secondary mb-1" style="font-size: 0.72rem;">마감 1분 전 입찰 시 연장(분)</label>
@@ -666,6 +713,18 @@
     window.toastTimer = setTimeout(() => {
       toast.classList.remove("show");
     }, 2400);
+  }
+
+  function selectAuctionFloatPos(pos) {
+    const valid = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const target = valid.includes(pos) ? pos : 'bottom-right';
+    const hidden = document.getElementById('cfgAuctionFloatPosition');
+    if (hidden) hidden.value = target;
+
+    valid.forEach(p => {
+      const btn = document.getElementById('btnAucPos_' + p);
+      if (btn) btn.classList.toggle('active', p === target);
+    });
   }
 
   function switchSettingsTab(tab) {
@@ -739,7 +798,7 @@
     try {
       const [data, aucRows] = await Promise.all([
         apiRequest("rpc/get_safe_guild_settings", "POST").catch(() => []),
-        apiRequest("guild_settings?key=in.(use_guild_auction,auction_reveal_winner,perm_settings_auction,auction_min_increment,auction_anti_snipe_min)").catch(() => [])
+        apiRequest("guild_settings?key=in.(use_guild_auction,auction_reveal_winner,perm_settings_auction,auction_min_increment,auction_anti_snipe_min,auction_float_position)").catch(() => [])
       ]);
 
       window.currentSettingsMap = {};
@@ -771,8 +830,9 @@
 
       document.getElementById('cfgUseGuildAuction').checked = (window.currentSettingsMap['use_guild_auction'] === 'true');
       document.getElementById('cfgAuctionRevealWinner').checked = (window.currentSettingsMap['auction_reveal_winner'] !== 'false');
-      document.getElementById('cfgAuctionMinInc').value = window.currentSettingsMap['auction_min_increment'] || '100';
+      document.getElementById('cfgAuctionMinInc').value = window.currentSettingsMap['auction_min_increment'] || '10';
       document.getElementById('cfgAuctionAntiSnipe').value = window.currentSettingsMap['auction_anti_snipe_min'] || '1';
+      selectAuctionFloatPos(window.currentSettingsMap['auction_float_position'] || 'bottom-right');
 
       applyMemberPinResetUI();
     } catch (e) {}
@@ -874,12 +934,14 @@
     }
 
     const useAuction = document.getElementById('cfgUseGuildAuction').checked ? 'true' : 'false';
+    const floatPos = document.getElementById('cfgAuctionFloatPosition').value || 'bottom-right';
     const revealWinner = document.getElementById('cfgAuctionRevealWinner').checked ? 'true' : 'false';
-    const minInc = String(Math.max(1, parseInt(document.getElementById('cfgAuctionMinInc').value, 10) || 100));
+    const minInc = String(Math.max(10, parseInt(document.getElementById('cfgAuctionMinInc').value, 10) || 10));
     const antiSnipe = String(Math.max(0, parseInt(document.getElementById('cfgAuctionAntiSnipe').value, 10) || 0));
 
     try {
       await upsertGuildSettingKey("use_guild_auction", useAuction);
+      await upsertGuildSettingKey("auction_float_position", floatPos);
       await upsertGuildSettingKey("auction_reveal_winner", revealWinner);
       await upsertGuildSettingKey("auction_min_increment", minInc);
       await upsertGuildSettingKey("auction_anti_snipe_min", antiSnipe);
