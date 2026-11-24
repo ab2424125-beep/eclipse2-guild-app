@@ -1,5 +1,5 @@
 <!-- ==========================================
-     [ECLIPSE 길드관리] 길드 익명 경매장 모듈
+     [ECLIPSE 길드관리] 길드 익명 경매장 모듈 (2열 그리드 + 실시간 스마트 갱신)
      경로: pages/PageAuction.html
      연동 테이블: guild_auctions, guild_auction_bids
      ========================================== -->
@@ -112,45 +112,130 @@
     color: #fbbf24;
   }
 
-  .auc-item-card {
+  /* 2열 그리드 경매 카드 레이아웃 */
+  .auc-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .auc-grid-card {
     background: #090e1c;
     border: 1px solid #1e2c47;
-    border-radius: 15px;
-    padding: 14px;
-    margin-bottom: 12px;
-    transition: all 0.15s;
+    border-radius: 14px;
+    padding: 11px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+    user-select: none;
+    min-width: 0;
   }
-  .auc-item-card.is-open {
-    border-color: rgba(245, 158, 11, 0.45);
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, #090e1c 100%);
+  .auc-grid-card:hover {
+    transform: translateY(-2px);
+    border-color: #38bdf8;
+    background: #0e172c;
   }
-  .auc-item-card.is-pending {
-    border-color: rgba(56, 189, 248, 0.5);
-    background: linear-gradient(180deg, rgba(56, 189, 248, 0.07) 0%, #090e1c 100%);
+  .auc-grid-card:active {
+    transform: scale(0.98);
   }
-  .auc-item-card.is-closed {
-    opacity: 0.92;
+  .auc-grid-card.is-open {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, #090e1c 100%);
+  }
+  .auc-grid-card.is-pending {
+    border-color: rgba(56, 189, 248, 0.55);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.09) 0%, #090e1c 100%);
+  }
+  .auc-grid-card.is-closed {
+    opacity: 0.88;
     border-color: #1b263b;
+  }
+
+  .auc-grid-title {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.86rem;
+    line-height: 1.25;
+    margin: 4px 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .auc-grid-price-box {
+    background: #060a14;
+    border: 1px solid #17233b;
+    border-radius: 9px;
+    padding: 7px 8px;
+    margin-bottom: 7px;
+  }
+  .auc-grid-price-label {
+    color: #64748b;
+    font-size: 0.64rem;
+    font-weight: 700;
+    margin-bottom: 1px;
+  }
+  .auc-grid-price-val {
+    color: #fbbf24;
+    font-weight: 800;
+    font-size: 0.94rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .auc-grid-action-bar {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 5px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .auc-grid-action-bar.open {
+    background: rgba(245, 158, 11, 0.18);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #fbbf24;
+  }
+  .auc-grid-action-bar.pending {
+    background: rgba(56, 189, 248, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #38bdf8;
+  }
+  .auc-grid-action-bar.approved {
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+  }
+  .auc-grid-action-bar.nobid {
+    background: rgba(148, 163, 184, 0.1);
+    border: 1px solid #334155;
+    color: #94a3b8;
   }
 
   .auc-badge-mode-open {
     background: rgba(56, 189, 248, 0.15);
     border: 1px solid rgba(56, 189, 248, 0.4);
     color: #38bdf8;
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
+    padding: 1px 6px;
+    border-radius: 5px;
     white-space: nowrap;
   }
   .auc-badge-mode-blind {
     background: rgba(168, 85, 247, 0.18);
     border: 1px solid rgba(168, 85, 247, 0.45);
     color: #c084fc;
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
+    padding: 1px 6px;
+    border-radius: 5px;
     white-space: nowrap;
   }
 
@@ -158,10 +243,10 @@
     background: rgba(239, 68, 68, 0.16);
     border: 1px solid rgba(239, 68, 68, 0.45);
     color: #f87171;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 8px;
+    padding: 2px 7px;
+    border-radius: 7px;
     white-space: nowrap;
   }
   .auc-timer-pill.pending {
@@ -181,11 +266,11 @@
   }
 
   .auc-price-banner {
-    background: #0d1629;
+    background: #080d1a;
     border: 1px solid #1e2c47;
     border-radius: 11px;
     padding: 10px 12px;
-    margin: 10px 0;
+    margin: 8px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -213,7 +298,7 @@
     border: 1px solid #172235;
     border-radius: 10px;
     padding: 8px 10px;
-    max-height: 150px;
+    max-height: 155px;
     overflow-y: auto;
     margin-top: 8px;
   }
@@ -221,7 +306,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     padding: 4px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
@@ -232,19 +317,21 @@
   .auc-modal-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(6, 10, 20, 0.85);
+    background: rgba(6, 10, 20, 0.86);
     backdrop-filter: blur(7px);
     z-index: 999999;
     display: flex; align-items: center; justify-content: center;
-    padding: 16px;
+    padding: 14px;
   }
   .auc-modal-box {
     background: #0d1527;
-    border: 1.5px solid #38bdf8;
+    border: 1.5px solid #f59e0b;
     border-radius: 18px;
-    width: 100%; max-width: 400px;
-    padding: 18px 16px;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+    width: 100%; max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.92);
   }
 
   .custom-auc-toast {
@@ -275,8 +362,12 @@
   .custom-auc-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @media (max-width: 480px) {
-    .auction-card-main { padding: 14px 12px; }
-    .auc-item-card { padding: 12px; }
+    .auction-card-main { padding: 14px 10px; }
+    .auc-grid-container { gap: 8px; }
+    .auc-grid-card { padding: 10px 9px; }
+  }
+  @media (max-width: 330px) {
+    .auc-grid-container { grid-template-columns: 1fr; }
   }
 </style>
 
@@ -286,6 +377,9 @@
     <div class="d-flex align-items-center gap-2">
       <span style="font-size: 1.3rem;">🔨</span>
       <h6 class="fw-bold mb-0 text-white">길드 익명 경매장</h6>
+      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.64rem; padding: 3px 6px;">
+        <i class="fa-solid fa-circle fa-beat-fade me-1" style="font-size: 0.5rem;"></i>실시간
+      </span>
     </div>
     <div class="d-flex align-items-center gap-1">
       <button type="button" class="btn btn-warning btn-xs py-1 px-2 fw-bold text-dark" id="btnToggleCreateAuction" style="display: none; font-size: 0.74rem;" onclick="window.toggleCreateAuctionForm()">
@@ -294,7 +388,7 @@
       <button type="button" class="btn-kakao-auc" onclick="window.copyActiveAuctionsToKakao()">
         <i class="fa-solid fa-comment"></i> 경매 공지 복사
       </button>
-      <button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.74rem;" onclick="window.loadGuildAuctions()">
+      <button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.74rem;" onclick="window.loadGuildAuctions(false, true)">
         <i class="fa-solid fa-arrows-rotate"></i>
       </button>
     </div>
@@ -303,8 +397,8 @@
   <!-- 안내 배너 -->
   <div class="p-2 px-3 rounded mb-3 d-flex align-items-center justify-content-between gap-2" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
     <div class="small text-secondary" style="font-size: 0.74rem; word-break: keep-all;">
-      <i class="fa-solid fa-user-secret text-warning me-1"></i>
-      <span>개인 PIN 인증 후 <strong>10 다이아 단위 익명 입찰</strong>로 진행되며, 마감 후 <strong>관리자 낙찰 승인</strong> 시 최종 완료됩니다.</span>
+      <i class="fa-solid fa-hand-pointer text-warning me-1"></i>
+      <span>원하는 <strong>경매 아이템 카드를 누르면 입찰 창</strong>이 열립니다. (개인 PIN 인증 · 10 다이아 단위)</span>
     </div>
   </div>
 
@@ -315,7 +409,6 @@
       <button type="button" class="btn-close btn-close-white" style="font-size: 0.72rem;" onclick="window.toggleCreateAuctionForm()"></button>
     </div>
 
-    <!-- 1. 미정산 보스 드랍템 원클릭 불러오기 -->
     <div class="mb-2">
       <label class="small text-info fw-bold mb-1" style="font-size: 0.72rem;">📦 미정산 보스 드랍템 빠른 선택 (선택 시 N/1 대상자 자동 연결)</label>
       <select id="aucUnsettledDropSelect" class="form-select input-custom-auc" onchange="window.onSelectUnsettledDropItem()">
@@ -323,7 +416,6 @@
       </select>
     </div>
 
-    <!-- 2. 아이템명 & 출처 보스 -->
     <div class="row g-2 mb-2">
       <div class="col-7">
         <label class="small text-secondary mb-1" style="font-size: 0.72rem;">경매 아이템명 *</label>
@@ -335,21 +427,17 @@
       </div>
     </div>
 
-    <!-- 3. 경매 방식 선택 -->
     <div class="mb-2">
       <label class="small text-secondary mb-1" style="font-size: 0.72rem;">경매 진행 방식</label>
       <select id="aucNewMode" class="form-select input-custom-auc">
-        <option value="open" selected>📢 공개 호가 (실시간 최고가 공개 · 입찰자 완전 익명)</option>
+        <option value="open" selected>📢 공개 호가 (실시간 최고가 공개)</option>
         <option value="blind">🙈 비공개 블라인드 입찰 (낙찰 승인 전까지 입찰가 비공개)</option>
       </select>
     </div>
 
-    <!-- 4. 시작가 & 입찰 단위(기본 10D) + 원클릭 프리셋 -->
     <div class="row g-2 mb-2">
       <div class="col-6">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-          <label class="small text-secondary m-0" style="font-size: 0.72rem;">시작가 (10D 단위)</label>
-        </div>
+        <label class="small text-secondary mb-1" style="font-size: 0.72rem;">시작가 (10D 단위)</label>
         <input type="number" id="aucNewStartPrice" class="form-control input-custom-auc no-spin mb-1" value="100" min="10" step="10">
         <div class="d-flex gap-1 flex-wrap">
           <button type="button" class="btn-preset-mini" onclick="document.getElementById('aucNewStartPrice').value=10">10D</button>
@@ -359,9 +447,7 @@
         </div>
       </div>
       <div class="col-6">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-          <label class="small text-secondary m-0" style="font-size: 0.72rem;">최소 호가 단위</label>
-        </div>
+        <label class="small text-secondary mb-1" style="font-size: 0.72rem;">최소 호가 단위</label>
         <input type="number" id="aucNewMinInc" class="form-control input-custom-auc no-spin mb-1" value="10" min="10" step="10">
         <div class="d-flex gap-1 flex-wrap">
           <button type="button" class="btn-preset-mini" onclick="document.getElementById('aucNewMinInc').value=10">10D</button>
@@ -371,7 +457,6 @@
       </div>
     </div>
 
-    <!-- 5. 마감 시간 원클릭 프리셋 -->
     <div class="mb-3">
       <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
         <label class="small text-secondary m-0" style="font-size: 0.72rem;">경매 마감 일시</label>
@@ -398,15 +483,74 @@
     <button type="button" class="btn-auc-tab" id="aucTab_all" onclick="window.setAuctionFilter('all')">📋 전체 보기</button>
   </div>
 
-  <!-- 경매 목록 컨테이너 -->
+  <!-- 2열 그리드 경매 목록 컨테이너 -->
   <div id="auctionListContainer">
     <div class="text-secondary small text-center py-4">경매 목록을 불러오는 중...</div>
   </div>
 </div>
 
-<!-- [관리자 전용] 경매 낙찰 결과 N/1 정산 & 금고 반영 모달 -->
-<div id="modalAuctionSettle" class="auc-modal-backdrop" style="display: none;">
+<!-- 🎯 경매 아이템 상세 & 입찰 팝업 모달 (입력칸 보호형 실시간 부분 갱신) -->
+<div id="modalAuctionDetail" class="auc-modal-backdrop" style="display: none;" onclick="if(event.target===this) window.closeAuctionDetailModal()">
   <div class="auc-modal-box">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+      <div style="min-width: 0; flex: 1;">
+        <div class="d-flex align-items-center gap-1 flex-wrap mb-1" id="detailAucBadges"></div>
+        <h6 class="fw-bold text-white m-0 text-truncate" id="detailAucTitle" style="font-size: 1.02rem;">아이템명</h6>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <span class="auc-timer-pill" id="detailAucTimerPill">계산중...</span>
+        <button type="button" class="btn-close btn-close-white" style="font-size: 0.78rem;" onclick="window.closeAuctionDetailModal()"></button>
+      </div>
+    </div>
+
+    <!-- 현재가 배너 (실시간 갱신) -->
+    <div class="auc-price-banner">
+      <div>
+        <div class="text-secondary" style="font-size: 0.7rem;" id="detailAucPriceLabel">현재 최고 입찰가</div>
+        <div class="fw-bold text-warning fs-5" id="detailAucPriceVal">0 D</div>
+      </div>
+      <div class="text-end">
+        <div class="text-secondary" style="font-size: 0.7rem;">총 입찰</div>
+        <div class="fw-bold text-info small" id="detailAucBidCount">0회</div>
+      </div>
+    </div>
+
+    <!-- 상태별 영역: 진행중 입찰 입력폼 OR 마감 승인 대기 OR 낙찰 확정 -->
+    <div id="detailAucBidInputSection" style="display: none;">
+      <div class="p-2 rounded mt-2" style="background: #060a14; border: 1px solid #1e2c47;">
+        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+          <span class="text-secondary" style="font-size: 0.7rem;" id="detailAucMinBidHint">최소 입찰: 10 D</span>
+          <div class="d-flex gap-1" id="detailAucQuickBtns"></div>
+        </div>
+        <div class="row g-1 align-items-center">
+          <div class="col-4">
+            <input type="password" id="detailAucPinInput" class="form-control input-custom-auc text-center" placeholder="개인 PIN" maxlength="12" inputmode="numeric">
+          </div>
+          <div class="col-5">
+            <input type="number" id="detailAucAmtInput" class="form-control input-custom-auc text-end no-spin" step="10" placeholder="10D 단위">
+          </div>
+          <div class="col-3">
+            <button type="button" class="btn btn-warning btn-sm w-100 fw-bold text-dark" id="btnSubmitDetailBid" style="height: 38px; font-size: 0.78rem; white-space: nowrap;" onclick="window.submitActiveModalBid()">
+              입찰
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="detailAucStatusBannerSection"></div>
+
+    <!-- 실시간 입찰 기록 목록 -->
+    <div id="detailAucBidsLogSection"></div>
+
+    <!-- 관리자 전용 제어 버튼 (즉시 마감 / N/1 정산 / 삭제) -->
+    <div id="detailAucAdminToolsSection"></div>
+  </div>
+</div>
+
+<!-- [관리자 전용] 경매 낙찰 결과 N/1 정산 & 금고 반영 모달 -->
+<div id="modalAuctionSettle" class="auc-modal-backdrop" style="display: none; z-index: 1000005;">
+  <div class="auc-modal-box" style="border-color: #38bdf8;">
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
       <h6 class="fw-bold text-white m-0"><i class="fa-solid fa-coins text-warning me-1"></i> 낙찰 정산 및 금고 반영</h6>
       <button type="button" class="btn-close btn-close-white" style="font-size: 0.75rem;" onclick="window.closeAuctionSettleModal()"></button>
@@ -449,22 +593,36 @@
 
 <script>
   window.aucListCache = [];
+  window.aucLastDataSignature = "";
   window.aucUnsettledDrops = [];
   window.aucCurrentFilter = "open";
+  window.aucActiveModalId = null;
   window.aucCountdownTimer = null;
+  window.aucAutoSyncTimer = null;
   window.aucToastTimer = null;
   window.aucDefaultMinInc = 10;
   window.aucGuildName = "불편한사람들";
+
+  window.onAucVisibilityChange = function() {
+    if (!document.hidden && document.getElementById("auctionListContainer")) {
+      window.loadGuildAuctions(true);
+    }
+  };
 
   window.__currentModuleCleanup = function() {
     if (window.aucCountdownTimer) {
       clearInterval(window.aucCountdownTimer);
       window.aucCountdownTimer = null;
     }
+    if (window.aucAutoSyncTimer) {
+      clearInterval(window.aucAutoSyncTimer);
+      window.aucAutoSyncTimer = null;
+    }
     if (window.aucToastTimer) {
       clearTimeout(window.aucToastTimer);
       window.aucToastTimer = null;
     }
+    document.removeEventListener("visibilitychange", window.onAucVisibilityChange);
   };
 
   window.showAucToast = function(msg, icon = "✅") {
@@ -637,7 +795,7 @@
       document.getElementById("createAuctionFormBox").style.display = "none";
 
       window.showAucToast(`[${itemName}] 익명 경매가 시작되었습니다!`, "🔨");
-      await window.loadGuildAuctions();
+      await window.loadGuildAuctions(false);
       if (typeof window.refreshAuctionFloatingButton === "function") {
         window.refreshAuctionFloatingButton();
       }
@@ -655,11 +813,19 @@
       const btn = document.getElementById(`aucTab_${k}`);
       if (btn) btn.classList.toggle("active", k === filter);
     });
-    window.renderAuctionList();
+    window.renderAuctionGrid();
   };
 
-  window.loadGuildAuctions = async function() {
+  window.computeAuctionsSignature = function(list, isAdmin) {
+    return (isAdmin ? "ADM:" : "USR:") + (list || []).map(a =>
+      `${a.id}_${a.status}_${a.current_price}_${a.bid_count}_${a.end_time}_${a.winner_name}`
+    ).join("|");
+  };
+
+  window.loadGuildAuctions = async function(isSilentAuto = false, showManualToast = false) {
     const container = document.getElementById("auctionListContainer");
+    if (!container) return;
+
     const canManage = await window.checkAuctionManagePermission();
     const createBtn = document.getElementById("btnToggleCreateAuction");
     if (createBtn) createBtn.style.display = canManage ? "inline-block" : "none";
@@ -668,22 +834,48 @@
       const data = await apiRequest("rpc/get_guild_auctions_safe", "POST", {
         p_is_admin: canManage
       });
-      window.aucListCache = Array.isArray(data) ? data : [];
-      window.renderAuctionList(canManage);
+      const list = Array.isArray(data) ? data : [];
+      const newSig = window.computeAuctionsSignature(list, canManage);
+
+      // 변경된 입찰이나 상태가 없으면 DOM을 건드리지 않아 버벅거림/깜빡임 제로
+      if (isSilentAuto && newSig === window.aucLastDataSignature) {
+        return;
+      }
+
+      // 열려 있는 팝업의 입찰가 상승 알림
+      if (isSilentAuto && window.aucActiveModalId) {
+        const prevModalItem = window.aucListCache.find(x => x.id === window.aucActiveModalId);
+        const nextModalItem = list.find(x => x.id === window.aucActiveModalId);
+        if (prevModalItem && nextModalItem && nextModalItem.bid_count > prevModalItem.bid_count) {
+          if (nextModalItem.auction_mode === "open") {
+            window.showAucToast(`🔔 새 입찰 발생! 현재가 ${Number(nextModalItem.current_price).toLocaleString()} D`, "⚡");
+          } else {
+            window.showAucToast(`🔔 새 블라인드 입찰이 접수되었습니다! (총 ${nextModalItem.bid_count}회)`, "⚡");
+          }
+        }
+      }
+
+      window.aucListCache = list;
+      window.aucLastDataSignature = newSig;
+      window.renderAuctionGrid(canManage);
+
+      if (window.aucActiveModalId) {
+        window.syncAuctionDetailModal(window.aucActiveModalId, canManage, isSilentAuto);
+      }
+
+      if (showManualToast) {
+        window.showAucToast("최신 경매 현황으로 갱신되었습니다.", "🔄");
+      }
     } catch (err) {
-      if (container) {
+      if (!isSilentAuto && container) {
         container.innerHTML = `<div class="text-danger small text-center py-4">경매 조회 실패: ${err.message}</div>`;
       }
     }
   };
 
-  window.renderAuctionList = function(canManageFlag) {
+  window.renderAuctionGrid = function(canManageFlag) {
     const container = document.getElementById("auctionListContainer");
     if (!container) return;
-
-    const isAdmin = (canManageFlag !== undefined)
-      ? canManageFlag
-      : ((typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true"));
 
     const now = Date.now();
     const filtered = window.aucListCache.filter(a => {
@@ -698,7 +890,7 @@
       return;
     }
 
-    container.innerHTML = filtered.map(a => {
+    container.innerHTML = `<div class="auc-grid-container">` + filtered.map(a => {
       const endMs = new Date(a.end_time).getTime();
       const isOpen = (a.status === "open") && (endMs > now);
       const isApproved = (a.status === "approved" || a.status === "settled");
@@ -706,78 +898,202 @@
       const isBlind = (a.auction_mode === "blind");
 
       const modeBadge = isBlind
-        ? `<span class="auc-badge-mode-blind">🙈 비공개 블라인드</span>`
-        : `<span class="auc-badge-mode-open">📢 공개 호가(익명)</span>`;
+        ? `<span class="auc-badge-mode-blind">🙈 블라인드</span>`
+        : `<span class="auc-badge-mode-open">📢 공개</span>`;
 
       const bossBadge = a.boss_name
-        ? `<span class="badge bg-dark text-info border border-info border-opacity-25" style="font-size:0.68rem;">${a.boss_name}</span>`
+        ? `<span class="badge bg-dark text-info border border-info border-opacity-25 text-truncate" style="font-size:0.62rem; max-width:74px;">${a.boss_name}</span>`
         : "";
 
-      let priceLabel = "현재 최고 입찰가";
-      let priceValText = `${Number(a.current_price || a.start_price).toLocaleString()} <small class="fs-6 text-light">D</small>`;
-      if (a.bid_count === 0) {
-        priceLabel = "경매 시작가 (입찰 대기)";
-      } else if (isPendingApproval) {
-        priceLabel = "마감 최고 입찰가 (승인 대기중)";
-      } else if (isApproved) {
-        priceLabel = "최종 승인 낙찰가";
+      let priceLabel = a.bid_count === 0 ? "시작가 (대기)" : (isApproved ? "최종 낙찰가" : "현재 최고가");
+      let priceValText = `${Number(a.current_price || a.start_price).toLocaleString()} D`;
+
+      if (isBlind && !isApproved && Number(a.current_price) === 0) {
+        priceLabel = "시작가 (비공개)";
+        priceValText = `${Number(a.start_price).toLocaleString()} D~`;
       }
 
-      if (isBlind && !isApproved && !isAdmin) {
-        priceLabel = isOpen ? "블라인드 진행중 (시작가)" : "블라인드 입찰 마감 (승인 대기중)";
-        priceValText = `${Number(a.start_price).toLocaleString()} <small class="fs-6 text-light">D ~ (비공개)</small>`;
+      let pillClass = "";
+      let pillText = "계산중";
+      let cardClass = "is-open";
+      let actionBarClass = "open";
+      let actionBarText = `🔥 입찰하기 (${a.bid_count}회)`;
+
+      if (!isOpen) {
+        if (isPendingApproval) {
+          pillClass = "pending";
+          pillText = "⏳ 승인대기";
+          cardClass = "is-pending";
+          actionBarClass = "pending";
+          actionBarText = "⏳ 낙찰 승인 대기";
+        } else if (isApproved) {
+          pillClass = "ended";
+          pillText = "✅ 확정";
+          cardClass = "is-closed";
+          actionBarClass = "approved";
+          actionBarText = `🏆 ${a.winner_name || '낙찰 확정'}`;
+        } else {
+          pillClass = "nobid";
+          pillText = "유찰";
+          cardClass = "is-closed";
+          actionBarClass = "nobid";
+          actionBarText = "유찰 마감";
+        }
       }
+
+      return `
+        <div class="auc-grid-card ${cardClass}" onclick="window.openAuctionDetailModal(${a.id})">
+          <div>
+            <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
+              <div class="d-flex align-items-center gap-1" style="min-width:0; overflow:hidden;">
+                ${modeBadge}
+                ${bossBadge}
+              </div>
+              <span class="auc-timer-pill ${pillClass}" id="aucTimer_${a.id}" data-end="${a.end_time}" data-closed="${isOpen ? '0' : '1'}">
+                ${pillText}
+              </span>
+            </div>
+            <div class="auc-grid-title" title="${a.item_name}">${a.item_name}</div>
+          </div>
+
+          <div>
+            <div class="auc-grid-price-box">
+              <div class="auc-grid-price-label">${priceLabel}</div>
+              <div class="auc-grid-price-val">${priceValText}</div>
+            </div>
+            <div class="auc-grid-action-bar ${actionBarClass}">${actionBarText}</div>
+          </div>
+        </div>
+      `;
+    }).join('') + `</div>`;
+
+    window.updateAuctionCountdowns();
+  };
+
+  window.openAuctionDetailModal = async function(aucId) {
+    window.aucActiveModalId = aucId;
+    const pinEl = document.getElementById("detailAucPinInput");
+    const amtEl = document.getElementById("detailAucAmtInput");
+    if (pinEl) pinEl.value = "";
+    if (amtEl) amtEl.value = "";
+
+    const canManage = await window.checkAuctionManagePermission();
+    window.syncAuctionDetailModal(aucId, canManage, false);
+    document.getElementById("modalAuctionDetail").style.display = "flex";
+  };
+
+  window.closeAuctionDetailModal = function() {
+    window.aucActiveModalId = null;
+    document.getElementById("modalAuctionDetail").style.display = "none";
+  };
+
+  window.syncAuctionDetailModal = function(aucId, isAdmin, preserveInputs = false) {
+    const a = window.aucListCache.find(x => x.id === aucId);
+    if (!a) {
+      window.closeAuctionDetailModal();
+      return;
+    }
+
+    const now = Date.now();
+    const endMs = new Date(a.end_time).getTime();
+    const isOpen = (a.status === "open") && (endMs > now);
+    const isApproved = (a.status === "approved" || a.status === "settled");
+    const isPendingApproval = !isOpen && !isApproved && (a.bid_count > 0);
+    const isBlind = (a.auction_mode === "blind");
+
+    const modeBadge = isBlind
+      ? `<span class="auc-badge-mode-blind">🙈 비공개 블라인드</span>`
+      : `<span class="auc-badge-mode-open">📢 공개 호가</span>`;
+    const bossBadge = a.boss_name
+      ? `<span class="badge bg-dark text-info border border-info border-opacity-25" style="font-size:0.66rem;">${a.boss_name}</span>`
+      : "";
+
+    document.getElementById("detailAucBadges").innerHTML = `${modeBadge} ${bossBadge}`;
+    document.getElementById("detailAucTitle").innerText = a.item_name;
+
+    const timerPill = document.getElementById("detailAucTimerPill");
+    timerPill.setAttribute("data-end", a.end_time);
+    timerPill.setAttribute("data-closed", isOpen ? "0" : "1");
+    timerPill.className = "auc-timer-pill";
+    if (!isOpen) {
+      if (isPendingApproval) {
+        timerPill.classList.add("pending");
+        timerPill.innerText = "⏳ 낙찰 승인 대기";
+      } else if (isApproved) {
+        timerPill.classList.add("ended");
+        timerPill.innerText = "✅ 낙찰 확정";
+      } else {
+        timerPill.classList.add("nobid");
+        timerPill.innerText = "유찰 마감";
+      }
+    }
+
+    let priceLabel = "현재 최고 입찰가";
+    let priceValText = `${Number(a.current_price || a.start_price).toLocaleString()} <small class="fs-6 text-light">D</small>`;
+    if (a.bid_count === 0) {
+      priceLabel = "경매 시작가 (입찰 대기)";
+    } else if (isPendingApproval) {
+      priceLabel = "마감 최고 입찰가 (승인 대기중)";
+    } else if (isApproved) {
+      priceLabel = "최종 승인 낙찰가";
+    }
+
+    if (isBlind && !isApproved && !isAdmin) {
+      priceLabel = isOpen ? "블라인드 진행중 (시작가)" : "블라인드 입찰 마감 (승인 대기중)";
+      priceValText = `${Number(a.start_price).toLocaleString()} <small class="fs-6 text-light">D ~ (비공개)</small>`;
+    }
+
+    document.getElementById("detailAucPriceLabel").innerText = priceLabel;
+    document.getElementById("detailAucPriceVal").innerHTML = priceValText;
+    document.getElementById("detailAucBidCount").innerText = `${a.bid_count}회`;
+
+    const bidSection = document.getElementById("detailAucBidInputSection");
+    const statusSection = document.getElementById("detailAucStatusBannerSection");
+
+    if (isOpen) {
+      bidSection.style.display = "block";
+      statusSection.innerHTML = "";
 
       const incUnit = Math.max(10, Number(a.min_increment) || 10);
       const nextMinBid = (a.bid_count === 0)
         ? Number(a.start_price)
         : (Number(a.current_price) + incUnit);
 
-      let statusBodyHtml = "";
-      if (isOpen) {
-        statusBodyHtml = `
-          <div class="p-2 rounded mt-2" style="background: #060a14; border: 1px solid #1e2c47;">
-            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
-              <span class="text-secondary" style="font-size: 0.7rem;">
-                ${isBlind ? `시작가 ${Number(a.start_price).toLocaleString()}D 이상 (10D 단위)` : `최소 입찰: <strong class="text-info">${nextMinBid.toLocaleString()} D</strong> (단위 +${incUnit}D)`}
-              </span>
-              <div class="d-flex gap-1">
-                <button type="button" class="btn-quick-inc" onclick="window.setQuickBidAmount(${a.id}, ${nextMinBid})">최소가</button>
-                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 10, ${nextMinBid})">+10</button>
-                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 50, ${nextMinBid})">+50</button>
-                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 100, ${nextMinBid})">+100</button>
-              </div>
-            </div>
-            <div class="row g-1 align-items-center">
-              <div class="col-4">
-                <input type="password" id="aucPin_${a.id}" class="form-control input-custom-auc text-center" placeholder="개인 PIN" maxlength="12" inputmode="numeric">
-              </div>
-              <div class="col-5">
-                <input type="number" id="aucAmt_${a.id}" class="form-control input-custom-auc text-end no-spin" step="10" value="${isBlind ? Number(a.start_price) : nextMinBid}" placeholder="10D 단위 입력">
-              </div>
-              <div class="col-3">
-                <button type="button" class="btn btn-warning btn-sm w-100 fw-bold text-dark" style="height: 38px; font-size: 0.78rem; white-space: nowrap;" onclick="window.submitAuctionBid(${a.id})">
-                  입찰
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else if (isPendingApproval) {
-        statusBodyHtml = `
+      document.getElementById("detailAucMinBidHint").innerHTML = isBlind
+        ? `시작가 ${Number(a.start_price).toLocaleString()}D 이상 (10D 단위)`
+        : `최소 입찰: <strong class="text-info">${nextMinBid.toLocaleString()} D</strong> (+${incUnit}D)`;
+
+      document.getElementById("detailAucQuickBtns").innerHTML = `
+        <button type="button" class="btn-quick-inc" onclick="window.setModalQuickBidAmount(${nextMinBid})">최소가</button>
+        <button type="button" class="btn-quick-inc" onclick="window.addModalQuickBidAmount(10, ${nextMinBid})">+10</button>
+        <button type="button" class="btn-quick-inc" onclick="window.addModalQuickBidAmount(50, ${nextMinBid})">+50</button>
+        <button type="button" class="btn-quick-inc" onclick="window.addModalQuickBidAmount(100, ${nextMinBid})">+100</button>
+      `;
+
+      const amtInput = document.getElementById("detailAucAmtInput");
+      if (amtInput) {
+        const curTyped = parseInt(amtInput.value, 10) || 0;
+        if (!preserveInputs || curTyped < nextMinBid) {
+          amtInput.value = isBlind ? Number(a.start_price) : nextMinBid;
+        }
+      }
+    } else {
+      bidSection.style.display = "none";
+      if (isPendingApproval) {
+        statusSection.innerHTML = `
           <div class="p-2 rounded mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.45); font-size: 0.78rem;">
             <span class="text-warning fw-bold">
               ⏳ 입찰 마감 — ${isAdmin ? `최고 입찰자: <span class="text-info">${a.winner_name}</span> (${Number(a.current_price).toLocaleString()} D)` : '관리자 낙찰 승인 대기중'}
             </span>
             ${isAdmin ? `
-              <button type="button" class="btn btn-success btn-sm py-1 px-2 fw-bold" style="font-size: 0.74rem; white-space: nowrap;" onclick="window.approveAuctionWinner(${a.id}, '${a.item_name}', '${a.winner_name}', ${Number(a.current_price)})">
+              <button type="button" class="btn btn-success btn-sm py-1 px-2 fw-bold" style="font-size: 0.74rem; white-space: nowrap;" onclick="window.approveAuctionWinner(${a.id})">
                 ✅ 낙찰 승인
               </button>
             ` : ''}
           </div>
         `;
       } else if (isApproved) {
-        statusBodyHtml = `
+        statusSection.innerHTML = `
           <div class="p-2 rounded mt-2 d-flex justify-content-between align-items-center flex-wrap gap-1" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.78rem;">
             <span class="text-success fw-bold">
               🏆 최종 낙찰 확정: ${a.winner_name || '익명 낙찰자'} (${Number(a.current_price).toLocaleString()} D)
@@ -786,91 +1102,42 @@
           </div>
         `;
       } else {
-        statusBodyHtml = `
+        statusSection.innerHTML = `
           <div class="p-2 rounded mt-2 text-secondary small" style="background: rgba(148, 163, 184, 0.08); border: 1px solid #334155; font-size: 0.76rem;">
             유찰됨 (입찰 참여자 없음)
           </div>
         `;
       }
+    }
 
-      const bids = Array.isArray(a.bids) ? a.bids : [];
-      const bidsHtml = bids.length > 0 ? `
-        <div class="auc-bid-log-list">
-          <div class="text-secondary mb-1" style="font-size: 0.68rem;">📜 입찰 현황 (총 ${a.bid_count}건)</div>
-          ${bids.map((b, i) => `
-            <div class="auc-bid-row">
-              <span class="${i === 0 ? 'text-warning fw-bold' : 'text-secondary'}">
-                ${i === 0 ? '👑 ' : ''}${b.bidder_name}
-              </span>
-              <span class="${i === 0 ? 'text-warning fw-bold' : 'text-light'}">
-                ${Number(b.bid_amount).toLocaleString()} D
-              </span>
-            </div>
-          `).join('')}
-        </div>
-      ` : (isBlind && !isApproved && !isAdmin
-        ? `<div class="text-secondary mt-2" style="font-size:0.72rem;">🙈 비공개 블라인드 경매입니다. 현재 총 <strong>${a.bid_count}건</strong>의 입찰이 접수되었습니다.</div>`
-        : `<div class="text-secondary mt-2" style="font-size:0.72rem;">아직 입찰 내역이 없습니다.</div>`);
-
-      const adminToolsHtml = isAdmin ? `
-        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-1 flex-wrap">
-          ${isOpen ? `<button type="button" class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.closeAuctionEarly(${a.id}, '${a.item_name}')">입찰 즉시 마감</button>` : ''}
-          ${(a.status === 'approved' && a.bid_count > 0 && Array.isArray(a.participants) && a.participants.length > 0)
-            ? `<button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size:0.7rem;" onclick="window.openAuctionSettleModal(${a.id})">🎁 N/1 정산 & 금고 반영</button>`
-            : ''}
-          <button type="button" class="btn btn-outline-danger btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.deleteAuctionItem(${a.id}, '${a.item_name}')">삭제</button>
-        </div>
-      ` : "";
-
-      let pillClass = "";
-      let pillText = "계산중...";
-      if (!isOpen) {
-        if (isPendingApproval) {
-          pillClass = "pending";
-          pillText = "⏳ 낙찰 승인 대기";
-        } else if (isApproved) {
-          pillClass = "ended";
-          pillText = "✅ 낙찰 확정";
-        } else {
-          pillClass = "nobid";
-          pillText = "유찰 마감";
-        }
-      }
-
-      const cardClass = isOpen ? "is-open" : (isPendingApproval ? "is-pending" : "is-closed");
-
-      return `
-        <div class="auc-item-card ${cardClass}">
-          <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-            <div style="min-width:0; flex:1;">
-              <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
-                ${modeBadge}
-                ${bossBadge}
-              </div>
-              <div class="fw-bold text-white fs-6 text-truncate">${a.item_name}</div>
-            </div>
-            <span class="auc-timer-pill ${pillClass}" id="aucTimer_${a.id}" data-end="${a.end_time}" data-closed="${isOpen ? '0' : '1'}">
-              ${pillText}
+    const bids = Array.isArray(a.bids) ? a.bids : [];
+    document.getElementById("detailAucBidsLogSection").innerHTML = bids.length > 0 ? `
+      <div class="auc-bid-log-list">
+        <div class="text-secondary mb-1" style="font-size: 0.68rem;">📜 입찰 현황 (총 ${a.bid_count}건)</div>
+        ${bids.map((b, i) => `
+          <div class="auc-bid-row">
+            <span class="${i === 0 ? 'text-warning fw-bold' : 'text-secondary'}">
+              ${i === 0 ? '👑 ' : ''}${b.bidder_name}
+            </span>
+            <span class="${i === 0 ? 'text-warning fw-bold' : 'text-light'}">
+              ${Number(b.bid_amount).toLocaleString()} D
             </span>
           </div>
+        `).join('')}
+      </div>
+    ` : (isBlind && !isApproved && !isAdmin
+      ? `<div class="text-secondary mt-2" style="font-size:0.72rem;">🙈 비공개 블라인드 경매입니다. 현재 총 <strong>${a.bid_count}건</strong>의 입찰이 접수되었습니다.</div>`
+      : `<div class="text-secondary mt-2" style="font-size:0.72rem;">아직 입찰 내역이 없습니다.</div>`);
 
-          <div class="auc-price-banner">
-            <div>
-              <div class="text-secondary" style="font-size: 0.7rem;">${priceLabel}</div>
-              <div class="fw-bold text-warning fs-5">${priceValText}</div>
-            </div>
-            <div class="text-end">
-              <div class="text-secondary" style="font-size: 0.7rem;">총 입찰</div>
-              <div class="fw-bold text-info small">${a.bid_count}회</div>
-            </div>
-          </div>
-
-          ${statusBodyHtml}
-          ${bidsHtml}
-          ${adminToolsHtml}
-        </div>
-      `;
-    }).join('');
+    document.getElementById("detailAucAdminToolsSection").innerHTML = isAdmin ? `
+      <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-1 flex-wrap">
+        ${isOpen ? `<button type="button" class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.closeAuctionEarly(${a.id})">입찰 즉시 마감</button>` : ''}
+        ${(a.status === 'approved' && a.bid_count > 0 && Array.isArray(a.participants) && a.participants.length > 0)
+          ? `<button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size:0.7rem;" onclick="window.openAuctionSettleModal(${a.id})">🎁 N/1 정산 & 금고 반영</button>`
+          : ''}
+        <button type="button" class="btn btn-outline-danger btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.deleteAuctionItem(${a.id})">삭제</button>
+      </div>
+    ` : "";
 
     window.updateAuctionCountdowns();
   };
@@ -879,9 +1146,12 @@
     const now = Date.now();
     let justExpired = false;
 
-    document.querySelectorAll("[id^='aucTimer_']").forEach(el => {
+    document.querySelectorAll("[id^='aucTimer_'], #detailAucTimerPill").forEach(el => {
       if (el.getAttribute("data-closed") === "1") return;
-      const endMs = new Date(el.getAttribute("data-end")).getTime();
+      const endStr = el.getAttribute("data-end");
+      if (!endStr) return;
+
+      const endMs = new Date(endStr).getTime();
       const diffSec = Math.floor((endMs - now) / 1000);
       if (diffSec <= 0) {
         el.innerText = "입찰 마감";
@@ -898,29 +1168,33 @@
     });
 
     if (justExpired) {
-      window.loadGuildAuctions();
+      window.loadGuildAuctions(false);
       if (typeof window.refreshAuctionFloatingButton === "function") {
         window.refreshAuctionFloatingButton();
       }
     }
   };
 
-  window.setQuickBidAmount = function(aucId, amount) {
-    const el = document.getElementById(`aucAmt_${aucId}`);
+  window.setModalQuickBidAmount = function(amount) {
+    const el = document.getElementById("detailAucAmtInput");
     if (el) el.value = amount;
   };
 
-  window.addQuickBidAmount = function(aucId, inc, minVal) {
-    const el = document.getElementById(`aucAmt_${aucId}`);
+  window.addModalQuickBidAmount = function(inc, minVal) {
+    const el = document.getElementById("detailAucAmtInput");
     if (!el) return;
     const cur = parseInt(el.value, 10) || minVal;
     const nextVal = Math.max(minVal, cur + inc);
     el.value = Math.ceil(nextVal / 10) * 10;
   };
 
-  window.submitAuctionBid = async function(aucId) {
-    const pinEl = document.getElementById(`aucPin_${aucId}`);
-    const amtEl = document.getElementById(`aucAmt_${aucId}`);
+  window.submitActiveModalBid = async function() {
+    const aucId = window.aucActiveModalId;
+    if (!aucId) return;
+
+    const pinEl = document.getElementById("detailAucPinInput");
+    const amtEl = document.getElementById("detailAucAmtInput");
+    const btn = document.getElementById("btnSubmitDetailBid");
     const pin = (pinEl?.value || "").trim();
     const amount = parseInt(amtEl?.value || "0", 10);
 
@@ -932,6 +1206,11 @@
     }
     if (amount % 10 !== 0) {
       return window.showAucToast("입찰 금액은 10 다이아 단위로만 입력할 수 있습니다.", "⚠️");
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "처리중";
     }
 
     try {
@@ -948,21 +1227,29 @@
       if (pinEl) pinEl.value = "";
       const extMsg = res.extended ? " (마감 임박 자동 연장됨!)" : "";
       window.showAucToast(`✅ 익명 입찰 완료! (${Number(amount).toLocaleString()} D)${extMsg}`, "🔨");
-      await window.loadGuildAuctions();
+      await window.loadGuildAuctions(false);
     } catch (err) {
       window.showAucToast("입찰 오류: " + err.message, "❌");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "입찰";
+      }
     }
   };
 
-  window.closeAuctionEarly = async function(aucId, itemName) {
-    if (!confirm(`[${itemName}] 입찰을 지금 즉시 마감하고 낙찰 승인 대기 상태로 전환하시겠습니까?`)) return;
+  window.closeAuctionEarly = async function(aucId) {
+    const a = window.aucListCache.find(x => x.id === aucId);
+    if (!a) return;
+    if (!confirm(`[${a.item_name}] 입찰을 지금 즉시 마감하고 낙찰 승인 대기 상태로 전환하시겠습니까?`)) return;
+
     try {
       await apiRequest(`guild_auctions?id=eq.${aucId}`, "PATCH", {
         status: "pending_approval",
         end_time: new Date().toISOString()
       });
-      window.showAucToast(`[${itemName}] 입찰이 마감되었습니다. 낙찰 승인을 진행해주세요.`, "⏳");
-      await window.loadGuildAuctions();
+      window.showAucToast(`[${a.item_name}] 입찰이 마감되었습니다. 낙찰 승인을 진행해주세요.`, "⏳");
+      await window.loadGuildAuctions(false);
       if (typeof window.refreshAuctionFloatingButton === "function") {
         window.refreshAuctionFloatingButton();
       }
@@ -971,14 +1258,17 @@
     }
   };
 
-  window.approveAuctionWinner = async function(aucId, itemName, winnerName, price) {
+  window.approveAuctionWinner = async function(aucId) {
     const allowed = await window.checkAuctionManagePermission();
     if (!allowed) return window.showAucToast("낙찰 승인은 관리자만 가능합니다.", "🔒");
 
+    const a = window.aucListCache.find(x => x.id === aucId);
+    if (!a) return;
+
     const confirmMsg = `[✅ 최종 낙찰 승인]\n` +
-      `• 경매 물품: ${itemName}\n` +
-      `• 최종 낙찰자: ${winnerName}\n` +
-      `• 최종 낙찰가: ${Number(price).toLocaleString()} 다이아\n\n` +
+      `• 경매 물품: ${a.item_name}\n` +
+      `• 최종 낙찰자: ${a.winner_name}\n` +
+      `• 최종 낙찰가: ${Number(a.current_price).toLocaleString()} 다이아\n\n` +
       `이대로 최종 낙찰을 승인하시겠습니까?`;
 
     if (!confirm(confirmMsg)) return;
@@ -987,19 +1277,25 @@
       await apiRequest(`guild_auctions?id=eq.${aucId}`, "PATCH", {
         status: "approved"
       });
-      window.showAucToast(`🎉 [${itemName}] 최종 낙찰이 승인되었습니다!`, "✅");
-      await window.loadGuildAuctions();
+      window.showAucToast(`🎉 [${a.item_name}] 최종 낙찰이 승인되었습니다!`, "✅");
+      await window.loadGuildAuctions(false);
     } catch (err) {
       window.showAucToast("낙찰 승인 실패: " + err.message, "❌");
     }
   };
 
-  window.deleteAuctionItem = async function(aucId, itemName) {
-    if (!confirm(`[${itemName}] 경매 기록을 삭제하시겠습니까?`)) return;
+  window.deleteAuctionItem = async function(aucId) {
+    const a = window.aucListCache.find(x => x.id === aucId);
+    if (!a) return;
+    if (!confirm(`[${a.item_name}] 경매 기록을 삭제하시겠습니까?`)) return;
+
     try {
       await apiRequest(`guild_auctions?id=eq.${aucId}`, "DELETE");
-      window.showAucToast(`[${itemName}] 삭제 완료`, "🗑️");
-      await window.loadGuildAuctions();
+      if (window.aucActiveModalId === aucId) {
+        window.closeAuctionDetailModal();
+      }
+      window.showAucToast(`[${a.item_name}] 삭제 완료`, "🗑️");
+      await window.loadGuildAuctions(false);
       if (typeof window.refreshAuctionFloatingButton === "function") {
         window.refreshAuctionFloatingButton();
       }
@@ -1074,7 +1370,7 @@
 
       window.closeAuctionSettleModal();
       window.showAucToast(`🎉 낙찰 정산 완료! (1인당 ${perShare.toLocaleString()} D)`, "🎉");
-      await window.loadGuildAuctions();
+      await window.loadGuildAuctions(false);
     } catch (err) {
       window.showAucToast("정산 실패: " + err.message, "❌");
     } finally {
@@ -1094,15 +1390,27 @@
       return `• [${a.boss_name || '경매'}] ${a.item_name} (${modeStr} / 입찰 ${a.bid_count}회)`;
     });
 
-    const text = `🔨 [${window.aucGuildName} 익명 경매 진행 안내]\n──────────────────\n${lines.join('\n')}\n──────────────────\n길드 관리 웹 [길드경매] 버튼에서 개인 비밀번호(PIN)로 10D 단위 익명 입찰하세요!`;
+    const text = `🔨 [${window.aucGuildName} 익명 경매 진행 안내]\n──────────────────\n${lines.join('\n')}\n──────────────────\n길드 관리 웹 [길드경매] 버튼에서 개인 비밀번호(PIN)로 10D 단위 입찰하세요!`;
     navigator.clipboard.writeText(text);
     window.showAucToast("진행 중인 경매 공지가 복사되었습니다!", "📋");
   };
 
   (async function initAuctionModule() {
     await window.loadAuctionMetaSettings();
-    await window.loadGuildAuctions();
+    await window.loadGuildAuctions(false);
+
     if (window.aucCountdownTimer) clearInterval(window.aucCountdownTimer);
     window.aucCountdownTimer = setInterval(window.updateAuctionCountdowns, 1000);
+
+    // 4초 간격 스마트 자동 갱신 (화면 비활성화/백그라운드 시 자동 일시정지)
+    if (window.aucAutoSyncTimer) clearInterval(window.aucAutoSyncTimer);
+    window.aucAutoSyncTimer = setInterval(() => {
+      if (document.hidden) return;
+      if (!document.getElementById("auctionListContainer")) return;
+      window.loadGuildAuctions(true);
+    }, 4000);
+
+    document.removeEventListener("visibilitychange", window.onAucVisibilityChange);
+    document.addEventListener("visibilitychange", window.onAucVisibilityChange);
   })();
 </script>
