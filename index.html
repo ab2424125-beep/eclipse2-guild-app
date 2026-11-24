@@ -214,6 +214,68 @@
       margin-bottom: 12px;
     }
 
+    /* 우측 하단 접이식 길드 경매 미니 플로팅 버튼 (자가 등록 화면 자동 숨김) */
+    .floating-auction-wrap {
+      position: fixed;
+      right: 12px;
+      bottom: 16px;
+      z-index: 9990;
+      display: none;
+      align-items: center;
+      background: rgba(13, 21, 39, 0.96);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid #f59e0b;
+      border-radius: 30px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 0 14px rgba(245, 158, 11, 0.28);
+      transition: transform 0.22s ease, opacity 0.2s ease;
+      overflow: hidden;
+      user-select: none;
+    }
+    .floating-auction-wrap.is-collapsed {
+      right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: none;
+    }
+    .floating-auction-main-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      color: #fbbf24;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .floating-auction-main-btn:hover {
+      background: rgba(245, 158, 11, 0.15);
+    }
+    .floating-auction-badge {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.66rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .floating-auction-toggle-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      border-left: 1px solid rgba(245, 158, 11, 0.3);
+      color: #94a3b8;
+      padding: 8px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .floating-auction-toggle-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
     .custom-global-toast {
       position: fixed;
       top: 24px;
@@ -386,6 +448,18 @@
     </div>
   </div>
 
+  <!-- 우측 하단 접이식 길드 익명 경매 미니 버튼 -->
+  <div id="floatingAuctionWrap" class="floating-auction-wrap">
+    <div class="floating-auction-main-btn" onclick="openModule('PageAuction')">
+      <span>🔨</span>
+      <span id="floatingAuctionLabel">길드경매</span>
+      <span class="floating-auction-badge" id="floatingAuctionBadge" style="display: none;">0</span>
+    </div>
+    <button type="button" class="floating-auction-toggle-btn" id="btnCollapseAuctionFloat" title="버튼 접기/펼치기" onclick="toggleFloatingAuctionCollapse(event)">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
   <div id="globalToastBox" class="custom-global-toast">
     <span id="globalToastIcon" style="font-size: 1.1rem;">✅</span>
     <span id="globalToastMsg">알림 내용</span>
@@ -497,6 +571,7 @@
     var targetSelfRaidData = null;
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
+    var isAuctionFloatCollapsed = false;
 
     // 🎙️ 보이스 스튜디오 이동 함수 (실제 운영 URL 연결)
     function openTtsStudio() {
@@ -512,6 +587,69 @@
       }
       const adminToken = "raidon_admin_master_auth";
       window.location.href = `https://raidonbot.onrender.com/index.html?adminToken=${encodeURIComponent(adminToken)}`;
+    }
+
+    // 🔨 경매 미니 플로팅 버튼 상태 제어 (자가 등록 화면에서는 무조건 숨김)
+    window.refreshAuctionFloatingButton = async function() {
+      const wrap = document.getElementById("floatingAuctionWrap");
+      if (!wrap) return;
+
+      const isSelfCheckinHash = window.location.hash.includes("SelfCheckin");
+      const selfModal = document.getElementById("selfCheckinModal");
+      const isSelfModalOpen = selfModal && selfModal.style.display === "flex";
+
+      if (isSelfCheckinHash || isSelfModalOpen || currentActiveModule === "PageAuction") {
+        wrap.style.display = "none";
+        return;
+      }
+
+      try {
+        const rows = await apiRequest("guild_settings?key=eq.use_guild_auction");
+        const enabled = (rows && rows.length > 0 && rows[0].value === "true");
+        cachedGuildSettingsMap["use_guild_auction"] = enabled ? "true" : "false";
+
+        if (!enabled) {
+          wrap.style.display = "none";
+          return;
+        }
+
+        const nowIso = new Date().toISOString();
+        const openAucs = await apiRequest(`guild_auctions?status=eq.open&end_time=gt.${encodeURIComponent(nowIso)}&select=id`).catch(() => []);
+        const count = Array.isArray(openAucs) ? openAucs.length : 0;
+
+        const badge = document.getElementById("floatingAuctionBadge");
+        if (badge) {
+          if (count > 0) {
+            badge.style.display = "inline-block";
+            badge.innerText = `${count}건`;
+          } else {
+            badge.style.display = "none";
+          }
+        }
+
+        wrap.style.display = "flex";
+      } catch (e) {
+        wrap.style.display = "none";
+      }
+    };
+
+    function toggleFloatingAuctionCollapse(event) {
+      if (event) event.stopPropagation();
+      const wrap = document.getElementById("floatingAuctionWrap");
+      const label = document.getElementById("floatingAuctionLabel");
+      const btn = document.getElementById("btnCollapseAuctionFloat");
+      if (!wrap || !label || !btn) return;
+
+      isAuctionFloatCollapsed = !isAuctionFloatCollapsed;
+      if (isAuctionFloatCollapsed) {
+        wrap.classList.add("is-collapsed");
+        label.style.display = "none";
+        btn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+      } else {
+        wrap.classList.remove("is-collapsed");
+        label.style.display = "inline";
+        btn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+      }
     }
 
     function runCurrentModuleCleanup() {
@@ -745,11 +883,13 @@
       if (displayElem) {
         displayElem.innerText = finalVisitCount.toLocaleString();
       }
+
+      await window.refreshAuctionFloatingButton();
     }
 
     async function checkPermissionBeforeOpen(pageName) {
       if (isSuperAdminLoggedIn()) return true;
-      if (pageName === "PageSettle" || pageName === "PageEvents") return true;
+      if (pageName === "PageSettle" || pageName === "PageEvents" || pageName === "PageAuction") return true;
 
       try {
         const settings = await apiRequest("guild_settings?select=key,value");
@@ -797,6 +937,8 @@
         history.pushState({ page: pageName }, "", `#${pageName}`);
       }
 
+      window.refreshAuctionFloatingButton();
+
       const container = document.getElementById("moduleContentArea");
       container.innerHTML = `<div class="text-secondary small text-center py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>화면을 불러오는 중...</div>`;
 
@@ -838,11 +980,17 @@
       if (pushHistory && window.location.hash) {
         history.pushState(null, "", window.location.pathname);
       }
+
+      window.refreshAuctionFloatingButton();
     }
 
     async function checkSelfCheckinUrlHash() {
       const hash = window.location.hash;
       if (!hash || !hash.includes("SelfCheckin")) return;
+
+      // 자가 등록 화면 진입 시 경매 플로팅 버튼 즉시 숨김
+      const aucWrap = document.getElementById("floatingAuctionWrap");
+      if (aucWrap) aucWrap.style.display = "none";
 
       const paramsPart = hash.split("?")[1];
       if (!paramsPart) return;
@@ -859,6 +1007,7 @@
       if (elapsedMs > expireLimitMs) {
         alert("⚠️ 자가 추가 가능 시간(5분)이 이미 만료되었습니다.\n명단 추가가 필요한 경우 길드 관리자에게 문의하세요.");
         history.replaceState(null, "", window.location.pathname);
+        window.refreshAuctionFloatingButton();
         return;
       }
 
@@ -871,6 +1020,7 @@
         if (!raidData || raidData.length === 0) {
           alert("해당 토벌 기록을 찾을 수 없습니다.");
           history.replaceState(null, "", window.location.pathname);
+          window.refreshAuctionFloatingButton();
           return;
         }
 
@@ -922,6 +1072,7 @@
       if (selfTimerInterval) clearInterval(selfTimerInterval);
       document.getElementById("selfCheckinModal").style.display = "none";
       history.replaceState(null, "", window.location.pathname);
+      window.refreshAuctionFloatingButton();
     }
 
     async function submitSelfCheckin() {
