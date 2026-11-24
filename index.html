@@ -214,11 +214,9 @@
       margin-bottom: 12px;
     }
 
-    /* 우측 하단 접이식 길드 경매 미니 플로팅 버튼 (자가 등록 화면 자동 숨김) */
+    /* 접이식 길드 경매 미니 플로팅 버튼 (4방향 지원 + PC 중앙 520px 영역 안쪽 정렬) */
     .floating-auction-wrap {
       position: fixed;
-      right: 12px;
-      bottom: 16px;
       z-index: 9990;
       display: none;
       align-items: center;
@@ -227,16 +225,47 @@
       border: 1.5px solid #f59e0b;
       border-radius: 30px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 0 14px rgba(245, 158, 11, 0.28);
-      transition: transform 0.22s ease, opacity 0.2s ease;
+      transition: all 0.2s ease;
       overflow: hidden;
       user-select: none;
     }
-    .floating-auction-wrap.is-collapsed {
-      right: 0;
+
+    /* 우측 배치 (하단 우측 / 상단 우측) */
+    .floating-auction-wrap.pos-bottom-right {
+      bottom: 16px;
+      right: max(12px, calc(50vw - 260px + 12px));
+    }
+    .floating-auction-wrap.pos-top-right {
+      top: 56px;
+      right: max(12px, calc(50vw - 260px + 12px));
+    }
+    .floating-auction-wrap.pos-bottom-right.is-collapsed,
+    .floating-auction-wrap.pos-top-right.is-collapsed {
+      right: max(0px, calc(50vw - 260px));
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
       border-right: none;
     }
+
+    /* 좌측 배치 (하단 좌측 / 상단 좌측) */
+    .floating-auction-wrap.pos-bottom-left {
+      bottom: 16px;
+      left: max(12px, calc(50vw - 260px + 12px));
+      flex-direction: row-reverse;
+    }
+    .floating-auction-wrap.pos-top-left {
+      top: 56px;
+      left: max(12px, calc(50vw - 260px + 12px));
+      flex-direction: row-reverse;
+    }
+    .floating-auction-wrap.pos-bottom-left.is-collapsed,
+    .floating-auction-wrap.pos-top-left.is-collapsed {
+      left: max(0px, calc(50vw - 260px));
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      border-left: none;
+    }
+
     .floating-auction-main-btn {
       display: flex;
       align-items: center;
@@ -270,6 +299,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .floating-auction-wrap.pos-bottom-left .floating-auction-toggle-btn,
+    .floating-auction-wrap.pos-top-left .floating-auction-toggle-btn {
+      border-left: none;
+      border-right: 1px solid rgba(245, 158, 11, 0.3);
     }
     .floating-auction-toggle-btn:hover {
       color: #ffffff;
@@ -448,8 +482,8 @@
     </div>
   </div>
 
-  <!-- 우측 하단 접이식 길드 익명 경매 미니 버튼 -->
-  <div id="floatingAuctionWrap" class="floating-auction-wrap">
+  <!-- 접이식 길드 익명 경매 미니 버튼 (4방향 위치 + PC 중앙 앱 박스 정렬) -->
+  <div id="floatingAuctionWrap" class="floating-auction-wrap pos-bottom-right">
     <div class="floating-auction-main-btn" onclick="openModule('PageAuction')">
       <span>🔨</span>
       <span id="floatingAuctionLabel">길드경매</span>
@@ -572,6 +606,7 @@
     var globalToastTimer = null;
     var cachedGuildSettingsMap = {};
     var isAuctionFloatCollapsed = false;
+    var currentAuctionFloatPos = "bottom-right";
 
     // 🎙️ 보이스 스튜디오 이동 함수 (실제 운영 URL 연결)
     function openTtsStudio() {
@@ -589,7 +624,22 @@
       window.location.href = `https://raidonbot.onrender.com/index.html?adminToken=${encodeURIComponent(adminToken)}`;
     }
 
-    // 🔨 경매 미니 플로팅 버튼 상태 제어 (자가 등록 화면에서는 무조건 숨김)
+    function updateFloatingAuctionArrowIcon() {
+      const btn = document.getElementById("btnCollapseAuctionFloat");
+      if (!btn) return;
+      const isLeft = currentAuctionFloatPos.endsWith("left");
+      if (isLeft) {
+        btn.innerHTML = isAuctionFloatCollapsed
+          ? `<i class="fa-solid fa-chevron-right"></i>`
+          : `<i class="fa-solid fa-chevron-left"></i>`;
+      } else {
+        btn.innerHTML = isAuctionFloatCollapsed
+          ? `<i class="fa-solid fa-chevron-left"></i>`
+          : `<i class="fa-solid fa-chevron-right"></i>`;
+      }
+    }
+
+    // 🔨 경매 미니 플로팅 버튼 상태 및 4방향 위치 제어 (자가 등록 화면에서는 무조건 숨김)
     window.refreshAuctionFloatingButton = async function() {
       const wrap = document.getElementById("floatingAuctionWrap");
       if (!wrap) return;
@@ -604,14 +654,27 @@
       }
 
       try {
-        const rows = await apiRequest("guild_settings?key=eq.use_guild_auction");
-        const enabled = (rows && rows.length > 0 && rows[0].value === "true");
-        cachedGuildSettingsMap["use_guild_auction"] = enabled ? "true" : "false";
+        const rows = await apiRequest("guild_settings?key=in.(use_guild_auction,auction_float_position)");
+        let enabled = false;
+        let pos = "bottom-right";
+
+        (rows || []).forEach(r => {
+          cachedGuildSettingsMap[r.key] = r.value;
+          if (r.key === "use_guild_auction") enabled = (r.value === "true");
+          if (r.key === "auction_float_position" && r.value) pos = r.value;
+        });
 
         if (!enabled) {
           wrap.style.display = "none";
           return;
         }
+
+        const validPos = ["top-left", "top-right", "bottom-left", "bottom-right"];
+        currentAuctionFloatPos = validPos.includes(pos) ? pos : "bottom-right";
+
+        wrap.classList.remove("pos-top-left", "pos-top-right", "pos-bottom-left", "pos-bottom-right");
+        wrap.classList.add("pos-" + currentAuctionFloatPos);
+        updateFloatingAuctionArrowIcon();
 
         const nowIso = new Date().toISOString();
         const openAucs = await apiRequest(`guild_auctions?status=eq.open&end_time=gt.${encodeURIComponent(nowIso)}&select=id`).catch(() => []);
@@ -637,19 +700,17 @@
       if (event) event.stopPropagation();
       const wrap = document.getElementById("floatingAuctionWrap");
       const label = document.getElementById("floatingAuctionLabel");
-      const btn = document.getElementById("btnCollapseAuctionFloat");
-      if (!wrap || !label || !btn) return;
+      if (!wrap || !label) return;
 
       isAuctionFloatCollapsed = !isAuctionFloatCollapsed;
       if (isAuctionFloatCollapsed) {
         wrap.classList.add("is-collapsed");
         label.style.display = "none";
-        btn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
       } else {
         wrap.classList.remove("is-collapsed");
         label.style.display = "inline";
-        btn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
       }
+      updateFloatingAuctionArrowIcon();
     }
 
     function runCurrentModuleCleanup() {
