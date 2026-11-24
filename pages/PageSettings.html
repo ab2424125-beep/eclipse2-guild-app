@@ -69,6 +69,11 @@
     background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     box-shadow: 0 2px 10px rgba(168, 85, 247, 0.4);
   }
+  .settings-nav-btn.auction-btn.active {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+  }
 
   .score-item-box {
     background: #090e1c;
@@ -136,6 +141,19 @@
     border-radius: 10px;
     padding: 10px;
     box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-action-auction {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
     cursor: pointer;
     white-space: nowrap;
   }
@@ -243,6 +261,9 @@
     </button>
     <button type="button" class="settings-nav-btn" id="btnNavBossGround" onclick="switchSettingsTab('bossGround')">
       ⚔️ 보스 관리
+    </button>
+    <button type="button" class="settings-nav-btn auction-btn" id="btnNavAuction" onclick="switchSettingsTab('auction')">
+      🔨 경매
     </button>
   </div>
 
@@ -434,7 +455,18 @@
         </div>
       </div>
 
-      <!-- 신규 추가: 길드이벤트 설정 및 초기화 권한 -->
+      <div class="perm-switch-item" style="border-color: rgba(245, 158, 11, 0.45); background: rgba(245, 158, 11, 0.06);">
+        <div style="min-width:0; flex:1;">
+          <div class="text-white fw-bold small" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-gavel text-warning me-1"></i>설정창 경매 탭 및 경매 관리 권한
+          </div>
+          <div class="text-secondary" style="font-size: 0.68rem;">일반 관리자의 설정창 [경매] 탭 진입, 경매 등록·마감 및 입찰자 실명 조회 허용</div>
+        </div>
+        <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
+          <input class="form-check-input ms-0" type="checkbox" id="permSettingsAuction" role="switch">
+        </div>
+      </div>
+
       <div class="perm-switch-item" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05);">
         <div style="min-width:0; flex:1;">
           <div class="text-white fw-bold small" style="font-size: 0.8rem;">
@@ -550,6 +582,63 @@
       <div id="bossChipsContainer" class="boss-grid-container"></div>
     </div>
   </div>
+
+  <!-- [탭 5] 경매 설정 탭 -->
+  <div id="tabSettingsAuction" style="display: none;">
+    <div class="settings-section-box border-warning border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+        <span class="fw-bold text-warning small"><i class="fa-solid fa-gavel me-1"></i> 길드 익명 경매 시스템 제어</span>
+        <button type="button" class="btn btn-outline-warning btn-xs py-0 px-2 fw-bold" style="font-size: 0.7rem;" onclick="if(typeof openModule==='function') openModule('PageAuction')">
+          경매장 바로가기 →
+        </button>
+      </div>
+
+      <div class="perm-switch-item" style="border-color: rgba(245, 158, 11, 0.4);">
+        <div style="min-width:0; flex:1;">
+          <div class="text-white fw-bold small" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-bell text-warning me-1"></i>경매 미니 플로팅 버튼 표시 (ON / OFF)
+          </div>
+          <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.4;">
+            활성화 시 모든 화면 우측 하단에 접이식 경매 버튼이 나타납니다.<br>
+            (카톡 누락자 자가 등록 화면에서는 자동으로 숨겨져 입력창을 가리지 않습니다)
+          </div>
+        </div>
+        <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
+          <input class="form-check-input ms-0" type="checkbox" id="cfgUseGuildAuction" role="switch">
+        </div>
+      </div>
+
+      <div class="perm-switch-item">
+        <div style="min-width:0; flex:1;">
+          <div class="text-white fw-bold small" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-user-check text-info me-1"></i>경매 종료 후 낙찰자 닉네임 전체 공개
+          </div>
+          <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.4;">
+            <strong>ON:</strong> 진행 중엔 익명, 마감 후엔 최종 낙찰자 닉네임이 전원에게 공개됩니다.<br>
+            <strong>OFF:</strong> 마감 후에도 낙찰자 닉네임은 관리자만 확인할 수 있습니다.
+          </div>
+        </div>
+        <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
+          <input class="form-check-input ms-0" type="checkbox" id="cfgAuctionRevealWinner" role="switch">
+        </div>
+      </div>
+
+      <div class="row g-2 mt-2">
+        <div class="col-6">
+          <label class="small text-secondary mb-1" style="font-size: 0.72rem;">기본 최소 입찰 단위 (다이아)</label>
+          <input type="number" id="cfgAuctionMinInc" class="form-control input-custom-set" value="100" min="1">
+        </div>
+        <div class="col-6">
+          <label class="small text-secondary mb-1" style="font-size: 0.72rem;">마감 1분 전 입찰 시 연장(분)</label>
+          <input type="number" id="cfgAuctionAntiSnipe" class="form-control input-custom-set" value="1" min="0" max="10">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-action-auction w-100" onclick="saveAuctionSettings()">
+      <i class="fa-solid fa-floppy-disk me-1"></i> 경매 설정 저장하기
+    </button>
+  </div>
 </div>
 
 <div id="appToastBox" class="custom-app-toast">
@@ -603,7 +692,15 @@
       }
     }
 
-    const tabs = ['general', 'auth', 'permissions', 'bossGround'];
+    if (tab === 'auction' && !isSuper) {
+      const allowAuction = window.currentSettingsMap['perm_settings_auction'] !== 'false';
+      if (!allowAuction) {
+        alert("⚠️ 일반 관리자에게는 경매 탭 접근 권한이 비활성화되어 있습니다.\n슈퍼관리자에게 문의하세요.");
+        return;
+      }
+    }
+
+    const tabs = ['general', 'auth', 'permissions', 'bossGround', 'auction'];
     tabs.forEach(t => {
       const panel = document.getElementById('tabSettings' + t.charAt(0).toUpperCase() + t.slice(1));
       const btn = document.getElementById('btnNav' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -640,9 +737,14 @@
 
   async function loadCurrentSettingsToForm() {
     try {
-      const data = await apiRequest("rpc/get_safe_guild_settings", "POST");
+      const [data, aucRows] = await Promise.all([
+        apiRequest("rpc/get_safe_guild_settings", "POST").catch(() => []),
+        apiRequest("guild_settings?key=in.(use_guild_auction,auction_reveal_winner,perm_settings_auction,auction_min_increment,auction_anti_snipe_min)").catch(() => [])
+      ]);
+
       window.currentSettingsMap = {};
       (data || []).forEach(item => window.currentSettingsMap[item.key] = item.value);
+      (aucRows || []).forEach(item => window.currentSettingsMap[item.key] = item.value);
 
       document.getElementById('cfgScoreBase').value = window.currentSettingsMap['score_base'] || '1';
       document.getElementById('cfgScoreInternal').value = window.currentSettingsMap['score_war_internal'] || '1';
@@ -657,6 +759,7 @@
       const parseBool = (k) => window.currentSettingsMap[k] !== 'false';
       document.getElementById('permSettingsSecurity').checked = parseBool('perm_settings_security');
       document.getElementById('permSettingsBossGround').checked = parseBool('perm_settings_boss_ground');
+      document.getElementById('permSettingsAuction').checked = parseBool('perm_settings_auction');
       document.getElementById('permEventsManage').checked = parseBool('perm_events_manage');
       document.getElementById('permBossRegister').checked = parseBool('perm_boss_register');
       document.getElementById('permBossRecordsEdit').checked = parseBool('perm_boss_records_edit');
@@ -665,6 +768,11 @@
       document.getElementById('permSettleFundDist').checked = parseBool('perm_settle_fund_dist');
       document.getElementById('permFinanceInput').checked = parseBool('perm_finance_input');
       document.getElementById('permNoticeWrite').checked = parseBool('perm_notice_write');
+
+      document.getElementById('cfgUseGuildAuction').checked = (window.currentSettingsMap['use_guild_auction'] === 'true');
+      document.getElementById('cfgAuctionRevealWinner').checked = (window.currentSettingsMap['auction_reveal_winner'] !== 'false');
+      document.getElementById('cfgAuctionMinInc').value = window.currentSettingsMap['auction_min_increment'] || '100';
+      document.getElementById('cfgAuctionAntiSnipe').value = window.currentSettingsMap['auction_anti_snipe_min'] || '1';
 
       applyMemberPinResetUI();
     } catch (e) {}
@@ -704,6 +812,16 @@
     }
   }
 
+  async function upsertGuildSettingKey(key, value) {
+    const row = await apiRequest(`guild_settings?key=eq.${key}`);
+    if (row && row.length > 0) {
+      await apiRequest(`guild_settings?key=eq.${key}`, "PATCH", { value: String(value) });
+    } else {
+      await apiRequest("guild_settings", "POST", [{ key: key, value: String(value) }]);
+    }
+    window.currentSettingsMap[key] = String(value);
+  }
+
   async function saveScoreSettings() {
     const isAuth = (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) return showToast("관리자 권한이 필요합니다.", "⚠️");
@@ -733,13 +851,7 @@
 
     try {
       await apiRequest("guild_settings?key=eq.guild_name", "PATCH", { value: guild_name });
-
-      const checkKey = await apiRequest("guild_settings?key=eq.use_self_checkin");
-      if (checkKey && checkKey.length > 0) {
-        await apiRequest("guild_settings?key=eq.use_self_checkin", "PATCH", { value: use_self_checkin });
-      } else {
-        await apiRequest("guild_settings", "POST", [{ key: "use_self_checkin", value: use_self_checkin }]);
-      }
+      await upsertGuildSettingKey("use_self_checkin", use_self_checkin);
 
       sessionStorage.setItem("guild_name", guild_name);
       const topTitle = document.getElementById("topHeaderTitle");
@@ -752,6 +864,35 @@
     }
   }
 
+  async function saveAuctionSettings() {
+    const isAuth = (sessionStorage.getItem("admin_auth") === "true");
+    if (!isAuth) return showToast("관리자 권한이 필요합니다.", "⚠️");
+
+    const isSuper = (sessionStorage.getItem("admin_role") === "super");
+    if (!isSuper && window.currentSettingsMap['perm_settings_auction'] === 'false') {
+      return showToast("경매 설정 변경 권한이 없습니다.", "⚠️");
+    }
+
+    const useAuction = document.getElementById('cfgUseGuildAuction').checked ? 'true' : 'false';
+    const revealWinner = document.getElementById('cfgAuctionRevealWinner').checked ? 'true' : 'false';
+    const minInc = String(Math.max(1, parseInt(document.getElementById('cfgAuctionMinInc').value, 10) || 100));
+    const antiSnipe = String(Math.max(0, parseInt(document.getElementById('cfgAuctionAntiSnipe').value, 10) || 0));
+
+    try {
+      await upsertGuildSettingKey("use_guild_auction", useAuction);
+      await upsertGuildSettingKey("auction_reveal_winner", revealWinner);
+      await upsertGuildSettingKey("auction_min_increment", minInc);
+      await upsertGuildSettingKey("auction_anti_snipe_min", antiSnipe);
+
+      if (typeof window.refreshAuctionFloatingButton === "function") {
+        await window.refreshAuctionFloatingButton();
+      }
+      showToast("🔨 경매 설정이 성공적으로 저장되었습니다!");
+    } catch (err) {
+      showToast("경매 설정 저장 실패: " + err.message, "❌");
+    }
+  }
+
   async function registerNewGeminiApiKey() {
     const isAuth = (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) return showToast("관리자 권한이 필요합니다.", "⚠️");
@@ -760,13 +901,7 @@
     if (!inputKey) return showToast("등록할 새 API 키를 입력해주세요!", "⚠️");
 
     try {
-      const checkRow = await apiRequest("guild_settings?key=eq.gemini_api_key");
-      if (checkRow && checkRow.length > 0) {
-        await apiRequest("guild_settings?key=eq.gemini_api_key", "PATCH", { value: inputKey });
-      } else {
-        await apiRequest("guild_settings", "POST", [{ key: "gemini_api_key", value: inputKey }]);
-      }
-
+      await upsertGuildSettingKey("gemini_api_key", inputKey);
       window.currentSettingsMap['gemini_api_key'] = 'registered';
       updateGeminiKeyStatusUI();
       showToast("Gemini API 키가 안전하게 등록되었습니다! 🎉");
@@ -782,6 +917,7 @@
     const permissions = {
       perm_settings_security: document.getElementById('permSettingsSecurity').checked ? 'true' : 'false',
       perm_settings_boss_ground: document.getElementById('permSettingsBossGround').checked ? 'true' : 'false',
+      perm_settings_auction: document.getElementById('permSettingsAuction').checked ? 'true' : 'false',
       perm_events_manage: document.getElementById('permEventsManage').checked ? 'true' : 'false',
       perm_boss_register: document.getElementById('permBossRegister').checked ? 'true' : 'false',
       perm_boss_records_edit: document.getElementById('permBossRecordsEdit').checked ? 'true' : 'false',
@@ -794,13 +930,7 @@
 
     try {
       for (let [k, v] of Object.entries(permissions)) {
-        const row = await apiRequest(`guild_settings?key=eq.${k}`);
-        if (row && row.length > 0) {
-          await apiRequest(`guild_settings?key=eq.${k}`, "PATCH", { value: v });
-        } else {
-          await apiRequest("guild_settings", "POST", [{ key: k, value: v }]);
-        }
-        window.currentSettingsMap[k] = v;
+        await upsertGuildSettingKey(k, v);
       }
       applyMemberPinResetUI();
       showToast("👑 관리자 권한 정책이 성공적으로 반영되었습니다!");
