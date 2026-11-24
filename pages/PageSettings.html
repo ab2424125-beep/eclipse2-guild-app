@@ -638,7 +638,6 @@
         </div>
       </div>
 
-      <!-- 신규 추가: 경매 버튼 화면 표시 위치 4방향 선택 -->
       <div class="perm-switch-item" style="display: block; border-color: rgba(56, 189, 248, 0.35);">
         <div class="text-white fw-bold small mb-1" style="font-size: 0.8rem;">
           <i class="fa-solid fa-arrows-up-down-left-right text-info me-1"></i>경매 미니 버튼 화면 표시 위치
@@ -652,6 +651,22 @@
           <button type="button" class="btn-auc-pos" id="btnAucPos_top-right" onclick="selectAuctionFloatPos('top-right')">↗ 상단 우측</button>
           <button type="button" class="btn-auc-pos" id="btnAucPos_bottom-left" onclick="selectAuctionFloatPos('bottom-left')">↙ 하단 좌측</button>
           <button type="button" class="btn-auc-pos active" id="btnAucPos_bottom-right" onclick="selectAuctionFloatPos('bottom-right')">↘ 하단 우측</button>
+        </div>
+      </div>
+
+      <!-- 신규 추가: 경매 참여자 닉네임 공개 여부 ON/OFF -->
+      <div class="perm-switch-item">
+        <div style="min-width:0; flex:1;">
+          <div class="text-white fw-bold small" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-users-viewfinder text-warning me-1"></i>경매 참여자 닉네임 전체 공개
+          </div>
+          <div class="text-secondary" style="font-size: 0.68rem; line-height: 1.4;">
+            <strong>ON:</strong> 입찰 현황 목록에 입찰한 길드원의 실제 닉네임이 공개됩니다.<br>
+            <strong>OFF (기본):</strong> '익명 참여자 #1'로 표시되며 관리자만 실명을 확인합니다.
+          </div>
+        </div>
+        <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
+          <input class="form-check-input ms-0" type="checkbox" id="cfgAuctionRevealBidders" role="switch">
         </div>
       </div>
 
@@ -798,7 +813,7 @@
     try {
       const [data, aucRows] = await Promise.all([
         apiRequest("rpc/get_safe_guild_settings", "POST").catch(() => []),
-        apiRequest("guild_settings?key=in.(use_guild_auction,auction_reveal_winner,perm_settings_auction,auction_min_increment,auction_anti_snipe_min,auction_float_position)").catch(() => [])
+        apiRequest("guild_settings?key=in.(use_guild_auction,auction_reveal_bidders,auction_reveal_winner,perm_settings_auction,auction_min_increment,auction_anti_snipe_min,auction_float_position)").catch(() => [])
       ]);
 
       window.currentSettingsMap = {};
@@ -829,6 +844,7 @@
       document.getElementById('permNoticeWrite').checked = parseBool('perm_notice_write');
 
       document.getElementById('cfgUseGuildAuction').checked = (window.currentSettingsMap['use_guild_auction'] === 'true');
+      document.getElementById('cfgAuctionRevealBidders').checked = (window.currentSettingsMap['auction_reveal_bidders'] === 'true');
       document.getElementById('cfgAuctionRevealWinner').checked = (window.currentSettingsMap['auction_reveal_winner'] !== 'false');
       document.getElementById('cfgAuctionMinInc').value = window.currentSettingsMap['auction_min_increment'] || '10';
       document.getElementById('cfgAuctionAntiSnipe').value = window.currentSettingsMap['auction_anti_snipe_min'] || '1';
@@ -935,6 +951,7 @@
 
     const useAuction = document.getElementById('cfgUseGuildAuction').checked ? 'true' : 'false';
     const floatPos = document.getElementById('cfgAuctionFloatPosition').value || 'bottom-right';
+    const revealBidders = document.getElementById('cfgAuctionRevealBidders').checked ? 'true' : 'false';
     const revealWinner = document.getElementById('cfgAuctionRevealWinner').checked ? 'true' : 'false';
     const minInc = String(Math.max(10, parseInt(document.getElementById('cfgAuctionMinInc').value, 10) || 10));
     const antiSnipe = String(Math.max(0, parseInt(document.getElementById('cfgAuctionAntiSnipe').value, 10) || 0));
@@ -942,6 +959,7 @@
     try {
       await upsertGuildSettingKey("use_guild_auction", useAuction);
       await upsertGuildSettingKey("auction_float_position", floatPos);
+      await upsertGuildSettingKey("auction_reveal_bidders", revealBidders);
       await upsertGuildSettingKey("auction_reveal_winner", revealWinner);
       await upsertGuildSettingKey("auction_min_increment", minInc);
       await upsertGuildSettingKey("auction_anti_snipe_min", antiSnipe);
