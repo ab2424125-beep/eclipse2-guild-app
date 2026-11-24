@@ -124,8 +124,12 @@
     border-color: rgba(245, 158, 11, 0.45);
     background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, #090e1c 100%);
   }
+  .auc-item-card.is-pending {
+    border-color: rgba(56, 189, 248, 0.5);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.07) 0%, #090e1c 100%);
+  }
   .auc-item-card.is-closed {
-    opacity: 0.9;
+    opacity: 0.92;
     border-color: #1b263b;
   }
 
@@ -160,7 +164,17 @@
     border-radius: 8px;
     white-space: nowrap;
   }
+  .auc-timer-pill.pending {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+  }
   .auc-timer-pill.ended {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+  }
+  .auc-timer-pill.nobid {
     background: rgba(148, 163, 184, 0.12);
     border-color: #475569;
     color: #94a3b8;
@@ -290,7 +304,7 @@
   <div class="p-2 px-3 rounded mb-3 d-flex align-items-center justify-content-between gap-2" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);">
     <div class="small text-secondary" style="font-size: 0.74rem; word-break: keep-all;">
       <i class="fa-solid fa-user-secret text-warning me-1"></i>
-      <span>모든 입찰은 <strong>개인 PIN 인증 후 10 다이아 단위 익명 입찰</strong>로 진행됩니다. (입찰자 실명은 관리자만 확인 가능)</span>
+      <span>개인 PIN 인증 후 <strong>10 다이아 단위 익명 입찰</strong>로 진행되며, 마감 후 <strong>관리자 낙찰 승인</strong> 시 최종 완료됩니다.</span>
     </div>
   </div>
 
@@ -326,7 +340,7 @@
       <label class="small text-secondary mb-1" style="font-size: 0.72rem;">경매 진행 방식</label>
       <select id="aucNewMode" class="form-select input-custom-auc">
         <option value="open" selected>📢 공개 호가 (실시간 최고가 공개 · 입찰자 완전 익명)</option>
-        <option value="blind">🙈 비공개 블라인드 입찰 (마감 전까지 입찰가 비공개)</option>
+        <option value="blind">🙈 비공개 블라인드 입찰 (낙찰 승인 전까지 입찰가 비공개)</option>
       </select>
     </div>
 
@@ -380,7 +394,7 @@
   <!-- 상태 필터 탭 -->
   <div class="auc-filter-tabs">
     <button type="button" class="btn-auc-tab active" id="aucTab_open" onclick="window.setAuctionFilter('open')">🔥 진행중 경매</button>
-    <button type="button" class="btn-auc-tab" id="aucTab_closed" onclick="window.setAuctionFilter('closed')">🏁 종료된 경매</button>
+    <button type="button" class="btn-auc-tab" id="aucTab_closed" onclick="window.setAuctionFilter('closed')">🏁 종료/승인대기</button>
     <button type="button" class="btn-auc-tab" id="aucTab_all" onclick="window.setAuctionFilter('all')">📋 전체 보기</button>
   </div>
 
@@ -463,7 +477,6 @@
     window.aucToastTimer = setTimeout(() => t.classList.remove("show"), 2500);
   };
 
-  // 관리자 로그인 및 경매 권한 확인 (관리자만 경매 개설·마감·실명 조회 가능)
   window.checkAuctionManagePermission = async function() {
     const isAuth = (typeof isAdminLoggedIn === "function") ? isAdminLoggedIn() : (sessionStorage.getItem("admin_auth") === "true");
     if (!isAuth) return false;
@@ -503,7 +516,7 @@
       const [settledRows, raidsRows, openAucRows] = await Promise.all([
         apiRequest("item_distributions?select=item_key").catch(() => []),
         apiRequest("boss_participations?select=*&order=id.desc&limit=80").catch(() => []),
-        apiRequest("guild_auctions?select=source_item_key&status=in.(open,closed)").catch(() => [])
+        apiRequest("guild_auctions?select=source_item_key&status=in.(open,closed,pending_approval,approved)").catch(() => [])
       ]);
 
       const settledSet = new Set((settledRows || []).map(s => s.item_key));
@@ -674,9 +687,9 @@
 
     const now = Date.now();
     const filtered = window.aucListCache.filter(a => {
-      const isClosed = (a.status !== "open") || (new Date(a.end_time).getTime() <= now);
-      if (window.aucCurrentFilter === "open") return !isClosed;
-      if (window.aucCurrentFilter === "closed") return isClosed;
+      const isOpen = (a.status === "open") && (new Date(a.end_time).getTime() > now);
+      if (window.aucCurrentFilter === "open") return isOpen;
+      if (window.aucCurrentFilter === "closed") return !isOpen;
       return true;
     });
 
@@ -687,7 +700,9 @@
 
     container.innerHTML = filtered.map(a => {
       const endMs = new Date(a.end_time).getTime();
-      const isClosed = (a.status !== "open") || (endMs <= now);
+      const isOpen = (a.status === "open") && (endMs > now);
+      const isApproved = (a.status === "approved" || a.status === "settled");
+      const isPendingApproval = !isOpen && !isApproved && (a.bid_count > 0);
       const isBlind = (a.auction_mode === "blind");
 
       const modeBadge = isBlind
@@ -702,9 +717,14 @@
       let priceValText = `${Number(a.current_price || a.start_price).toLocaleString()} <small class="fs-6 text-light">D</small>`;
       if (a.bid_count === 0) {
         priceLabel = "경매 시작가 (입찰 대기)";
+      } else if (isPendingApproval) {
+        priceLabel = "마감 최고 입찰가 (승인 대기중)";
+      } else if (isApproved) {
+        priceLabel = "최종 승인 낙찰가";
       }
-      if (isBlind && !isClosed && !isAdmin) {
-        priceLabel = "블라인드 진행중 (시작가)";
+
+      if (isBlind && !isApproved && !isAdmin) {
+        priceLabel = isOpen ? "블라인드 진행중 (시작가)" : "블라인드 입찰 마감 (승인 대기중)";
         priceValText = `${Number(a.start_price).toLocaleString()} <small class="fs-6 text-light">D ~ (비공개)</small>`;
       }
 
@@ -713,41 +733,65 @@
         ? Number(a.start_price)
         : (Number(a.current_price) + incUnit);
 
-      const bidAreaHtml = !isClosed ? `
-        <div class="p-2 rounded mt-2" style="background: #060a14; border: 1px solid #1e2c47;">
-          <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
-            <span class="text-secondary" style="font-size: 0.7rem;">
-              ${isBlind ? `시작가 ${Number(a.start_price).toLocaleString()}D 이상 (10D 단위)` : `최소 입찰: <strong class="text-info">${nextMinBid.toLocaleString()} D</strong> (단위 +${incUnit}D)`}
+      let statusBodyHtml = "";
+      if (isOpen) {
+        statusBodyHtml = `
+          <div class="p-2 rounded mt-2" style="background: #060a14; border: 1px solid #1e2c47;">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+              <span class="text-secondary" style="font-size: 0.7rem;">
+                ${isBlind ? `시작가 ${Number(a.start_price).toLocaleString()}D 이상 (10D 단위)` : `최소 입찰: <strong class="text-info">${nextMinBid.toLocaleString()} D</strong> (단위 +${incUnit}D)`}
+              </span>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn-quick-inc" onclick="window.setQuickBidAmount(${a.id}, ${nextMinBid})">최소가</button>
+                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 10, ${nextMinBid})">+10</button>
+                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 50, ${nextMinBid})">+50</button>
+                <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 100, ${nextMinBid})">+100</button>
+              </div>
+            </div>
+            <div class="row g-1 align-items-center">
+              <div class="col-4">
+                <input type="password" id="aucPin_${a.id}" class="form-control input-custom-auc text-center" placeholder="개인 PIN" maxlength="12" inputmode="numeric">
+              </div>
+              <div class="col-5">
+                <input type="number" id="aucAmt_${a.id}" class="form-control input-custom-auc text-end no-spin" step="10" value="${isBlind ? Number(a.start_price) : nextMinBid}" placeholder="10D 단위 입력">
+              </div>
+              <div class="col-3">
+                <button type="button" class="btn btn-warning btn-sm w-100 fw-bold text-dark" style="height: 38px; font-size: 0.78rem; white-space: nowrap;" onclick="window.submitAuctionBid(${a.id})">
+                  입찰
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (isPendingApproval) {
+        statusBodyHtml = `
+          <div class="p-2 rounded mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.45); font-size: 0.78rem;">
+            <span class="text-warning fw-bold">
+              ⏳ 입찰 마감 — ${isAdmin ? `최고 입찰자: <span class="text-info">${a.winner_name}</span> (${Number(a.current_price).toLocaleString()} D)` : '관리자 낙찰 승인 대기중'}
             </span>
-            <div class="d-flex gap-1">
-              <button type="button" class="btn-quick-inc" onclick="window.setQuickBidAmount(${a.id}, ${nextMinBid})">최소가</button>
-              <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 10, ${nextMinBid})">+10</button>
-              <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 50, ${nextMinBid})">+50</button>
-              <button type="button" class="btn-quick-inc" onclick="window.addQuickBidAmount(${a.id}, 100, ${nextMinBid})">+100</button>
-            </div>
-          </div>
-          <div class="row g-1 align-items-center">
-            <div class="col-4">
-              <input type="password" id="aucPin_${a.id}" class="form-control input-custom-auc text-center" placeholder="개인 PIN" maxlength="12" inputmode="numeric">
-            </div>
-            <div class="col-5">
-              <input type="number" id="aucAmt_${a.id}" class="form-control input-custom-auc text-end no-spin" step="10" value="${isBlind ? Number(a.start_price) : nextMinBid}" placeholder="10D 단위 입력">
-            </div>
-            <div class="col-3">
-              <button type="button" class="btn btn-warning btn-sm w-100 fw-bold text-dark" style="height: 38px; font-size: 0.78rem; white-space: nowrap;" onclick="window.submitAuctionBid(${a.id})">
-                입찰
+            ${isAdmin ? `
+              <button type="button" class="btn btn-success btn-sm py-1 px-2 fw-bold" style="font-size: 0.74rem; white-space: nowrap;" onclick="window.approveAuctionWinner(${a.id}, '${a.item_name}', '${a.winner_name}', ${Number(a.current_price)})">
+                ✅ 낙찰 승인
               </button>
-            </div>
+            ` : ''}
           </div>
-        </div>
-      ` : `
-        <div class="p-2 rounded mt-2 d-flex justify-content-between align-items-center flex-wrap gap-1" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.78rem;">
-          <span class="text-success fw-bold">
-            🏆 최종 낙찰: ${a.bid_count > 0 ? `${a.winner_name || '익명 낙찰자'} (${Number(a.current_price).toLocaleString()} D)` : '유찰 (입찰자 없음)'}
-          </span>
-          ${a.status === 'settled' ? '<span class="badge bg-info text-dark">정산/금고 반영완료</span>' : ''}
-        </div>
-      `;
+        `;
+      } else if (isApproved) {
+        statusBodyHtml = `
+          <div class="p-2 rounded mt-2 d-flex justify-content-between align-items-center flex-wrap gap-1" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.78rem;">
+            <span class="text-success fw-bold">
+              🏆 최종 낙찰 확정: ${a.winner_name || '익명 낙찰자'} (${Number(a.current_price).toLocaleString()} D)
+            </span>
+            ${a.status === 'settled' ? '<span class="badge bg-info text-dark">정산/금고 반영완료</span>' : ''}
+          </div>
+        `;
+      } else {
+        statusBodyHtml = `
+          <div class="p-2 rounded mt-2 text-secondary small" style="background: rgba(148, 163, 184, 0.08); border: 1px solid #334155; font-size: 0.76rem;">
+            유찰됨 (입찰 참여자 없음)
+          </div>
+        `;
+      }
 
       const bids = Array.isArray(a.bids) ? a.bids : [];
       const bidsHtml = bids.length > 0 ? `
@@ -764,22 +808,39 @@
             </div>
           `).join('')}
         </div>
-      ` : (isBlind && !isClosed && !isAdmin
+      ` : (isBlind && !isApproved && !isAdmin
         ? `<div class="text-secondary mt-2" style="font-size:0.72rem;">🙈 비공개 블라인드 경매입니다. 현재 총 <strong>${a.bid_count}건</strong>의 입찰이 접수되었습니다.</div>`
         : `<div class="text-secondary mt-2" style="font-size:0.72rem;">아직 입찰 내역이 없습니다.</div>`);
 
       const adminToolsHtml = isAdmin ? `
         <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-end gap-1 flex-wrap">
-          ${!isClosed ? `<button type="button" class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.closeAuctionEarly(${a.id}, '${a.item_name}')">즉시 마감</button>` : ''}
-          ${(isClosed && a.bid_count > 0 && a.status !== 'settled' && Array.isArray(a.participants) && a.participants.length > 0)
+          ${isOpen ? `<button type="button" class="btn btn-outline-warning btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.closeAuctionEarly(${a.id}, '${a.item_name}')">입찰 즉시 마감</button>` : ''}
+          ${(a.status === 'approved' && a.bid_count > 0 && Array.isArray(a.participants) && a.participants.length > 0)
             ? `<button type="button" class="btn btn-outline-info btn-xs py-1 px-2 fw-bold" style="font-size:0.7rem;" onclick="window.openAuctionSettleModal(${a.id})">🎁 N/1 정산 & 금고 반영</button>`
             : ''}
           <button type="button" class="btn btn-outline-danger btn-xs py-1 px-2" style="font-size:0.7rem;" onclick="window.deleteAuctionItem(${a.id}, '${a.item_name}')">삭제</button>
         </div>
       ` : "";
 
+      let pillClass = "";
+      let pillText = "계산중...";
+      if (!isOpen) {
+        if (isPendingApproval) {
+          pillClass = "pending";
+          pillText = "⏳ 낙찰 승인 대기";
+        } else if (isApproved) {
+          pillClass = "ended";
+          pillText = "✅ 낙찰 확정";
+        } else {
+          pillClass = "nobid";
+          pillText = "유찰 마감";
+        }
+      }
+
+      const cardClass = isOpen ? "is-open" : (isPendingApproval ? "is-pending" : "is-closed");
+
       return `
-        <div class="auc-item-card ${isClosed ? 'is-closed' : 'is-open'}">
+        <div class="auc-item-card ${cardClass}">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
             <div style="min-width:0; flex:1;">
               <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
@@ -788,8 +849,8 @@
               </div>
               <div class="fw-bold text-white fs-6 text-truncate">${a.item_name}</div>
             </div>
-            <span class="auc-timer-pill ${isClosed ? 'ended' : ''}" id="aucTimer_${a.id}" data-end="${a.end_time}" data-closed="${isClosed ? '1' : '0'}">
-              ${isClosed ? '마감됨' : '계산중...'}
+            <span class="auc-timer-pill ${pillClass}" id="aucTimer_${a.id}" data-end="${a.end_time}" data-closed="${isOpen ? '0' : '1'}">
+              ${pillText}
             </span>
           </div>
 
@@ -804,7 +865,7 @@
             </div>
           </div>
 
-          ${bidAreaHtml}
+          ${statusBodyHtml}
           ${bidsHtml}
           ${adminToolsHtml}
         </div>
@@ -816,17 +877,17 @@
 
   window.updateAuctionCountdowns = function() {
     const now = Date.now();
+    let justExpired = false;
+
     document.querySelectorAll("[id^='aucTimer_']").forEach(el => {
-      if (el.getAttribute("data-closed") === "1") {
-        el.innerText = "마감됨";
-        return;
-      }
+      if (el.getAttribute("data-closed") === "1") return;
       const endMs = new Date(el.getAttribute("data-end")).getTime();
       const diffSec = Math.floor((endMs - now) / 1000);
       if (diffSec <= 0) {
-        el.innerText = "마감됨";
-        el.classList.add("ended");
+        el.innerText = "입찰 마감";
+        el.classList.add("pending");
         el.setAttribute("data-closed", "1");
+        justExpired = true;
         return;
       }
       const h = Math.floor(diffSec / 3600);
@@ -835,6 +896,13 @@
       const pad = n => (n < 10 ? "0" + n : n);
       el.innerText = `⏳ ${h > 0 ? h + ':' : ''}${pad(m)}:${pad(s)}`;
     });
+
+    if (justExpired) {
+      window.loadGuildAuctions();
+      if (typeof window.refreshAuctionFloatingButton === "function") {
+        window.refreshAuctionFloatingButton();
+      }
+    }
   };
 
   window.setQuickBidAmount = function(aucId, amount) {
@@ -887,19 +955,42 @@
   };
 
   window.closeAuctionEarly = async function(aucId, itemName) {
-    if (!confirm(`[${itemName}] 경매를 지금 즉시 마감하시겠습니까?`)) return;
+    if (!confirm(`[${itemName}] 입찰을 지금 즉시 마감하고 낙찰 승인 대기 상태로 전환하시겠습니까?`)) return;
     try {
       await apiRequest(`guild_auctions?id=eq.${aucId}`, "PATCH", {
-        status: "closed",
+        status: "pending_approval",
         end_time: new Date().toISOString()
       });
-      window.showAucToast(`[${itemName}] 경매가 마감되었습니다.`, "🏁");
+      window.showAucToast(`[${itemName}] 입찰이 마감되었습니다. 낙찰 승인을 진행해주세요.`, "⏳");
       await window.loadGuildAuctions();
       if (typeof window.refreshAuctionFloatingButton === "function") {
         window.refreshAuctionFloatingButton();
       }
     } catch (err) {
       window.showAucToast("마감 실패: " + err.message, "❌");
+    }
+  };
+
+  window.approveAuctionWinner = async function(aucId, itemName, winnerName, price) {
+    const allowed = await window.checkAuctionManagePermission();
+    if (!allowed) return window.showAucToast("낙찰 승인은 관리자만 가능합니다.", "🔒");
+
+    const confirmMsg = `[✅ 최종 낙찰 승인]\n` +
+      `• 경매 물품: ${itemName}\n` +
+      `• 최종 낙찰자: ${winnerName}\n` +
+      `• 최종 낙찰가: ${Number(price).toLocaleString()} 다이아\n\n` +
+      `이대로 최종 낙찰을 승인하시겠습니까?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      await apiRequest(`guild_auctions?id=eq.${aucId}`, "PATCH", {
+        status: "approved"
+      });
+      window.showAucToast(`🎉 [${itemName}] 최종 낙찰이 승인되었습니다!`, "✅");
+      await window.loadGuildAuctions();
+    } catch (err) {
+      window.showAucToast("낙찰 승인 실패: " + err.message, "❌");
     }
   };
 
@@ -1003,7 +1094,7 @@
       return `• [${a.boss_name || '경매'}] ${a.item_name} (${modeStr} / 입찰 ${a.bid_count}회)`;
     });
 
-    const text = `🔨 [${window.aucGuildName} 익명 경매 진행 안내]\n──────────────────\n${lines.join('\n')}\n──────────────────\n길드 관리 웹 우측 하단 [길드경매] 버튼에서 개인 비밀번호(PIN)로 10D 단위 익명 입찰하세요!`;
+    const text = `🔨 [${window.aucGuildName} 익명 경매 진행 안내]\n──────────────────\n${lines.join('\n')}\n──────────────────\n길드 관리 웹 [길드경매] 버튼에서 개인 비밀번호(PIN)로 10D 단위 익명 입찰하세요!`;
     navigator.clipboard.writeText(text);
     window.showAucToast("진행 중인 경매 공지가 복사되었습니다!", "📋");
   };
